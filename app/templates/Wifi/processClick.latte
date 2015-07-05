@@ -1,0 +1,39 @@
+<b>{$nets[0]->ssid}</b>
+<table>
+    <tr>
+        <td>Latitude</td>
+        <td>{$nets[0]->latitude}</td>
+    </tr>
+    <tr>
+        <td>Longtitude</td>
+        <td>{$nets[0]->longtitude}</td>
+    </tr>
+    <tr>
+        <td>Altitude</td>
+        <td>{$nets[0]->altitude} m</td>
+    </tr>
+    <tr>
+        <td>MAC</td>
+        <td>{$nets[0]->mac}</td>
+    </tr>
+    {if $nets[0]->channel}
+    <tr>
+        <td>Kanál</td>
+        <td>{$nets[0]->channel}</td>
+    </tr>
+    {/if}
+</table>
+{if count($nets) > 1}
+<span>Na tomto místě se nachází další sítě ({count($nets)-1})</span><br />
+<?php
+    $max = (count($nets)>10)?10:count($nets)-1;
+?>
+<span>{$max} dalších sítí nejblíže k bodu kliknutí</span><br />
+
+
+{for $i = 1; $i <= $max; $i++}
+    <b>{$nets[$i]->ssid}</b><br />
+{/for}
+
+{/if}
+
