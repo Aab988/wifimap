@@ -43,10 +43,10 @@ class Debugger
 	/********************* Debugger::dump() ****************d*g**/
 
 	/** @var int  how many nested levels of array/object properties display {@link Debugger::dump()} */
-	public static $maxDepth = 3;
+	public static $maxDepth = 6;
 
 	/** @var int  how long strings display {@link Debugger::dump()} */
-	public static $maxLen = 150;
+	public static $maxLen = 300;
 
 	/** @var bool display location? {@link Debugger::dump()} */
 	public static $showLocation = FALSE;

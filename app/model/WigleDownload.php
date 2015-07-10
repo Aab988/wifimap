@@ -156,4 +156,137 @@ class WigleDownload extends Download implements \IDownload {
         );
     }
 
+
+    public function generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end) {
+        if($lat_end < $lat_start) {
+            $tmp = $lat_start;
+            $lat_start = $lat_end;
+            $lat_end = $tmp;
+        }
+
+        if($lon_end < $lon_start) {
+            $tmp = $lon_start;
+            $lon_start = $lon_end;
+            $lon_end = $tmp;
+        }
+
+        $lat_start = round($lat_start-0.005,2); $lat_end = round($lat_end+0.005,2);
+        $lon_start = round($lon_start-0.005,2); $lon_end = round($lon_end+0.005,2);
+
+        echo "lat: " . $lat_start . " - " . $lat_end . '<br />';
+        echo "lon: " . $lon_start . " - " . $lon_end . '<br />';
+
+        $array = array();
+
+        for($lat = $lat_start; $lat<$lat_end; $lat+=0.05) {
+            for($lon = $lon_start; $lon<$lon_end; $lon+=0.05) {
+                $a = array("lat_start"=>$lat,"lat_end"=>$lat+0.05,"lon_start"=>$lon,"lon_end"=>$lon+0.05);
+                $array[] = $a;
+            }
+
+        }
+        foreach($array as $key=>$ar) {
+            $array[$key][] = $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
+        }
+        //$ar = $array[0];
+        //echo $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
+
+        dump($array);
+    }
+
+    private function improveLatLngRange($lat_start,$lat_end,$lon_start,$lon_end) {
+		$pole = array();
+        $pocet = $this->analyzeImage($lat_start,$lat_end,$lon_start,$lon_end);
+		$pole[] = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end);
+        if($pocet > 5000) {
+
+            for($lat = $lat_start;$lat < $lat_end;$lat+=($lat_end-$lat_start)/(double)2) {
+                for ($lon = $lon_start; $lon < $lon_end; $lon += ($lon_end - $lon_start) / (double)2) {
+
+					$nlat = ($lat + ($lat_end - $lat_start) / (double)2);
+					$nlon = ($lon + ($lon_end - $lon_start) / (double)2);
+                    echo "Lat:". $lat ." - ". $nlat . "<br />";
+					echo "Lon:". $lon ." - ".$nlon . "<br />";
+                    $pole[] = $this->improveLatLngRange($lat, $nlat,$lon, $nlon);
+                }
+            }
+        }
+        return $pole;
+    }
+
+
+    /**
+     * vraci pocet pixelu v jine barve(hustotu siti v dane plose)
+     *
+     * @param $lat_start
+     * @param $lat_end
+     * @param $lon_start
+     * @param $lon_end
+     * @return int
+     */
+    private function analyzeImage($lat_start,$lat_end,$lon_start,$lon_end) {
+
+        $url = "https://wigle.net/gps/gps/GPSDB/onlinemap2/";
+
+        if($lat_end < $lat_start) {
+            $tmp = $lat_start;
+            $lat_start = $lat_end;
+            $lat_end = $tmp;
+        }
+
+        if($lon_end < $lon_start) {
+            $tmp = $lon_start;
+            $lon_start = $lon_end;
+            $lon_end = $tmp;
+        }
+
+        $url.= "?lat1=$lat_start&long1=$lon_start&lat2=$lat_end&long2=$lon_end";
+        $url.= "&redir=Y&networksOnly=Y&sizeX=256&sizeY=256";
+
+        //header('Content-Type: image/png');
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Must be set to true so that PHP follows any "Location:" header
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  2);
+        $a = curl_exec($ch); // $a will contain all headers
+
+        //dump($a);
+
+        $a = explode("-url:",$a);
+        $b = explode("Locat",$a[1]);
+        //dump($b[1]);
+
+        $url = "https://wigle.net".trim($b[0]);
+        //echo $url;
+        $a = imagecreatefrompng($url);
+
+        $points = 0;
+        for($x = 0; $x< 256; $x++) {
+            for($y = 0; $y<256; $y++) {
+                if(dechex(imagecolorat($a, $x,$y)) == "ff0000") {
+                    $points++;
+                }
+                //echo dechex(imagecolorat($a, $x,$y)) . '<br />';
+
+            }
+        }
+
+        return $points;
+        //imagepng($a);
+
+
+
+        // priklad adresy
+        // https://wigle.net/gps/gps//GPSDB/onlinemap2/?lat1=50.21909462044748&long1=15.787353515625
+        //	&lat2=50.21206446065373&long2=15.79833984375&redir=Y&networksOnly=Y&sizeX=256&sizeY=256
+
+    }
+
+
+
+
 }
