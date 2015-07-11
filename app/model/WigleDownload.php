@@ -7,6 +7,12 @@ class WigleDownload extends Download implements \IDownload {
 
 	private $user;
 	private $password;
+	/**
+	 * souradnice vygenerovanych ctvercu pro ulozeni do DB
+	 * vytvoreni fronty pro stahovani dat
+	 * - rekurzivni prochazeni vytvoreneho pole
+	 */
+	private $generatedCoords = array();
 
 	public function __construct($user,$password) {
 		$this->user = $user;
@@ -121,42 +127,17 @@ class WigleDownload extends Download implements \IDownload {
         
         return $ws;
     }
-    
-    
-    private function generateQuery($longmin,$longmax,$latmin,$latmax) {
-        $latitudeMax = $latmax;
-        $latitudeMin = $latmin;
-        
-        $longtitudeMax = $longmax;
-        $longtitudeMin = $longmin;
-        
-        $maxvals = $this->database->query("select max(latitude) as latmax, max(longtitude) as lonmax from wifi where id_zdroj=2 and longtitude between $longmin and $longmax and latitude between $latmin and $latmax")->fetch();
-        if($maxvals->lonmax != null) {
-            $longtitudeMin = $maxvals->lonmax;
-        }
-       /* if($maxvals->latmax != null) {
-           $latitudeMin = $maxvals->latmax;
-        }
-        */
-        if($longtitudeMin + 0.01 < $longtitudeMax) {
-            $longtitudeMax = $longtitudeMin + 0.01;
-        }
-        else {
-            if($latitudeMin + 0.01 < $latitudeMax) {
-                $latitudeMax = $latitudeMin + 0.01;
-            }
-        }
-        
-        
-        return array(
-            "latmin" => $latitudeMin,
-            "latmax" => $latitudeMax,
-            "lonmin" => $longtitudeMin,
-            "lonmax" => $longtitudeMax
-        );
-    }
 
 
+	/**
+	 * zadanou velkou plochu rozdeli na mensi - jejich velikost urcena hustotou siti v dane oblasti
+	 * vetsi hustota v dane oblasti = rozdeleni plochy na 4 mensi
+	 *
+	 * @param $lat_start
+	 * @param $lat_end
+	 * @param $lon_start
+	 * @param $lon_end
+	 */
     public function generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end) {
         if($lat_end < $lat_start) {
             $tmp = $lat_start;
@@ -191,8 +172,53 @@ class WigleDownload extends Download implements \IDownload {
             $array[$key] = $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
         }
         dump($array);
+
+        $this->iterateArray($array);
+		dump($this->generatedCoords);
+
     }
 
+	/**
+	 * rekurzivne prohleda vsechny rozmery pole a z jednotlivych ctvercu sestavi pole
+	 *
+	 * @param $nestedCoords vygenerovane pole, zmenseni ctverce = dalsi zanoreni
+	 */
+	private function iterateArray($nestedCoords) {
+        foreach($nestedCoords as $c) {
+            if(is_array($c) && !$this->isAssoc($c)) {
+                $this->iterateArray($c);
+            }
+            else {
+				$this->generatedCoords[] = $c;
+            }
+        }
+    }
+
+	/**
+	 * vrati jestli je pole asociativni (ma vsechny indexy jako string)
+	 * @param $array
+	 * @return bool
+	 */
+    private function isAssoc($array) {
+        $return = true;
+        foreach(array_keys($array) as $a) {
+            $return = $return & is_string($a);
+        }
+        return (bool)$return;
+    }
+
+	/**
+	 * sestavi pole ctvercu obsahujici mensi mnozstvi siti pro stahovani
+	 * kazde zanoreni = zmenseni ctverce
+	 * v pripade ze zkoumana plocha obsahuje vice nez 5000 siti tak se rozdeli na 4 mensi plochy
+	 * a pro ne se rekurzivne opakuje deleni do doby nez kazda plocha v poli obsahuje mene nez 5000 siti
+	 *
+	 * @param $lat_start
+	 * @param $lat_end
+	 * @param $lon_start
+	 * @param $lon_end
+	 * @return array
+	 */
     private function improveLatLngRange($lat_start,$lat_end,$lon_start,$lon_end) {
 		$pole = array();
         $pocet = $this->analyzeImage($lat_start,$lat_end,$lon_start,$lon_end);
@@ -208,8 +234,6 @@ class WigleDownload extends Download implements \IDownload {
 					$nlat = ($nlat <= $lat_end) ? $nlat : $lat_end;
 					$nlon = ($nlon <= $lon_end) ? $nlon : $lon_end;
 
-                  /*  echo "Lat:". $lat ." - ". $nlat . "<br />";
-					echo "Lon:". $lon ." - ".$nlon . "<br />";*/
                     $pole[] = $this->improveLatLngRange($lat, $nlat,$lon, $nlon);
                 }
             }
@@ -277,22 +301,14 @@ class WigleDownload extends Download implements \IDownload {
                     $points++;
                 }
                 //echo dechex(imagecolorat($a, $x,$y)) . '<br />';
-
             }
         }
-
         return $points;
-        //imagepng($a);
-
-
 
         // priklad adresy
         // https://wigle.net/gps/gps//GPSDB/onlinemap2/?lat1=50.21909462044748&long1=15.787353515625
         //	&lat2=50.21206446065373&long2=15.79833984375&redir=Y&networksOnly=Y&sizeX=256&sizeY=256
 
     }
-
-
-
 
 }
