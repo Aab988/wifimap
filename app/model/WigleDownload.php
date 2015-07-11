@@ -177,39 +177,45 @@ class WigleDownload extends Download implements \IDownload {
         echo "lon: " . $lon_start . " - " . $lon_end . '<br />';
 
         $array = array();
+        for($lat = round($lat_start,2); round($lat,2) < round($lat_end,2); $lat+=0.05) {
+            for($lon = round($lon_start,2); round($lon,2) < round($lon_end,2); $lon+=0.05) {
 
-        for($lat = $lat_start; $lat<$lat_end; $lat+=0.05) {
-            for($lon = $lon_start; $lon<$lon_end; $lon+=0.05) {
-                $a = array("lat_start"=>$lat,"lat_end"=>$lat+0.05,"lon_start"=>$lon,"lon_end"=>$lon+0.05);
-                $array[] = $a;
+                $nlate = ($lat+0.05 <= $lat_end)?$lat+0.05:$lat_end;
+                $nlone = ($lon+0.05 <= $lon_end)?$lon+0.05:$lon_end;
+
+                $array[] = array("lat_start"=>$lat,"lat_end"=>$nlate,"lon_start"=>$lon,"lon_end"=>$nlone);
             }
-
         }
+
         foreach($array as $key=>$ar) {
-            $array[$key][] = $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
+            $array[$key] = $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
         }
-        //$ar = $array[0];
-        //echo $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
-
         dump($array);
     }
 
     private function improveLatLngRange($lat_start,$lat_end,$lon_start,$lon_end) {
 		$pole = array();
         $pocet = $this->analyzeImage($lat_start,$lat_end,$lon_start,$lon_end);
-		$pole[] = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end);
+        //$pocet = 10;
         if($pocet > 5000) {
 
-            for($lat = $lat_start;$lat < $lat_end;$lat+=($lat_end-$lat_start)/(double)2) {
-                for ($lon = $lon_start; $lon < $lon_end; $lon += ($lon_end - $lon_start) / (double)2) {
+            for($lat = round($lat_start,6); round($lat,6) < round($lat_end,6); $lat += ($lat_end - $lat_start)/2.0) {
+                for ($lon = round($lon_start,6); round($lon,6) < round($lon_end,6); $lon += ($lon_end - $lon_start) / 2.0) {
 
 					$nlat = ($lat + ($lat_end - $lat_start) / (double)2);
 					$nlon = ($lon + ($lon_end - $lon_start) / (double)2);
-                    echo "Lat:". $lat ." - ". $nlat . "<br />";
-					echo "Lon:". $lon ." - ".$nlon . "<br />";
+
+					$nlat = ($nlat <= $lat_end) ? $nlat : $lat_end;
+					$nlon = ($nlon <= $lon_end) ? $nlon : $lon_end;
+
+                  /*  echo "Lat:". $lat ." - ". $nlat . "<br />";
+					echo "Lon:". $lon ." - ".$nlon . "<br />";*/
                     $pole[] = $this->improveLatLngRange($lat, $nlat,$lon, $nlon);
                 }
             }
+        }
+        else {
+            $pole = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end);
         }
         return $pole;
     }
