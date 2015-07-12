@@ -114,7 +114,7 @@ class WifiPresenter extends BasePresenter {
         $width = 256;
         $height = 256;
 
-        $sql = "select latitude,longtitude,ssid,mac,id_zdroj from wifi
+        $sql = "select latitude,longtitude,ssid,mac,id_source from wifi
             where latitude > ? and latitude < ?
             and longtitude > ? and longtitude < ?";
 
@@ -147,7 +147,7 @@ class WifiPresenter extends BasePresenter {
             if($x < $width && $y < $height && imagecolorat($my_img, $x,$y) == $line_colour) {
                 $x++; $y++;
             }
-            if($w->id_zdroj == 2) {
+            if($w->id_source== 2) {
                 imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $wigle_colour);
             }
             else {

@@ -22,7 +22,7 @@ class Wifi extends Nette\Object {
     private $bcninterval = "";
     private $qos = "";
     
-    private $zdroj;
+    private $source;
     
     
     public function getMac() {
@@ -177,12 +177,12 @@ class Wifi extends Nette\Object {
         $this->qos = $qos;
     }
 
-    public function getZdroj() {
-        return $this->zdroj;
+    public function getSource() {
+        return $this->source;
     }
 
-    public function setZdroj($zdroj) {
-        $this->zdroj = $zdroj;
+    public function setSource($source) {
+        $this->source = $source;
     }
 
 

@@ -2,7 +2,6 @@
 namespace App\Model;
 
 
-
 class WigleDownload extends Download implements \IDownload {
 
 	private $user;
@@ -14,11 +13,14 @@ class WigleDownload extends Download implements \IDownload {
 	 */
 	private $generatedCoords = array();
 
-	public function __construct($user,$password) {
+
+
+
+	/*public function __construct($user,$password) {
 		$this->user = $user;
 		$this->password = $password;
 	}
-
+*/
     private function loginToWigle($login, $password) {
         $ch = curl_init();
         // set the target url
@@ -87,7 +89,7 @@ class WigleDownload extends Download implements \IDownload {
         $wifi->setChannel((int)$p[14]);
         $wifi->setBcninterval(trim($p[15]));
         $wifi->setQos((int)$p[16]);
-        $wifi->setZdroj(2);
+        $wifi->setSource(2);
         
         return $wifi;
 
@@ -99,18 +101,23 @@ class WigleDownload extends Download implements \IDownload {
         
         // TODO: sestaveni dotazu - urceni dat ktera chci stahnout
         
-        
+        $query = $this->database->query("select id,lat_start,lat_end,lon_start,lon_end from download_queue where downloaded=0 order by rand() limit 1")->fetch();
+
+		dump($query);
         // getDataFromWigle
         // start: 15.5,50.1
 
-        $results = $this->getDataFromWigle(15.5, 15.8, 50.1, 50.3);
+        $results = $this->getDataFromWigle($query['lon_start'], $query['lon_end'],$query['lat_start'], $query['lat_end']);
+		dump($results);
 
         $ws = $this->parseData($results);
         dump($ws);
-        if(count($ws) > 0) {
-           $this->saveAll($ws);
-        }
-    }
+		$pocet = count($ws);
+        if($pocet > 0) {
+			$this->saveAll($ws);
+			$this->database->query("update download_queue set downloaded=1,downloaded_nets_count=$pocet where id=". $query['id']);
+		}
+	}
    
     
     
@@ -176,7 +183,21 @@ class WigleDownload extends Download implements \IDownload {
         $this->iterateArray($array);
 		dump($this->generatedCoords);
 
+
+        $this->saveAll2downloadQueue();
+
     }
+
+    private function saveAll2downloadQueue() {
+        foreach($this->generatedCoords as $coord) {
+            $coord['id_source'] = 2;
+            $coord['downloaded'] = 0;
+
+            $this->database->query("insert into download_queue", $coord);
+        }
+
+    }
+
 
 	/**
 	 * rekurzivne prohleda vsechny rozmery pole a z jednotlivych ctvercu sestavi pole
@@ -239,7 +260,7 @@ class WigleDownload extends Download implements \IDownload {
             }
         }
         else {
-            $pole = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end);
+            $pole = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end, 'calculated_nets_count'=>$pocet);
         }
         return $pole;
     }
@@ -309,6 +330,14 @@ class WigleDownload extends Download implements \IDownload {
         // https://wigle.net/gps/gps//GPSDB/onlinemap2/?lat1=50.21909462044748&long1=15.787353515625
         //	&lat2=50.21206446065373&long2=15.79833984375&redir=Y&networksOnly=Y&sizeX=256&sizeY=256
 
+    }
+
+    public function setUser($user) {
+        $this->user = $user;
+    }
+
+    public function setPassword($password) {
+        $this->password = $password;
     }
 
 }

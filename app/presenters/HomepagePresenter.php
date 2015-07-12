@@ -22,7 +22,7 @@ class HomepagePresenter extends BasePresenter
 
 	public function renderDefault()
 	{
-		$this->template->wifi = $this->database->table("wifi")->where("id_zdroj=2")->order("rand()");
+		//$this->template->wifi = $this->database->table("wifi")->where("id_zdroj=2")->order("rand()");
 	}
 
 }

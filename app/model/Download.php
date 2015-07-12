@@ -67,7 +67,7 @@ class Download extends Nette\Object {
      */
     private function prepareArrayForDB(Wifi $wifi) {
         $array = array(
-            "id_zdroj" => $wifi->getZdroj(),
+            "id_source" => $wifi->getSource(),
             "mac" => $wifi->getMac(),
             "ssid" => $wifi->getSsid(),
             "sec" => $wifi->getSec(),
