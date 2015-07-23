@@ -2,6 +2,8 @@
 
     var map;
 var markers = [];
+
+var request;
     
     function initialize() {
         var mapOptions = {center:{lat:49.5,lng:15.78},zoom:10, draggableCursor: 'default'};
@@ -88,8 +90,10 @@ function CoordMapType(tileSize) {
 
 CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
 
+
     var bod = MERCATOR.getTileBounds({x: coord.x, y: coord.y, z: zoom});
     var img = ownerDocument.createElement('img');
+    console.log(    )
     var url = location.protocol + "//" + location.host + location.pathname + "wifi/image";
     img.src = url+'?lat1='+bod.sw.lat+'&lat2='+bod.ne.lat+'&lon1='+bod.sw.lng + '&lon2='+bod.ne.lng + '&zoom='+zoom;
     return img;
