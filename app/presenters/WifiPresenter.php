@@ -8,7 +8,10 @@ use App\Model\Wifi;
 class WifiPresenter extends BasePresenter {
     public $database;
    // private $cache;
-	
+
+
+
+
     public function __construct(Nette\Database\Context $database) {
 		$this->database = $database;
         
@@ -114,6 +117,10 @@ class WifiPresenter extends BasePresenter {
         $width = 256;
         $height = 256;
 
+        if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
+        if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
+
+
         $sql = "select latitude,longtitude,ssid,mac,id_source from wifi
             where latitude > ? and latitude < ?
             and longtitude > ? and longtitude < ?";
@@ -158,7 +165,9 @@ class WifiPresenter extends BasePresenter {
             }
         }
         $timenew = microtime(true);
-        imagestring($my_img, 3, 20, 9, ($timenew - $timeold)*1000, $text_colour);
+        imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
+
+
         header( "Content-type: image/png" );
         imagepng( $my_img );
         imagecolordeallocate( $my_img,$line_colour );
