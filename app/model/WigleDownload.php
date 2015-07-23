@@ -4,6 +4,10 @@ namespace App\Model;
 
 class WigleDownload extends Download implements \IDownload {
 
+    const ID_SOURCE = 2;
+    const MAX_RESULTS_COUNT = 100;
+
+
 	private $user;
 	private $password;
 	/**
@@ -49,15 +53,15 @@ class WigleDownload extends Download implements \IDownload {
         $ch = curl_init();
         curl_setopt ($ch, CURLOPT_COOKIEJAR, "cookie.txt"); 
         curl_setopt ($ch, CURLOPT_COOKIEFILE, "cookie.txt"); 
-        curl_setopt($ch, CURLOPT_URL,"https://wigle.net/gpsopen/gps/GPSDB/confirmquery");
+        curl_setopt($ch, CURLOPT_URL,"https://wigle.net/api/v1/jsonSearch");
         // how many parameters to post
         curl_setopt($ch, CURLOPT_POST, 5);
         // post parameters
-        curl_setopt($ch, CURLOPT_POSTFIELDS,"longrange1=$longmin&longrange2=$longmax&latrange1=$latmin&latrange2=$latmax&simple=true");
+        curl_setopt($ch, CURLOPT_POSTFIELDS,"longrange1=$longmin&longrange2=$longmax&latrange1=$latmin&latrange2=$latmax");
         curl_setopt( $ch, CURLOPT_COOKIESESSION, true );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		curl_setopt( $ch, CURLOPT_AUTOREFERER, true );
-        curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+		///curl_setopt( $ch, CURLOPT_AUTOREFERER, true );
+       // curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
         curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  2);
@@ -66,8 +70,39 @@ class WigleDownload extends Download implements \IDownload {
         curl_close ($ch); 
         return $result;
     }
-    
-    
+
+
+    public function parseLine($line) {
+        $wifi = new Wifi();
+
+        $wifi->setMac($line['netid']);
+        $wifi->setSsid($line['ssid']);
+        $wifi->setComment(trim($line['comment']));
+        $wifi->setName(trim($line['name']));
+        $wifi->setType($line['type']);
+        $wifi->setFreenet($line['freenet']);
+        $wifi->setPaynet($line['paynet']);
+        $wifi->setFirsttime(new \Nette\Utils\DateTime($line['firsttime']));
+        $wifi->setLasttime(new \Nette\Utils\DateTime($line['lasttime']));
+        $wifi->setFlags($line['flags']);
+        $wifi->setWep($line['wep']);
+        $wifi->setLatitude((double)$line['trilat']);
+        $wifi->setLongtitude((double)$line['trilong']);
+        $wifi->setLastupdt($line['lastupdt']);
+        $wifi->setChannel((int)$line['channel']);
+        $wifi->setBcninterval($line['bcninterval']);
+        $wifi->setQos((int)$line['qos']);
+        $wifi->setSource(self::ID_SOURCE);
+
+        return $wifi;
+
+    }
+
+    /**
+     * parseLine old -> wigle změnil funkčnost
+     * @param $line
+     * @return Wifi
+
     public function parseLine($line) {
         $wifi = new Wifi();
         
@@ -94,38 +129,45 @@ class WigleDownload extends Download implements \IDownload {
         return $wifi;
 
     }
-    
+    */
     
     public function download() {
         $this->loginToWigle($this->user, $this->password);
         
-        // TODO: sestaveni dotazu - urceni dat ktera chci stahnout
-        
         $query = $this->database->query("select id,lat_start,lat_end,lon_start,lon_end from download_queue where downloaded=0 order by rand() limit 1")->fetch();
 
 		dump($query);
-        // getDataFromWigle
-        // start: 15.5,50.1
+
 
         $results = $this->getDataFromWigle($query['lon_start'], $query['lon_end'],$query['lat_start'], $query['lat_end']);
-		dump($results);
+        dump($results);
 
         $ws = $this->parseData($results);
+
         dump($ws);
 		$pocet = count($ws);
         if($pocet > 0) {
 			$this->saveAll($ws);
 			$this->database->query("update download_queue set downloaded=1,downloaded_nets_count=$pocet where id=". $query['id']);
 		}
+		else {
+			dump($results);
+		}
+        echo $pocet;
 	}
-   
-    
-    
+
+
+    /**
+     *
+     * parseData OLD -> Wigle změnil funkčnost
+     * @param $data
+     * @return array
+
     private function parseData($data) {
 
         $matches = array();
         preg_match_all("/([A-F0-9:]{17}~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~[^~]*~\d*~\d*~[^~]*~\d*~[^~])/", $data, $matches);
-        dump($matches);
+        //dump($matches);
         
         $ws = array();
         foreach($matches[0] as $m) {
@@ -134,7 +176,18 @@ class WigleDownload extends Download implements \IDownload {
         
         return $ws;
     }
+    */
 
+    private function parseData($results) {
+        $data = json_decode($results,true);
+        $ws = array();
+        foreach($data["results"] as $net) {
+            $ws[] = $this->parseLine($net);
+        }
+
+        return $ws;
+
+    }
 
 	/**
 	 * zadanou velkou plochu rozdeli na mensi - jejich velikost urcena hustotou siti v dane oblasti
@@ -243,8 +296,8 @@ class WigleDownload extends Download implements \IDownload {
     private function improveLatLngRange($lat_start,$lat_end,$lon_start,$lon_end) {
 		$pole = array();
         $pocet = $this->analyzeImage($lat_start,$lat_end,$lon_start,$lon_end);
-        //$pocet = 10;
-        if($pocet > 5000) {
+        $pocet = 10;
+        if($pocet > 1000) {
 
             for($lat = round($lat_start,6); round($lat,6) < round($lat_end,6); $lat += ($lat_end - $lat_start)/2.0) {
                 for ($lon = round($lon_start,6); round($lon,6) < round($lon_end,6); $lon += ($lon_end - $lon_start) / 2.0) {
@@ -298,30 +351,25 @@ class WigleDownload extends Download implements \IDownload {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Must be set to true so that PHP follows any "Location:" header
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  2);
-        $a = curl_exec($ch); // $a will contain all headers
+        curl_exec($ch);
 
-        //dump($a);
+        $headers = get_headers($url,1);
 
-        $a = explode("-url:",$a);
-        $b = explode("Locat",$a[1]);
-        //dump($b[1]);
-
-        $url = "https://wigle.net".trim($b[0]);
-        //echo $url;
-        $a = imagecreatefrompng($url);
+        $url = "https://wigle.net".trim($headers["-url"]);
+        $image = imagecreatefrompng($url);
 
         $points = 0;
         for($x = 0; $x< 256; $x++) {
             for($y = 0; $y<256; $y++) {
-                if(dechex(imagecolorat($a, $x,$y)) == "ff0000") {
+                if(dechex(imagecolorat($image, $x,$y)) != "7a000000") {
                     $points++;
                 }
-                //echo dechex(imagecolorat($a, $x,$y)) . '<br />';
+                //echo dechex(imagecolorat($image, $x,$y)) . '<br />';
             }
         }
         return $points;
