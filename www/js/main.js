@@ -1,36 +1,68 @@
 /* global google */
 
-    var map;
+var map; // google mapa
+
+// pocatecni nastaveni - konstanty
+var INFOWINDOW_MIN_ZOOM = 10; // priblizeni nutne pro zobrazeni info okna
+var INIT_ZOOM = 8; // priblizeni mapy bez zjistene geolokace
+var INIT_CENTER = {lat:49.8,lng:15.5}; // vystredeni mapy bez zjistene geolokace
+var GEOLOCATION_ZOOM = 12; // zoom pri zjistene geolokaci
+
+
 var markers = [];
 
-var request;
-    
-    function initialize() {
-        var mapOptions = {center:{lat:49.5,lng:15.78},zoom:10, draggableCursor: 'default'};
-	    map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+/**
+ * zjisteni hodnot z URL (kvuli moznosti sdileni filtru)
+ */
+var urlVars = getUrlVars();
+console.log(urlVars);
 
+var ssid = (urlVars["ssid"]) ? urlVars["ssid"] : "";
+console.log(ssid);
+
+    function initialize() {
+
+        var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default'};
+	    map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
+
+        // get user location by HTML5
+        if(navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                map.setCenter(new google.maps.LatLng(position.coords.latitude,position.coords.longitude));
+                map.setZoom(GEOLOCATION_ZOOM);
+            });
+        }
+
+        // prekryvna vrstva
         map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 
+        // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {
-            var url = location.protocol + "//" + location.host + location.pathname + "wifi/processClick";
+            console.log(map.getZoom());
+            if(map.getZoom() >= INFOWINDOW_MIN_ZOOM) {
+                var url = location.protocol + "//" + location.host + location.pathname + "wifi/processClick";
 
-            var bounds = map.getBounds();
+                var bounds = map.getBounds();
 
-            $.ajax({url: url,data: {
-                click_lat: event.latLng.lat(),
-                click_lon: event.latLng.lng(),
-                map_lat1: bounds.getSouthWest().lat(),
-                map_lat2: bounds.getNorthEast().lat(),
-                map_lon1: bounds.getSouthWest().lng(),
-                map_lon2: bounds.getNorthEast().lng(),
-                zoom: map.getZoom()
-            }}).done(function(data){
-                var infoWindow = new google.maps.InfoWindow();
+                $.ajax({
+                    url: url, data: {
+                        click_lat: event.latLng.lat(),
+                        click_lon: event.latLng.lng(),
+                        map_lat1: bounds.getSouthWest().lat(),
+                        map_lat2: bounds.getNorthEast().lat(),
+                        map_lon1: bounds.getSouthWest().lng(),
+                        map_lon2: bounds.getNorthEast().lng(),
+                        zoom: map.getZoom()
+                    }
+                }).done(function (data) {
+                    var infoWindow = new google.maps.InfoWindow();
 
-                infoWindow.setContent(data);
-                infoWindow.setPosition(new google.maps.LatLng(event.latLng.lat(),event.latLng.lng()));
-                infoWindow.open(map);
-            });
+                    infoWindow.setContent(data);
+                    infoWindow.setPosition(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
+                    infoWindow.open(map);
+                });
+            }
+
         })
 
    
@@ -93,9 +125,12 @@ CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
 
     var bod = MERCATOR.getTileBounds({x: coord.x, y: coord.y, z: zoom});
     var img = ownerDocument.createElement('img');
-    console.log(    )
     var url = location.protocol + "//" + location.host + location.pathname + "wifi/image";
     img.src = url+'?lat1='+bod.sw.lat+'&lat2='+bod.ne.lat+'&lon1='+bod.sw.lng + '&lon2='+bod.ne.lng + '&zoom='+zoom;
+    if(ssid != "") {
+        img.src += "&ssid="+ssid;
+    }
+    img.alt = "wifimap";
     return img;
   };
   
@@ -141,4 +176,21 @@ MERCATOR={
     return tile;
   }
 
+}
+
+function form() {
+    console.log("submit");
+    ssid = $("#form-ssid").val();
+    window.location.hash = "ssid=" + ssid;
+    map.overlayMapTypes.removeAt(0);
+    map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+    return false;
+}
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[#&]+([^=&]+)=([^&#]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
 }
