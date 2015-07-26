@@ -5,9 +5,11 @@
 
     <div id="search">
         <h1>Vyhledávání</h1>
-        <form onsubmit="return form()" method="post">
+        <form onsubmit="return searchFormSubmit()" method="post">
             <input type="text" name="ssid" id="form-ssid" />
             <input type="submit" />
         </form>
+
+        <button onclick="return resetAllFilters()">Zrušit filtr</button>
     </div>
 {/block}
