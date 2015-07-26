@@ -55,7 +55,7 @@ form .error {
 html.js .jshidden {
 	display: none;
 }
-#map-canvas {
+#mapa {
     height: 100%;
     width: 80%;
     float: left;

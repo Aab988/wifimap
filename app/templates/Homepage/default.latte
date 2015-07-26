@@ -1,12 +1,12 @@
 {block content}
-    <div id="map-canvas"></div>
+    <div id="mapa"></div>
     <input id="pac-input" class="controls" type="text" placeholder="Vyhledat adresu..">
 
 
     <div id="search">
         <h1>Vyhledávání</h1>
-        <form action="">
-            <input type="text" name="ssid" />
+        <form onsubmit="return form()" method="post">
+            <input type="text" name="ssid" id="form-ssid" />
             <input type="submit" />
         </form>
     </div>

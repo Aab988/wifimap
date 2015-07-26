@@ -112,7 +112,10 @@ class WifiPresenter extends BasePresenter {
     
     
     public function renderImage($lat1, $lat2, $lon1, $lon2, $zoom) {
-        $timeold = microtime(true);
+        $ssid = "";
+        $ssid = $this->getHttpRequest()->getQuery("ssid");
+
+
 
         $width = 256;
         $height = 256;
@@ -120,11 +123,14 @@ class WifiPresenter extends BasePresenter {
         if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
         if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
 
-
+        $timeold = microtime(true);
         $sql = "select latitude,longtitude,ssid,mac,id_source from wifi
             where latitude > ? and latitude < ?
             and longtitude > ? and longtitude < ?";
 
+        if($ssid != "") {
+            $sql.= " and ssid like '%$ssid%'";
+        }
         
         $wf = $this->database->query($sql,$lat1,$lat2,$lon1,$lon2)->fetchAll();
 
