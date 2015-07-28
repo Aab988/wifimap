@@ -13,18 +13,26 @@ var IMAGE_URL = location.protocol + "//" + location.host + location.pathname + "
 
 var markers = [];
 
+// url parametry -> sem pridavat vsechny
+var hashParams = {};
 /**
  * zjisteni hodnot z URL (kvuli moznosti sdileni filtru)
  */
 var urlVars = getUrlVars();
 console.log(urlVars);
-
+hashParams = getUrlVars();
 var ssid = (urlVars["ssid"]) ? urlVars["ssid"] : "";
 init();
 
+if(hashParams.gm) {
+    var res = hashParams.gm.split("%2C");
+    INIT_CENTER = {lat: parseFloat(res[0]), lng: parseFloat(res[1])};
+    INIT_ZOOM = parseInt(res[2]);
+}
+
     function init() {
         $("#form-ssid").val(ssid);
-
+        hashParams.ssid = ssid;
 
     }
     function initializeMap() {
@@ -33,7 +41,7 @@ init();
 	    map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
 
         // get user location by HTML5
-        if(navigator.geolocation) {
+        if(navigator.geolocation && !hashParams.gm) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 map.setCenter(new google.maps.LatLng(position.coords.latitude,position.coords.longitude));
                 map.setZoom(GEOLOCATION_ZOOM);
@@ -67,6 +75,13 @@ init();
                 });
             }
         });
+
+        google.maps.event.addListener(map,'idle', function() {
+            var gmString = map.getCenter().lat()+","+map.getCenter().lng()+","+map.getZoom();
+            hashParams.gm = gmString;
+            window.location.hash = $.param(hashParams);
+        });
+
 
         // google maps search
 
@@ -132,11 +147,11 @@ CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
         lon2: bod.ne.lng,
         zoom:zoom
     };
-    if(ssid != "") {
+   /* if(ssid != "") {
         params.ssid = ssid;
-    }
+    }*/
 
-    img.src = IMAGE_URL +"?" + $.param(params);
+    img.src = IMAGE_URL +"?" + $.param($.extend(params,hashParams));
     img.alt = "wifimap";
     return img;
 };
@@ -148,7 +163,9 @@ function redrawOverlay() {
 
 function searchFormSubmit() {
     ssid = $("#form-ssid").val();
-    window.location.hash = $.param({mode: "SEARCH", ssid: ssid});
+    hashParams.mode = 'SEARCH';
+    hashParams.ssid = ssid;
+    window.location.hash = $.param(hashParams);
     redrawOverlay();
     return false;
 }
@@ -165,8 +182,10 @@ function getUrlVars() {
  * zruseni vsech nastaveni - modu a jeho parametru
  */
 function resetAllFilters() {
-    ssid = "";
-    window.location.hash = "";
+    delete hashParams.ssid;
+    delete hashParams.mode;
+    console.log(hashParams);
+    window.location.hash = $.param(hashParams);
 
 
     redrawOverlay();
