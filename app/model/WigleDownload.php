@@ -140,20 +140,27 @@ class WigleDownload extends Download implements \IDownload {
 
 
         $results = $this->getDataFromWigle($query['lon_start'], $query['lon_end'],$query['lat_start'], $query['lat_end']);
+
         dump($results);
 
-        $ws = $this->parseData($results);
+        if(json_decode($results,true)["success"]) {
+            $ws = $this->parseData($results);
 
-        dump($ws);
-		$pocet = count($ws);
-        if($pocet > 0) {
-			$this->saveAll($ws);
-			$this->database->query("update download_queue set downloaded=1,downloaded_nets_count=$pocet where id=". $query['id']);
-		}
-		else {
-			dump($results);
-		}
-        echo $pocet;
+            dump($ws);
+            $pocet = count($ws);
+            if($pocet > 0) {
+                /**
+                 * TODO: nastavit downloaded na 1 v pripade ze bud je vic nez 0 nebo dotaz prosel ale zaroven vratil 0 siti protoze tam realne zadne nejsou
+                 */
+                $this->saveAll($ws);
+                $this->database->query("update download_queue set downloaded=1,downloaded_nets_count=$pocet where id=". $query['id']);
+            }
+            echo $pocet;
+        }
+        else {
+            echo "too many queries";
+        }
+
 	}
 
 
