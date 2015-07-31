@@ -32,14 +32,14 @@ if(hashParams.gm) {
 
     function init() {
         $("#form-ssid").val(ssid);
-        hashParams.ssid = ssid;
+        //hashParams.ssid = ssid;
+        hashParams.mode = (hashParams.mode) ? hashParams.mode : "MODE_ALL";
 
     }
     function initializeMap() {
 
-        var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default'};
+        var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
 	    map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
-
         // get user location by HTML5
         if(navigator.geolocation && !hashParams.gm) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -147,11 +147,10 @@ CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
         lon2: bod.ne.lng,
         zoom:zoom
     };
-   /* if(ssid != "") {
-        params.ssid = ssid;
-    }*/
 
-    img.src = IMAGE_URL +"?" + $.param($.extend(params,hashParams));
+    params = $.extend(params,hashParams);
+    delete params.gm;
+    img.src = IMAGE_URL +"?" + $.param(params);
     img.alt = "wifimap";
     return img;
 };
@@ -163,7 +162,7 @@ function redrawOverlay() {
 
 function searchFormSubmit() {
     ssid = $("#form-ssid").val();
-    hashParams.mode = 'SEARCH';
+    hashParams.mode = 'MODE_SEARCH';
     hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();

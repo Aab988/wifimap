@@ -6,7 +6,7 @@ class Wifi extends Nette\Object {
     private $ssid = "";
     private $sec = 0;
     private $latitude = 0;
-    private $longtitude = 0;
+    private $longitude = 0;
     private $altitude = 0;
     private $comment = "";
     private $name = "";
@@ -41,8 +41,8 @@ class Wifi extends Nette\Object {
         return $this->latitude;
     }
 
-    public function getLongtitude() {
-        return $this->longtitude;
+    public function getLongitude() {
+        return $this->longitude;
     }
 
     public function getAltitude() {
@@ -117,8 +117,8 @@ class Wifi extends Nette\Object {
         $this->latitude = $latitude;
     }
 
-    public function setLongtitude($longtitude) {
-        $this->longtitude = $longtitude;
+    public function setLongitude($longtitude) {
+        $this->longitude = $longtitude;
     }
 
     public function setAltitude($altitude) {

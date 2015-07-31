@@ -1,73 +1,49 @@
 <?php
 
 namespace App\Presenters;
+use App\Model\OverlayRenderer;
+use App\Model\WifiManager;
 use Nette;
-use App\Model\Wifi;
 //use Nette\Caching\Cache;
 
 class WifiPresenter extends BasePresenter {
-    public $database;
+
+    /**
+     * @var WifiManager
+     * @inject
+     */
+    public $wifiManager;
+
+    /**
+     * @var OverlayRenderer
+     * @inject
+     */
+    public $overlayRenderer;
+
    // private $cache;
+    // TODO: podle aktualniho modu vybirat a vracet/zobrazovat data (aby se po kliknuti nezobrazovali i jine site než jsou vlastnì aktualnì vidìt)
 
 
-
-
-    public function __construct(Nette\Database\Context $database) {
-		$this->database = $database;
-        
+    /*
+    public function __construct() {
         // cache
-     /*   $storage = new Nette\Caching\Storages\FileStorage('../temp/sql_cache');
-        $this->cache = new Cache($storage);*/
+        $storage = new Nette\Caching\Storages\FileStorage('../temp/sql_cache');
+        $this->cache = new Cache($storage);
     }
+    */
 
     public function renderProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2) {
-        $deltaLon = $map_lon2 - $map_lon1;
-        if($map_lon2 < $map_lon1) {
-            $deltaLon = $map_lon1 - $map_lon2;
+        // dostane MÓD -> podle nìj si vytáhne daná data a vykreslí
+        $mode = $this->getHttpRequest()->getQuery("mode");
+        switch($mode) {
+            case 'MODE_SEARCH':
+                // TODO: search mode
+                break;
+			default:
+				// mode ALL
+				break;
         }
-
-        $deltaLat = $map_lat2 - $map_lat1;
-        if($map_lat2 < $map_lat1) {
-            $deltaLat = $map_lat1 - $map_lat2;
-        }
-
-        $lat1 = (doubleval($click_lat)-0.03*$deltaLat);
-        $lat2 = (doubleval($click_lat)+0.03*$deltaLat);
-
-        if($lat1 > $lat2) {
-            $pom = $lat2;
-            $lat2 = $lat1;
-            $lat1 = $pom;
-        }
-
-        $lon1 = (doubleval($click_lon)-0.03*$deltaLon);
-        $lon2 = (doubleval($click_lon)+0.03*$deltaLon);
-
-        if($lon1 > $lon2) {
-            $pom = $lon1;
-            $lon1 = $lon2;
-            $lon2 = $pom;
-        }
-
-        $sql = "select latitude,longtitude,ssid,mac,altitude,channel, SQRT(POW(latitude-$click_lat,2)+POW(longtitude-$click_lon,2)) as distance
-                from wifi
-                where latitude > $lat1 and latitude < $lat2 and longtitude > $lon1 and longtitude < $lon2
-                order by distance";
-
-        $wf = $this->database->query($sql);
-        $array = array();
-        foreach($wf as $key=>$w) {
-            $wifi = new Wifi();
-            $wifi->setLatitude($w->latitude);
-            $wifi->setLongtitude($w->longtitude);
-            $wifi->setSsid($w->ssid);
-            $wifi->setMac($w->mac);
-            $wifi->setChannel($w->channel);
-            $wifi->setAltitude($w->altitude);
-
-            $array[] = $wifi;
-        }
-        $this->template->nets = $array;
+        $this->template->nets = $this->wifiManager->getNetsProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2);
     }
     
     public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom) {
@@ -109,76 +85,47 @@ class WifiPresenter extends BasePresenter {
         echo json_encode($array);
         
     }
-    
-    
-    public function renderImage($lat1, $lat2, $lon1, $lon2, $zoom) {
-        $ssid = "";
-        $ssid = $this->getHttpRequest()->getQuery("ssid");
 
+    /*
+     * MODY
+     *
+     * MODE_ALL - vsechny site
+     * MODE_ONE_SOURCE - pouze jeden zdroj
+     * MODE_SEARCH - vyhledavani
+     * MODE_HIGHLIGHT - oznaceni podle parametru
+     * MODE_FREE - pouze volne site
+     * MODE_ONE - jedna sit
+     * MODE_CALCULATED_POSITION - vypoctena pozice site
+     *
+     */
 
+    /// TODO: v kazdym case mit jen volani jedne funkce z modelu -> predat vsechny parametry a model uz si prebere co vyuzije a co ne
+    public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
 
-        $width = 256;
-        $height = 256;
+        switch($mode) {
+            case 'MODE_SEARCH':
+                // vyhledavani
+				$ssid = $this->getHttpRequest()->getQuery("ssid");
+				$nets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
+				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
+				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
+                break;
 
-        if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
-        if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
+            default:
+                // normalni zobrazeni - vsechny site
+				$lat1 = doubleval($lat1); $lat2 = doubleval($lat2);
+				$lon1 = doubleval($lon1); $lon2 = doubleval($lon2);
 
-        $timeold = microtime(true);
-        $sql = "select latitude,longtitude,ssid,mac,id_source from wifi
-            where latitude > ? and latitude < ?
-            and longtitude > ? and longtitude < ?";
+				if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
+				if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
 
-        if($ssid != "") {
-            $sql.= " and ssid like '%$ssid%'";
+				$nets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
+				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
+				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
+                break;
         }
-        
-        $wf = $this->database->query($sql,$lat1,$lat2,$lon1,$lon2)->fetchAll();
-
-        $my_img = imagecreate( $width, $height );
-        
-        $imc = imagecolorallocate($my_img, 255, 0, 0);
-        $background = imagecolortransparent( $my_img, $imc );
-        $text_colour = imagecolorallocate( $my_img, 0, 0, 0 );
-        $line_colour = imagecolorallocate( $my_img, 255, 0, 0 );
-
-        $wigle_colour = imagecolorallocate($my_img, 0,255,0);
-
-
-        $one_pixel_lat = ($lat2 - $lat1) / $width;
-        $one_pixel_lon = ($lon2 - $lon1) / $height;
-
-        foreach($wf as $w) {
-            $y = $height - (($w->latitude - $lat1) / (double)$one_pixel_lat);
-            $x = ($w->longtitude - $lon1) / (double)$one_pixel_lon;
-
-            $x = round($x);
-            $y = round($y);
-
-            if($x < 0) { $x = -$x;}
-            if($y< 0) {$y = -$y;}
-
-            if($x < $width && $y < $height && imagecolorat($my_img, $x,$y) == $line_colour) {
-                $x++; $y++;
-            }
-            if($w->id_source== 2) {
-                imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $wigle_colour);
-            }
-            else {
-                imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $line_colour);
-            }
-            if($zoom > 18) {
-             imagestring($my_img, 1, $x+7, $y, $w->ssid, $text_colour);
-            }
-        }
-        $timenew = microtime(true);
-        imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
-
-
-        header( "Content-type: image/png" );
-        imagepng( $my_img );
-        imagecolordeallocate( $my_img,$line_colour );
-        imagecolordeallocate($my_img ,$text_colour );
-        imagecolordeallocate( $my_img,$background );
-        imagedestroy( $my_img );
+		header( "Content-type: image/png" );
+		imagepng( $img );
     }
+
 }
