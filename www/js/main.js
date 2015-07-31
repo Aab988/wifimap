@@ -54,18 +54,21 @@ if(hashParams.gm) {
         // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {
             if(map.getZoom() >= INFOWINDOW_MIN_ZOOM) {
-
                 var bounds = map.getBounds();
+                var params = {
+                    click_lat: event.latLng.lat(),
+                    click_lon: event.latLng.lng(),
+                    map_lat1: bounds.getSouthWest().lat(),
+                    map_lat2: bounds.getNorthEast().lat(),
+                    map_lon1: bounds.getSouthWest().lng(),
+                    map_lon2: bounds.getNorthEast().lng(),
+                    zoom: map.getZoom()
+                };
+                params = $.extend(params,hashParams);
+                delete params.gm;
+
                 $.ajax({
-                    url: PROCESS_CLICK_URL, data: {
-                        click_lat: event.latLng.lat(),
-                        click_lon: event.latLng.lng(),
-                        map_lat1: bounds.getSouthWest().lat(),
-                        map_lat2: bounds.getNorthEast().lat(),
-                        map_lon1: bounds.getSouthWest().lng(),
-                        map_lon2: bounds.getNorthEast().lng(),
-                        zoom: map.getZoom()
-                    }
+                    url: PROCESS_CLICK_URL, data: params
                 }).done(function (data) {
                     var infoWindow = new google.maps.InfoWindow();
 

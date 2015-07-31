@@ -23,7 +23,6 @@ class WifiPresenter extends BasePresenter {
    // private $cache;
     // TODO: podle aktualniho modu vybirat a vracet/zobrazovat data (aby se po kliknuti nezobrazovali i jine site než jsou vlastnì aktualnì vidìt)
 
-
     /*
     public function __construct() {
         // cache
@@ -32,9 +31,36 @@ class WifiPresenter extends BasePresenter {
     }
     */
 
+	/**
+	 * vytvori pole parametru podle hodnot v query
+	 *
+	 * @return mixed
+	 */
+	private function createParamsArray() {
+		$r = $this->getHttpRequest();
+
+		$params["ssid"] = $r->getQuery("ssid");
+
+		return $params;
+	}
+
     public function renderProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2) {
+        if($map_lat2 < $map_lat1) {
+            $tmp = $map_lat1;
+            $map_lat1 = $map_lat2;
+            $map_lat2 = $tmp;
+        }
+        if($map_lon2 < $map_lon1) {
+            $tmp = $map_lon1;
+            $map_lon1 = $map_lon2;
+            $map_lon2 = $tmp;
+        }
+
         // dostane MÓD -> podle nìj si vytáhne daná data a vykreslí
-        $mode = $this->getHttpRequest()->getQuery("mode");
+        $params = $this->getHttpRequest()->getQuery();
+		$mode = $this->getHttpRequest()->getQuery("mode");
+
+		dump($this->getHttpRequest());
         switch($mode) {
             case 'MODE_SEARCH':
                 // TODO: search mode
@@ -43,7 +69,7 @@ class WifiPresenter extends BasePresenter {
 				// mode ALL
 				break;
         }
-        $this->template->nets = $this->wifiManager->getNetsProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2);
+        $this->template->nets = $this->wifiManager->getNetsProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2, $params);
     }
     
     public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom) {
