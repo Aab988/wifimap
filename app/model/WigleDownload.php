@@ -87,7 +87,7 @@ class WigleDownload extends Download implements \IDownload {
         $wifi->setFlags($line['flags']);
         $wifi->setWep($line['wep']);
         $wifi->setLatitude((double)$line['trilat']);
-        $wifi->setLongtitude((double)$line['trilong']);
+        $wifi->setLongitude((double)$line['trilong']);
         $wifi->setLastupdt($line['lastupdt']);
         $wifi->setChannel((int)$line['channel']);
         $wifi->setBcninterval($line['bcninterval']);
@@ -119,7 +119,7 @@ class WigleDownload extends Download implements \IDownload {
         $wifi->setFlags(trim($p[9]));
         $wifi->setWep($p[10]);
         $wifi->setLatitude((double)$p[11]);
-        $wifi->setLongtitude((double)$p[12]);
+        $wifi->setLongitude((double)$p[12]);
         $wifi->setLastupdt($p[13]);
         $wifi->setChannel((int)$p[14]);
         $wifi->setBcninterval(trim($p[15]));

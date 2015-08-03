@@ -41,8 +41,8 @@ class DownloadPresenter extends BasePresenter {
 	 *
 	 * @param $start_lat pocatecni latitude
 	 * @param $end_lat koncova latitude
-	 * @param $start_lon pocatecni longtitude
-	 * @param $end_lon koncova longtitude
+	 * @param $start_lon pocatecni longitude
+	 * @param $end_lon koncova longitude
 	 */
     public function renderPrepareWigleDownload($start_lat, $end_lat, $start_lon, $end_lon) {
 		// ceska republika rozsah

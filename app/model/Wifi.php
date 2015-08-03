@@ -117,8 +117,8 @@ class Wifi extends Nette\Object {
         $this->latitude = $latitude;
     }
 
-    public function setLongitude($longtitude) {
-        $this->longitude = $longtitude;
+    public function setLongitude($longitude) {
+        $this->longitude = $longitude;
     }
 
     public function setAltitude($altitude) {

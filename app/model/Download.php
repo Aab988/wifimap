@@ -72,7 +72,7 @@ class Download extends Nette\Object {
             "ssid" => $wifi->getSsid(),
             "sec" => $wifi->getSec(),
             "latitude" => $wifi->getLatitude(),
-            "longtitude" => $wifi->getLongtitude(),
+            "longitude" => $wifi->getLongitude(),
             "altitude" => $wifi->getAltitude(),
             "comment" => $wifi->getComment(),
             "name" => $wifi->getName(),

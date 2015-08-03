@@ -28,7 +28,7 @@ class WifileaksDownload extends Download implements \IDownload {
         $wifi->setSsid($array[1]);
         $wifi->setSec($array[2]);
         $wifi->setLatitude(doubleval($array[3]));
-        $wifi->setLongtitude(doubleval($array[4]));
+        $wifi->setLongitude(doubleval($array[4]));
         $wifi->setAltitude(doubleval($array[5]));
         $wifi->setSource(self::ID_ZDROJ);
 
