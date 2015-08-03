@@ -22,56 +22,29 @@ class WifiPresenter extends BasePresenter {
 
    // private $cache;
     // TODO: podle aktualniho modu vybirat a vracet/zobrazovat data (aby se po kliknuti nezobrazovali i jine site než jsou vlastnì aktualnì vidìt)
-
-    /*
-    public function __construct() {
+    /* public function __construct() {
         // cache
         $storage = new Nette\Caching\Storages\FileStorage('../temp/sql_cache');
         $this->cache = new Cache($storage);
+    } */
+
+
+
+    public function renderProcessClick() {
+
+                echo $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
+
+            $this->terminate();
     }
-    */
 
-	/**
-	 * vytvori pole parametru podle hodnot v query
-	 *
-	 * @return mixed
-	 */
-	private function createParamsArray() {
-		$r = $this->getHttpRequest();
 
-		$params["ssid"] = $r->getQuery("ssid");
 
-		return $params;
-	}
-
-    public function renderProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2) {
-        if($map_lat2 < $map_lat1) {
-            $tmp = $map_lat1;
-            $map_lat1 = $map_lat2;
-            $map_lat2 = $tmp;
-        }
-        if($map_lon2 < $map_lon1) {
-            $tmp = $map_lon1;
-            $map_lon1 = $map_lon2;
-            $map_lon2 = $tmp;
-        }
-
-        // dostane MÓD -> podle nìj si vytáhne daná data a vykreslí
-        $params = $this->getHttpRequest()->getQuery();
-		$mode = $this->getHttpRequest()->getQuery("mode");
-
-		dump($this->getHttpRequest());
-        switch($mode) {
-            case 'MODE_SEARCH':
-                // TODO: search mode
-                break;
-			default:
-				// mode ALL
-				break;
-        }
-        $this->template->nets = $this->wifiManager->getNetsProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2, $params);
+    public function renderGetnetbyid() {
+        //dump($this->getHttpRequest()->getQuery("id"));
+        echo $this->wifiManager->getNetByIdJSON($this->getHttpRequest()->getQuery("net"));
+        $this->terminate();
     }
-    
+
     public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom) {
         
         // spocitam rozdil latitud a longtitud
@@ -87,7 +60,7 @@ class WifiPresenter extends BasePresenter {
         $lon1c = $lon1 - (0 * $dlon);
         $lon2c = $lon2 + (0 * $dlon);
     
-        $sql = "select latitude,longtitude,ssid,mac from wifi where latitude > $lat1c and latitude < $lat2c and longtitude > $lon1c and longtitude < $lon2c";
+        $sql = "select latitude,longitude,ssid,mac from wifi where latitude > $lat1c and latitude < $lat2c and longitude > $lon1c and longitude < $lon2c";
        
         if($zoom < 19) {
             $sql .= " limit 500";
@@ -101,7 +74,7 @@ class WifiPresenter extends BasePresenter {
             $wf = $this->database->query($sql);
             $array = array();
             foreach($wf as $w) {
-                $a = array("ssid" => $w->ssid, "latitude"=>$w->latitude, "longtitude"=>$w->longtitude, "mac"=>$w->mac);
+                $a = array("ssid" => $w->ssid, "latitude"=>$w->latitude, "longitude"=>$w->longitude, "mac"=>$w->mac);
                 $array[] = $a;
             }
         

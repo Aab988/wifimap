@@ -87,20 +87,38 @@ class WifiManager extends Nette\Object {
 		return $q->fetchAll();
 	}
 
+	public function getNetByIdJSON($id) {
+		$w = $this->database->table("wifi")->select("id,channel,latitude,longitude,altitude,mac,ssid")->where("id = ?",$id)->fetch();
+		return json_encode(array("detail"=>$w->toArray()));
+	}
 
-	/**
-	 * vrati site v okoli bodu kliknuti
-	 * @param float $click_lat latitude bodu kliknuti
-	 * @param float $click_lon longitude bodu kliknuti
-	 * @param float $map_lat1 nejmensi latitude mapy
-	 * @param float $map_lat2 nejvetsi latitude mapy
-	 * @param float $map_lon1 nejmensi longitude mapy
-	 * @param float $map_lon2 nejvetsi longitude mapy
-	 * @param array $params parametry vyhledavani, nastaveni
-	 * @return array
-	 */
-	public function getNetsProcessClick($click_lat, $click_lon, $map_lat1, $map_lat2, $map_lon1, $map_lon2, $params) {
+
+
+	public function getNetsProcessClick(Nette\Http\Request $request) {
 		// vypocet rozdilu latitude a longitude
+
+
+		$click_lat = doubleval($request->getQuery("click_lat"));
+		$click_lon = doubleval($request->getQuery("click_lon"));
+		$map_lat1 = doubleval($request->getQuery("map_lat1"));
+		$map_lat2 = doubleval($request->getQuery("map_lat2"));
+		$map_lon1 = doubleval($request->getQuery("map_lon1"));
+		$map_lon2 = doubleval($request->getQuery("map_lon2"));
+
+		if($map_lat2 < $map_lat1) {
+			$tmp = $map_lat1;
+			$map_lat1 = $map_lat2;
+			$map_lat2 = $tmp;
+		}
+		if($map_lon2 < $map_lon1) {
+			$tmp = $map_lon1;
+			$map_lon1 = $map_lon2;
+			$map_lon2 = $tmp;
+		}
+
+		$params = array("ssid"=>$request->getQuery("ssid"));
+
+
 		$deltaLon = abs($map_lon2 - $map_lon1);
 		$deltaLat = abs($map_lat2 - $map_lat1);
 
@@ -112,23 +130,36 @@ class WifiManager extends Nette\Object {
 		$lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $deltaLon);
 
 		$sql = $this->getSearchQuery($lat1,$lat2,$lon1,$lon2,$params);
-		$sql->select("channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
+		$sql->select("id,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
 		$sql->order("distance");
 
 		$wf = $sql->fetchAll();
+
 		$array = array();
-		foreach($wf as $key=>$w) {
-			$wifi = new Wifi();
+		$array["count"] = count($wf);
+		$array["detail"] = $sql->fetch()->toArray();
+
+
+		/*dump($wf);
+		dump(array_slice($wf,1,5,true));*/
+
+		foreach(array_slice($wf,1,5,true) as $key=>$w) {
+			/*$wifi = new Wifi();
 			$wifi->setLatitude($w->latitude);
 			$wifi->setLongitude($w->longitude);
 			$wifi->setSsid($w->ssid);
 			$wifi->setMac($w->mac);
 			$wifi->setChannel($w->channel);
-			$wifi->setAltitude($w->altitude);
+			$wifi->setAltitude($w->altitude);*/
+			if($key != $array["detail"]["id"]) {
+				$wa = $w->toArray();
+				$p = array("id"=>$wa["id"],"ssid"=>$wa["ssid"]);
+				$array["others"][] = $p;
+			}
 
-			$array[] = $wifi;
 		}
-		return $array;
+
+		return json_encode($array);
 	}
 
 }

@@ -36,6 +36,42 @@ if(hashParams.gm) {
         hashParams.mode = (hashParams.mode) ? hashParams.mode : "MODE_ALL";
 
     }
+
+
+    function createInfoWindowContent(data) {
+        var content = "<b>" + data.detail.ssid + "</b>";
+        content += "<table>" +
+            "<tr><td>Latitude:</td><td>"+data.detail.latitude+"</td></tr>" +
+            "<tr><td>Longitude:</td><td>"+data.detail.longitude+"</td></tr>" +
+            "<tr><td>Altitude:</td><td>"+data.detail.altitude+"</td></tr>" +
+            "<tr><td>MAC:</td><td>" + data.detail.mac + "</td></tr>";
+        if(data.detail.channel) {
+            content+="<tr><td>Kanál:</td><td>"+data.detail.channel+"</td></tr>";
+        }
+        content += "</table>";
+        if(data.others) {
+            content += "<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: " + (data.count-1) +" - pro zpřesnění informací přibližte mapu</span><br />";
+            for(var i = 0; i < data.others.length; i++) {
+                content += "<a href=\"\" onclick=\"return changeIW(" + data.others[i].id + ");\">" + data.others[i].id + " </a><br />";
+            }
+        }
+        return content;
+    }
+
+    function createInfoWindow(content,position) {
+        var infoWindow = new google.maps.InfoWindow();
+        infoWindow.setContent(content);
+        infoWindow.setPosition(position);
+        infoWindow.open(map);
+    }
+
+    function changeIW(id) {
+        $.getJSON(location.protocol + "//" + location.host + location.pathname + "wifi/getnetbyid", {net: id}, function(data) {
+           createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude))
+        });
+        return false;
+    }
+
     function initializeMap() {
 
         var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
@@ -67,14 +103,8 @@ if(hashParams.gm) {
                 params = $.extend(params,hashParams);
                 delete params.gm;
 
-                $.ajax({
-                    url: PROCESS_CLICK_URL, data: params
-                }).done(function (data) {
-                    var infoWindow = new google.maps.InfoWindow();
-
-                    infoWindow.setContent(data);
-                    infoWindow.setPosition(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
-                    infoWindow.open(map);
+                $.getJSON(PROCESS_CLICK_URL,params,function(data){
+                    createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
                 });
             }
         });
@@ -186,7 +216,7 @@ function getUrlVars() {
 function resetAllFilters() {
     delete hashParams.ssid;
     delete hashParams.mode;
-    console.log(hashParams);
+    //console.log(hashParams);
     window.location.hash = $.param(hashParams);
 
 
