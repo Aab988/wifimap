@@ -237,6 +237,5 @@ function resetAllFilters() {
     //console.log(hashParams);
     window.location.hash = $.param(hashParams);
 
-
     redrawOverlay();
 }

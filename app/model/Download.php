@@ -1,28 +1,31 @@
 <?php
-
 namespace App\Model;
-
 use Nette;
 
 /**
  *
- * Zajistuje praci s databazi (vkladani zaznamu)
+ * Save Wifis into DB
  *
  * Class Download
  * @package App\Model
  */
 class Download extends Nette\Object {
+
+    /**
+     * @var Nette\Database\Context
+     */
     protected $database;
-    
-     
-    
+
+    /**
+     * @param Nette\Database\Context $database
+     */
     public function __construct(Nette\Database\Context $database) {
         $this->database = $database;
     }
 
     /**
-     * ulozi jednu Wifi sit
-     * @param Wifi $wifi sit
+     * save one Wi-fi network into DB
+     * @param Wifi $wifi
      */
     protected function saveSimpleInsert(Wifi $wifi) {
         try {
@@ -34,8 +37,8 @@ class Download extends Nette\Object {
     }
 
     /**
-     * ulozi cele pole Wifi siti
-     * @param array $wifis pole Wifi objektu
+     * save whole array of Wi-Fi networks
+     * @param Wifi[] $wifis
      */
     protected function saveAll(array $wifis) {
         foreach($wifis as $wifi) {
@@ -44,9 +47,10 @@ class Download extends Nette\Object {
     }
 
     /**
-     * vlozi do DB zaznamy multiinsertem
-     * @param array $wifis pole Wifi objektu
-     * @param $howmany int pocet kolik objektu ukladat zaroven v multiinsertu
+     * save whole array into DB using multiinsert query
+     *
+     * @param Wifi[] $wifis
+     * @param $howmany int how many rows insert at once
      */
     protected function saveMultiInsert(array $wifis, $howmany) {
         $data = array();
@@ -61,9 +65,10 @@ class Download extends Nette\Object {
     }
 
     /**
-     * vytvori z objektu pole pro vlozeni do DB
-     * @param Wifi $wifi jedna wifi sit
-     * @return array pole pro vlozeni do db
+     * change Wi-Fi object to associative array
+     *
+     * @param Wifi $wifi
+     * @return array
      */
     private function prepareArrayForDB(Wifi $wifi) {
         $array = array(
