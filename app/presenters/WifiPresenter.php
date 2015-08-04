@@ -109,7 +109,13 @@ class WifiPresenter extends BasePresenter {
 				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
 				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
                 break;
-
+            case 'MODE_HIGHLIGHT':
+                $ssid = $this->getHttpRequest()->getQuery("ssid");
+                $allNets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
+                $highlitedNets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
+                $zoom = intval($this->getHttpRequest()->getQuery("zoom"));
+                $img = $this->overlayRenderer->drawModeHighlight($lat1,$lat2,$lon1,$lon2,$zoom,$allNets,$highlitedNets);
+                break;
             default:
                 // normalni zobrazeni - vsechny site
 				$lat1 = doubleval($lat1); $lat2 = doubleval($lat2);

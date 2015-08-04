@@ -31,7 +31,9 @@ if(hashParams.gm) {
 }
 
     function init() {
-        $("#form-ssid").val(ssid);
+        if(hashParams.mode == 'MODE_SEARCH') {
+            $("#form-ssid").val(ssid);
+        }
         //hashParams.ssid = ssid;
         hashParams.mode = (hashParams.mode) ? hashParams.mode : "MODE_ALL";
 
@@ -49,6 +51,12 @@ if(hashParams.gm) {
             content+="<tr><td>Kanál:</td><td>"+data.detail.channel+"</td></tr>";
         }
         content += "</table>";
+
+        content += "<form onclick=\"return highlightFormSubmit(this);\">";
+        content += "<input type=\"submit\" value=\"Označit\" />";
+        content += "<input type=\"hidden\" name=\"ssid\" value=\""+ data.detail.ssid +"\">";
+        content += "</form>";
+
         if(data.others) {
             content += "<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: " + (data.count-1) +" - pro zpřesnění informací přibližte mapu</span><br />";
             for(var i = 0; i < data.others.length; i++) {
@@ -199,6 +207,16 @@ function searchFormSubmit() {
     hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();
+    return false;
+}
+
+function highlightFormSubmit(form) {
+    var ssid = form["ssid"].value;
+    hashParams.mode = "MODE_HIGHLIGHT";
+    hashParams.ssid = ssid;
+    window.location.hash = $.param(hashParams);
+    redrawOverlay();
+
     return false;
 }
 

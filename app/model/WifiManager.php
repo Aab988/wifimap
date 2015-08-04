@@ -52,7 +52,7 @@ class WifiManager extends Nette\Object {
 	private function getSearchQuery($lat1,$lat2,$lon1,$lon2,$params) {
 
 		$q = $this->getNetsRangeQuery($lat1,$lat2,$lon1,$lon2);
-		$q->select("latitude,longitude,ssid,mac,id_source");
+		$q->select("id,latitude,longitude,ssid,mac,id_source");
 		$q->where("ssid LIKE ?", "%".$params["ssid"]."%");
 		return $q;
 	}
@@ -95,9 +95,8 @@ class WifiManager extends Nette\Object {
 
 
 	public function getNetsProcessClick(Nette\Http\Request $request) {
+
 		// vypocet rozdilu latitude a longitude
-
-
 		$click_lat = doubleval($request->getQuery("click_lat"));
 		$click_lon = doubleval($request->getQuery("click_lon"));
 		$map_lat1 = doubleval($request->getQuery("map_lat1"));
@@ -116,9 +115,6 @@ class WifiManager extends Nette\Object {
 			$map_lon2 = $tmp;
 		}
 
-		$params = array("ssid"=>$request->getQuery("ssid"));
-
-
 		$deltaLon = abs($map_lon2 - $map_lon1);
 		$deltaLat = abs($map_lat2 - $map_lat1);
 
@@ -129,15 +125,30 @@ class WifiManager extends Nette\Object {
 		$lon1 = (doubleval($click_lon) - self::CLICK_POINT_CIRCLE_RADIUS * $deltaLon);
 		$lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $deltaLon);
 
-		$sql = $this->getSearchQuery($lat1,$lat2,$lon1,$lon2,$params);
-		$sql->select("id,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
-		$sql->order("distance");
 
+		switch($request->getQuery("mode")) {
+			case 'MODE_HIGHLIGHT':
+				$sql = $this->getNetsRangeQuery($lat1,$lat2,$lon1,$lon2);
+				break;
+
+			case 'MODE_SEARCH':
+				$params = array("ssid"=>$request->getQuery("ssid"));
+				$sql = $this->getSearchQuery($lat1,$lat2,$lon1,$lon2,$params);
+				break;
+
+			default:
+				$sql = $this->getNetsRangeQuery($lat1,$lat2,$lon1,$lon2);
+		}
+		$sql->select("id,latitude,longitude,ssid,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
+		$sql->order("distance");
 		$wf = $sql->fetchAll();
 
 		$array = array();
 		$array["count"] = count($wf);
-		$array["detail"] = $sql->fetch()->toArray();
+		$fetch = $sql->fetch();
+		if($fetch) {
+			$array["detail"] = $fetch->toArray();
+		}
 
 
 		/*dump($wf);
