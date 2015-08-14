@@ -87,18 +87,42 @@ class WifiManager extends Nette\Object {
 		return $q->fetchAll();
 	}
 
+
+
+
+
 	public function getNetByIdJSON($id) {
+
 		$w = $this->database->table("wifi")->select("id,channel,latitude,longitude,altitude,mac,ssid")->where("id = ?",$id)->fetch();
+
+
 		return json_encode(array("detail"=>$w->toArray()));
+	}
+
+
+	private function getDetailById($id) {
+		return $this->database->table("wifi")->where("id",$id)->fetch();
 	}
 
 
 
 	public function getNetsProcessClick(Nette\Http\Request $request) {
 
-		// vypocet rozdilu latitude a longitude
-		$click_lat = doubleval($request->getQuery("click_lat"));
-		$click_lon = doubleval($request->getQuery("click_lon"));
+		$detail = null;
+
+		if($request->getQuery("net")) {
+			$id = intval($request->getQuery("net"));
+			$detail = $this->getDetailById($id)->toArray();
+
+			$click_lat = $detail["latitude"];
+			$click_lon = $detail["longitude"];
+		}
+		else {
+			$click_lat = doubleval($request->getQuery("click_lat"));
+			$click_lon = doubleval($request->getQuery("click_lon"));
+		}
+
+
 		$map_lat1 = doubleval($request->getQuery("map_lat1"));
 		$map_lat2 = doubleval($request->getQuery("map_lat2"));
 		$map_lon1 = doubleval($request->getQuery("map_lon1"));
@@ -126,6 +150,7 @@ class WifiManager extends Nette\Object {
 		$lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $deltaLon);
 
 
+
 		switch($request->getQuery("mode")) {
 			case 'MODE_HIGHLIGHT':
 				$sql = $this->getNetsRangeQuery($lat1,$lat2,$lon1,$lon2);
@@ -139,38 +164,31 @@ class WifiManager extends Nette\Object {
 			default:
 				$sql = $this->getNetsRangeQuery($lat1,$lat2,$lon1,$lon2);
 		}
-		$sql->select("id,latitude,longitude,ssid,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
+
+
+		$sql->select("id,mac,latitude,longitude,ssid,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
 		$sql->order("distance");
-		$wf = $sql->fetchAll();
 
-		$array = array();
-		$array["count"] = count($wf);
-		$fetch = $sql->fetch();
-		if($fetch) {
-			$array["detail"] = $fetch->toArray();
+
+		if($detail == null) {
+			$detail = $sql->fetch()->toArray();
 		}
 
 
-		/*dump($wf);
-		dump(array_slice($wf,1,5,true));*/
+		$wf = $sql->fetchPairs("id");
+		$nbs = $wf;
+		unset($nbs[$detail["id"]]);
 
-		foreach(array_slice($wf,1,5,true) as $key=>$w) {
-			/*$wifi = new Wifi();
-			$wifi->setLatitude($w->latitude);
-			$wifi->setLongitude($w->longitude);
-			$wifi->setSsid($w->ssid);
-			$wifi->setMac($w->mac);
-			$wifi->setChannel($w->channel);
-			$wifi->setAltitude($w->altitude);*/
-			if($key != $array["detail"]["id"]) {
-				$wa = $w->toArray();
-				$p = array("id"=>$wa["id"],"ssid"=>$wa["ssid"]);
-				$array["others"][] = $p;
-			}
-
+		$json = array();
+		$json["count"] = count($wf);
+		$json["detail"] = $detail;
+		foreach(array_slice($nbs,0,5,true) as $nb) {
+			$json["others"][] = $nb->toArray();
 		}
 
-		return json_encode($array);
+
+
+		return json_encode($json);
 	}
 
 }

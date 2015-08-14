@@ -8,6 +8,25 @@ use Nette;
 
 class WifiPresenter extends BasePresenter {
 
+    // MODES
+    /*
+* MODY
+*
+* MODE_ALL - vsechny site
+* MODE_ONE_SOURCE - pouze jeden zdroj
+* MODE_SEARCH - vyhledavani
+* MODE_HIGHLIGHT - oznaceni podle parametru
+* MODE_FREE - pouze volne site
+* MODE_ONE - jedna sit
+* MODE_CALCULATED_POSITION - vypoctena pozice site
+*
+*/
+
+    const MODE_ALL = "MODE_ALL";
+    const MODE_SEARCH = "MODE_SEARCH";
+    const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
+
+
     /**
      * @var WifiManager
      * @inject
@@ -85,18 +104,6 @@ class WifiPresenter extends BasePresenter {
         
     }
 
-    /*
-     * MODY
-     *
-     * MODE_ALL - vsechny site
-     * MODE_ONE_SOURCE - pouze jeden zdroj
-     * MODE_SEARCH - vyhledavani
-     * MODE_HIGHLIGHT - oznaceni podle parametru
-     * MODE_FREE - pouze volne site
-     * MODE_ONE - jedna sit
-     * MODE_CALCULATED_POSITION - vypoctena pozice site
-     *
-     */
 
     /// TODO: v kazdym case mit jen volani jedne funkce z modelu -> predat vsechny parametry a model uz si prebere co vyuzije a co ne
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {

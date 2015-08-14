@@ -19,6 +19,11 @@
 
 <body>
 	<script> document.documentElement.className+=' js' </script>
+	<script>
+		var MODE_ALL = {App\Presenters\WifiPresenter::MODE_ALL};
+		var MODE_SEARCH = {App\Presenters\WifiPresenter::MODE_SEARCH};
+		var MODE_HIGHLIGHT = {App\Presenters\WifiPresenter::MODE_HIGHLIGHT};
+	</script>
 
 	<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{$flash->message}</div>
 

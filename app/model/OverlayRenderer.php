@@ -56,7 +56,7 @@ class OverlayRenderer extends Nette\Object {
 			}
 		}
 		$timenew = microtime(true);
-		imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
+		//imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
 
 		return $my_img;
 
@@ -120,7 +120,7 @@ class OverlayRenderer extends Nette\Object {
 			}
 		}
 		$timenew = microtime(true);
-		imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
+		//imagestring($my_img, 3, 20, 9, round(($timenew - $timeold)*1000,2) . ' ms', $text_colour);
 
 		return $my_img;
 	}

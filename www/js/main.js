@@ -1,47 +1,50 @@
 /* global google */
 
-var map; // google mapa
+var map; // google map object
 
-// pocatecni nastaveni - konstanty
-var INFOWINDOW_MIN_ZOOM = 10; // priblizeni nutne pro zobrazeni info okna
-var INIT_ZOOM = 8; // priblizeni mapy bez zjistene geolokace
-var INIT_CENTER = {lat:49.8,lng:15.5}; // vystredeni mapy bez zjistene geolokace
-var GEOLOCATION_ZOOM = 12; // zoom pri zjistene geolokaci
+// initial configuration - constants
+var INFOWINDOW_MIN_ZOOM = 10; // zoom needed for showing infowindow
+var INIT_ZOOM = 8; // initial zoom without user geolocation
+var INIT_CENTER = {lat:49.8,lng:15.5}; // initial map center without user geolocation
+var GEOLOCATION_ZOOM = 12; // zoom with user geolocation
 
 var PROCESS_CLICK_URL = location.protocol + "//" + location.host + location.pathname + "wifi/processClick";
 var IMAGE_URL = location.protocol + "//" + location.host + location.pathname + "wifi/image";
 
+// google maps search markers
 var markers = [];
 
-// url parametry -> sem pridavat vsechny
+var mainInfoWindow;
+
+// params in URL
 var hashParams = {};
-/**
- * zjisteni hodnot z URL (kvuli moznosti sdileni filtru)
- */
-var urlVars = getUrlVars();
-console.log(urlVars);
+// get URL params and values - share feature
 hashParams = getUrlVars();
-var ssid = (urlVars["ssid"]) ? urlVars["ssid"] : "";
 init();
 
-if(hashParams.gm) {
-    var res = hashParams.gm.split("%2C");
-    INIT_CENTER = {lat: parseFloat(res[0]), lng: parseFloat(res[1])};
-    INIT_ZOOM = parseInt(res[2]);
-}
+    if(hashParams.gm) {
+        var res = hashParams.gm.split("%2C");
+        INIT_CENTER = {lat: parseFloat(res[0]), lng: parseFloat(res[1])};
+        INIT_ZOOM = parseInt(res[2]);
+    }
 
+    // set some params - share feature
     function init() {
-        if(hashParams.mode == 'MODE_SEARCH') {
-            $("#form-ssid").val(ssid);
-        }
-        //hashParams.ssid = ssid;
-        hashParams.mode = (hashParams.mode) ? hashParams.mode : "MODE_ALL";
+        switch (hashParams.mode) {
+            case MODE_SEARCH:
+                if(hashParams.ssid) $("#form-ssid").val(hashParams.ssid);
+                break;
 
+        }
+        hashParams.mode = (hashParams.mode) ? hashParams.mode : MODE_ALL;
     }
 
 
     function createInfoWindowContent(data) {
-        var content = "<b>" + data.detail.ssid + "</b>";
+        var name = (data.detail.ssid.trim() != "") ? data.detail.ssid : data.detail.mac;
+
+
+        var content = "<b>" + name + "</b>";
         content += "<table>" +
             "<tr><td>Latitude:</td><td>"+data.detail.latitude+"</td></tr>" +
             "<tr><td>Longitude:</td><td>"+data.detail.longitude+"</td></tr>" +
@@ -60,7 +63,7 @@ if(hashParams.gm) {
         if(data.others) {
             content += "<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: " + (data.count-1) +" - pro zpřesnění informací přibližte mapu</span><br />";
             for(var i = 0; i < data.others.length; i++) {
-                content += "<a href=\"\" onclick=\"return changeIW(" + data.others[i].id + ");\">" + data.others[i].id + " </a><br />";
+                content += "<a href=\"\" onclick=\"return changeIW(" + data.others[i].id +");\">" + ((data.others[i].ssid.trim() != "") ? data.others[i].ssid : data.others[i].mac) + " </a><br />";
             }
         }
         return content;
@@ -70,12 +73,22 @@ if(hashParams.gm) {
         var infoWindow = new google.maps.InfoWindow();
         infoWindow.setContent(content);
         infoWindow.setPosition(position);
+        mainInfoWindow = infoWindow;
         infoWindow.open(map);
     }
 
     function changeIW(id) {
-        $.getJSON(location.protocol + "//" + location.host + location.pathname + "wifi/getnetbyid", {net: id}, function(data) {
-           createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude))
+        var bounds = map.getBounds();
+
+        $.getJSON(location.protocol + "//" + location.host + location.pathname + "wifi/processClick", {
+            net: id,
+            map_lat1: bounds.getSouthWest().lat(),
+            map_lat2: bounds.getNorthEast().lat(),
+            map_lon1: bounds.getSouthWest().lng(),
+            map_lon2: bounds.getNorthEast().lng()
+        }, function(data) {
+            mainInfoWindow.setContent(createInfoWindowContent(data));
+            mainInfoWindow.setPosition(new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
         });
         return false;
     }
@@ -83,7 +96,7 @@ if(hashParams.gm) {
     function initializeMap() {
 
         var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
-	    map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
+        map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
         // get user location by HTML5
         if(navigator.geolocation && !hashParams.gm) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -123,8 +136,7 @@ if(hashParams.gm) {
             window.location.hash = $.param(hashParams);
         });
 
-
-        // google maps search
+                // google maps search
 
         var input = (document.getElementById('pac-input'));
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
@@ -203,7 +215,7 @@ function redrawOverlay() {
 
 function searchFormSubmit() {
     ssid = $("#form-ssid").val();
-    hashParams.mode = 'MODE_SEARCH';
+    hashParams.mode = MODE_SEARCH;
     hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();
@@ -211,8 +223,9 @@ function searchFormSubmit() {
 }
 
 function highlightFormSubmit(form) {
+
     var ssid = form["ssid"].value;
-    hashParams.mode = "MODE_HIGHLIGHT";
+    hashParams.mode = MODE_HIGHLIGHT;
     hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();

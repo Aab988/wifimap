@@ -3,11 +3,15 @@ namespace App\Model;
 
 class WifileaksDownload extends Download implements \IDownload {
 
-    const ID_ZDROJ = 1;
+    /**
+     * Wifileaks ID from DB
+     */
+    const ID_SOURCE = 1;
+
 
     /**
-     * rozparsuje cely soubor a vlozi data do DB
-     * @param string $file_name cesta k souboru
+     * main method - parse whole file and save into DB
+     * @param string $file_name
      */
     public function download($file_name = "") {
         if($file_name != "") {
@@ -17,9 +21,9 @@ class WifileaksDownload extends Download implements \IDownload {
     }
 
     /**
-     * rozparsuje jeden radek a vytvori z nej Wifi objekt
-     * @param $line String jeden radek k rozprasovani
-     * @return Wifi objekt s wifi siti
+     * parse one line and create Wifi object
+     * @param string $line
+     * @return Wifi
      */
     private function parseLine($line) {
         $wifi = new Wifi();
@@ -30,15 +34,15 @@ class WifileaksDownload extends Download implements \IDownload {
         $wifi->setLatitude(doubleval($array[3]));
         $wifi->setLongitude(doubleval($array[4]));
         $wifi->setAltitude(doubleval($array[5]));
-        $wifi->setSource(self::ID_ZDROJ);
-
+        $wifi->setSource(self::ID_SOURCE);
         return $wifi;
     }
 
+
     /**
-     * rozparsuje cely soubor
-     * @param $fileName String cesta k souboru
-     * @return array pole Wifi
+     * parse whole file
+     * @param string $fileName
+     * @return Wifi[]
      */
     private function parseData($fileName) {
         $fh = fopen($fileName, 'r');
