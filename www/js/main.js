@@ -79,14 +79,17 @@ init();
 
     function changeIW(id) {
         var bounds = map.getBounds();
-
-        $.getJSON(location.protocol + "//" + location.host + location.pathname + "wifi/processClick", {
+        var params = {
             net: id,
             map_lat1: bounds.getSouthWest().lat(),
             map_lat2: bounds.getNorthEast().lat(),
             map_lon1: bounds.getSouthWest().lng(),
             map_lon2: bounds.getNorthEast().lng()
-        }, function(data) {
+        };
+        params = $.extend(params,hashParams);
+        delete params.gm;
+
+        $.getJSON(PROCESS_CLICK_URL, params, function(data) {
             mainInfoWindow.setContent(createInfoWindowContent(data));
             mainInfoWindow.setPosition(new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
         });

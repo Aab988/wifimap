@@ -18,10 +18,7 @@ class WifiManager extends Nette\Object {
 	}
 
 	/**
-	 * sestavi dotaz s omezenim rozsahu latitude a longitude<br>
-	 * -> vytvori select *<br>
-	 * pro zmenu selectu na vysledku funkce zavolat ->select("sloupec1,sloupec2,..")
-	 * 		- zde nutnost vyjmenovat vsechny potrebne sloupce
+	 * create query with latitude and longitude range<br>
 	 *
 	 * @param float $lat1
 	 * @param float $lat2
@@ -40,13 +37,13 @@ class WifiManager extends Nette\Object {
 
 
 	/**
-	 * sestavi dotaz pro vyhledavani, pomoci parametru sestavi filtr
+	 * create search query by associative params array
 	 *
-	 * @param float $lat1 nejmensi latitude
-	 * @param float $lat2 nejvetsi latitude
-	 * @param float $lon1 nejmensi longitude
-	 * @param float $lon2 nejvetsilongitude
-	 * @param array $params asociativni pole parametru
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
+	 * @param array $params associative array with params ($param => $value)
 	 * @return Nette\Database\Table\Selection
 	 */
 	private function getSearchQuery($lat1,$lat2,$lon1,$lon2,$params) {
@@ -59,12 +56,12 @@ class WifiManager extends Nette\Object {
 
 
 	/**
-	 * vrati data siti v dane plose
+	 * return nets data in passed lat lng range
 	 *
-	 * @param float $lat1 nejmensi latitude
-	 * @param float $lat2 nejvyssi latitude
-	 * @param float $lon1 nejmensi longitude
-	 * @param float $lon2 nejvyssi longitude
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2) {
@@ -73,13 +70,13 @@ class WifiManager extends Nette\Object {
 	}
 
 	/**
-	 * vrati vyhledavane site podle zadanych parametru
+	 * return searched nets by params
 	 *
-	 * @param float $lat1 nejmensi latitude
-	 * @param float $lat2 nejvetsi latitude
-	 * @param float $lon1 nejmensi longitude
-	 * @param float $lon2 nejvetsi longitude
-	 * @param array $params asociativni pole parametru
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
+	 * @param array $params associative array with params
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getNetsModeSearch($lat1,$lat2,$lon1,$lon2,$params) {
@@ -87,25 +84,22 @@ class WifiManager extends Nette\Object {
 		return $q->fetchAll();
 	}
 
-
-
-
-
-	public function getNetByIdJSON($id) {
-
-		$w = $this->database->table("wifi")->select("id,channel,latitude,longitude,altitude,mac,ssid")->where("id = ?",$id)->fetch();
-
-
-		return json_encode(array("detail"=>$w->toArray()));
-	}
-
-
-	private function getDetailById($id) {
+	/**
+	 * return one net details by ID
+	 *
+	 * @param $id
+	 * @return bool|mixed|Nette\Database\Table\IRow
+	 */
+	public function getDetailById($id) {
 		return $this->database->table("wifi")->where("id",$id)->fetch();
 	}
 
-
-
+	/**
+	 *	get JSON with nets - use MODE and get only sites which are visible in that MODES
+	 *
+	 * @param Nette\Http\Request $request
+	 * @return string JSON formated array
+	 */
 	public function getNetsProcessClick(Nette\Http\Request $request) {
 
 		$detail = null;

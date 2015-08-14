@@ -40,7 +40,6 @@ class WifiPresenter extends BasePresenter {
     public $overlayRenderer;
 
    // private $cache;
-    // TODO: podle aktualniho modu vybirat a vracet/zobrazovat data (aby se po kliknuti nezobrazovali i jine site než jsou vlastnì aktualnì vidìt)
     /* public function __construct() {
         // cache
         $storage = new Nette\Caching\Storages\FileStorage('../temp/sql_cache');
@@ -50,19 +49,10 @@ class WifiPresenter extends BasePresenter {
 
 
     public function renderProcessClick() {
-
-                echo $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
-
-            $this->terminate();
-    }
-
-
-
-    public function renderGetnetbyid() {
-        //dump($this->getHttpRequest()->getQuery("id"));
-        echo $this->wifiManager->getNetByIdJSON($this->getHttpRequest()->getQuery("net"));
+        echo $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
         $this->terminate();
     }
+
 
     public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom) {
         
@@ -105,8 +95,7 @@ class WifiPresenter extends BasePresenter {
     }
 
 
-    /// TODO: v kazdym case mit jen volani jedne funkce z modelu -> predat vsechny parametry a model uz si prebere co vyuzije a co ne
-    public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
+      public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
 
         switch($mode) {
             case 'MODE_SEARCH':
