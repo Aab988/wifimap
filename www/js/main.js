@@ -16,6 +16,8 @@ var markers = [];
 
 var mainInfoWindow;
 
+var userEditableRectangleBounds;
+
 // params in URL
 var hashParams = {};
 // get URL params and values - share feature
@@ -108,8 +110,11 @@ init();
             });
         }
 
+
+
+
         // prekryvna vrstva
-        map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+      //  map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 
         // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {
@@ -254,4 +259,97 @@ function resetAllFilters() {
     window.location.hash = $.param(hashParams);
 
     redrawOverlay();
+}
+
+
+
+function beginWigleRequest() {
+    var center = map.getCenter();
+    var bounds = map.getBounds();
+
+    var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
+    var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
+
+    if(deltaLat / 2 > 0.04) {
+        deltaLat = 0.08;
+    }
+    if(deltaLon /2 > 0.08) {
+        deltaLon = 0.16;
+    }
+
+    var bounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(center.lat() - deltaLat/6, center.lng() - deltaLon/6),
+        new google.maps.LatLng(center.lat() + deltaLat/6, center.lng() + deltaLon/6)
+    );
+
+    var rectangle = new google.maps.Rectangle({
+        map: map,
+        bounds: bounds,
+        draggable: true,
+        editable: true
+    });
+
+    $("#beginWigleRequest").hide();
+
+    userEditableRectangleBounds = rectangle.getBounds();
+
+
+
+    rectangle.addListener("bounds_changed", function() {
+
+        var bounds = rectangle.getBounds();
+
+        var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
+        var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
+
+
+        var deltaNElat = Math.abs(bounds.getNorthEast().lat() - userEditableRectangleBounds.getNorthEast().lat());
+        var deltaNElon = Math.abs(bounds.getNorthEast().lng() - userEditableRectangleBounds.getNorthEast().lng());
+
+        var deltaSWlat = Math.abs(bounds.getSouthWest().lat() - userEditableRectangleBounds.getSouthWest().lat());
+        var deltaSWlon = Math.abs(bounds.getSouthWest().lng() - userEditableRectangleBounds.getSouthWest().lng());
+
+        var nBounds = {
+            lat1: bounds.getSouthWest().lat(),
+            lat2: bounds.getNorthEast().lat(),
+            lon1: bounds.getSouthWest().lng(),
+            lon2: bounds.getNorthEast().lng()
+        };
+
+        console.log(nBounds);
+
+        var tooBig = false;
+        if(deltaLat / 2 > 0.021) {
+
+            if(deltaNElat > 0) {
+                nBounds.lat2 = nBounds.lat1 + 0.04;
+            }
+            if(deltaSWlat > 0) {
+                nBounds.lat1 = nBounds.lat2 - 0.04;
+            }
+            tooBig = true;
+        }
+        if(deltaLon/2 > 0.041) {
+
+            if(deltaNElon > 0) {
+                nBounds.lon2 = nBounds.lon1 + 0.08;
+            }
+            if(deltaSWlon > 0) {
+                nBounds.lon1 = nBounds.lon2 - 0.08;
+            }
+            tooBig = true;
+        }
+
+        // southWest, northEast
+        bounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(nBounds.lat1, nBounds.lon1),
+            new google.maps.LatLng(nBounds.lat2, nBounds.lon2)
+        );
+
+        if(tooBig) {
+            rectangle.setBounds(bounds);
+        }
+        userEditableRectangleBounds = rectangle.getBounds();
+
+    });
 }

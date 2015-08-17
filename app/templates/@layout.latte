@@ -28,14 +28,30 @@
 	<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{$flash->message}</div>
 
 	{include content}
+  	<div id="search">
+        <h1>Vyhledávání</h1>
+        <form onsubmit="return searchFormSubmit()" method="post">
+            <input type="text" name="ssid" id="form-ssid" />
+            <input type="submit" />
+        </form>
 
+        <button onclick="return resetAllFilters()">Zrušit filtr</button>
+		<br />
+		<button id="beginWigleRequest" onclick="beginWigleRequest()">Požádat o stažení z Wigle</button>
+
+		<h3>Zobrazení</h3>
+        <div id="menu">
+        	<a href="">Volné sítě</a>
+        	<a href="">Vypočtené polohy sítí</a>
+        	<a href="">Statistiky</a>
+        </div>
+    </div>
 	{block scripts}
   	<script src="{$basePath}/js/jquery.js"></script>
 	<script src="{$basePath}/js/netteForms.js"></script>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
 	<script src="{$basePath}/js/mercator.js"></script>
 	<script src="{$basePath}/js/main.js"></script>
-
 	{/block}
 </body>
 </html>
