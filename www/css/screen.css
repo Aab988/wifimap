@@ -128,3 +128,8 @@ html.js .jshidden {
 .padding-10 {
     padding: 10px;
 }
+
+
+#wigleCreateRequest {
+    display: none;
+}

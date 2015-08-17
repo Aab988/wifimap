@@ -56,5 +56,14 @@ class DownloadPresenter extends BasePresenter {
         // $this->wigleDownload->generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end);
 		$this->terminate();
     }
-    
+
+
+
+    public function renderAddWigleRequest($lat1,$lat2,$lon1,$lon2) {
+        echo "wigle request";
+
+        echo $this->wigleDownload->processWigleRequestCreation($lat1,$lat2,$lon1,$lon2);
+        $this->terminate();
+    }
+
 }

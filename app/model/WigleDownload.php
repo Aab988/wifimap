@@ -427,4 +427,79 @@ class WigleDownload extends Download implements \IDownload {
 		return $coords;
 	}
 
+    /**
+     * adds wigle request to wigle requests queue to DB
+     *
+     * @param float $lat_start
+     * @param float $lat_end
+     * @param float $lon_start
+     * @param float $lon_end
+     */
+    public function addWigleRequest($lat_start, $lat_end, $lon_start, $lon_end) {
+        $this->database->query("insert into wigle_request", array(
+            "date"=> new DateTime(),
+            "lat_start" => $lat_start,
+            "lat_end" => $lat_end,
+            "lon_start" => $lon_start,
+            "lon_end" => $lon_end,
+            "processed" => 'N'
+        ));
+    }
+
+
+    private function getRequestAlreadyExistingInLatLngRange($lat_start, $lat_end, $lon_start, $lon_end) {
+        $query = $this->database->table("wigle_request")
+            ->where("lat_start <= ?",$lat_start)
+            ->where("lat_end >= ?", $lat_end)
+            ->where("lon_start <= ?",$lon_start)
+            ->where("lon_end >= ?", $lon_end);
+        return $query->fetch();
+    }
+
+
+    public function processWigleRequestCreation($lat1,$lat2,$lon1,$lon2) {
+        $lat1 = doubleval($lat1);
+        $lat2 = doubleval($lat2);
+        $lon1 = doubleval($lon1);
+        $lon2 = doubleval($lon2);
+
+        if($lat1 > $lat2) {
+            $tmp = $lat1;
+            $lat1 = $lat2;
+            $lat2 = $tmp;
+        }
+
+        if($lon1 > $lon2) {
+            $tmp = $lon1;
+            $lon1 = $lon2;
+            $lon2 = $tmp;
+        }
+
+
+        $existingRequest = $this->getRequestAlreadyExistingInLatLngRange($lat1,$lat2,$lon1,$lon2);
+
+        if($existingRequest) {
+            // nalezeno
+            $er = $existingRequest->toArray();
+            // pokud processed = N pak je ve frontě a neni staženo
+            if($er["processed"] == "N") {
+                return "tato plocha je již ve frontě";
+            }
+            else {
+                $today = new DateTime();
+                $diff = $today->diff($er["processed_date"]);
+                if($diff->days < 7) {
+                    return "tato plocha byla stažena méně než před týdnem, nelze požadovat aktualizaci dat dříve než týden po jejím stažení";
+                }
+                else {
+                    $this->addWigleRequest($lat1,$lat2,$lon1,$lon2);
+                    return "plocha bude aktualizována";
+                }
+            }
+        }
+        else {
+            $this->addWigleRequest($lat1,$lat2,$lon1,$lon2);
+        }
+    }
+
 }

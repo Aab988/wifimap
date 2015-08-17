@@ -8,8 +8,12 @@ var INIT_ZOOM = 8; // initial zoom without user geolocation
 var INIT_CENTER = {lat:49.8,lng:15.5}; // initial map center without user geolocation
 var GEOLOCATION_ZOOM = 12; // zoom with user geolocation
 
-var PROCESS_CLICK_URL = location.protocol + "//" + location.host + location.pathname + "wifi/processClick";
-var IMAGE_URL = location.protocol + "//" + location.host + location.pathname + "wifi/image";
+var BASE_URL = location.protocol + "//" + location.host + location.pathname;
+
+var PROCESS_CLICK_URL = BASE_URL + "wifi/processClick";
+var IMAGE_URL = BASE_URL + "wifi/image";
+var ADD_WIGLE_REQUEST_URL = BASE_URL + "download/addwiglerequest";
+
 
 // google maps search markers
 var markers = [];
@@ -17,6 +21,7 @@ var markers = [];
 var mainInfoWindow;
 
 var userEditableRectangleBounds;
+var userEditableRectangle;
 
 // params in URL
 var hashParams = {};
@@ -282,7 +287,7 @@ function beginWigleRequest() {
         new google.maps.LatLng(center.lat() + deltaLat/6, center.lng() + deltaLon/6)
     );
 
-    var rectangle = new google.maps.Rectangle({
+    userEditableRectangle = new google.maps.Rectangle({
         map: map,
         bounds: bounds,
         draggable: true,
@@ -290,14 +295,14 @@ function beginWigleRequest() {
     });
 
     $("#beginWigleRequest").hide();
+    $("#wigleCreateRequest").show();
+    userEditableRectangleBounds = userEditableRectangle.getBounds();
 
-    userEditableRectangleBounds = rectangle.getBounds();
 
 
+    userEditableRectangle.addListener("bounds_changed", function() {
 
-    rectangle.addListener("bounds_changed", function() {
-
-        var bounds = rectangle.getBounds();
+        var bounds = userEditableRectangle.getBounds();
 
         var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
         var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
@@ -347,9 +352,33 @@ function beginWigleRequest() {
         );
 
         if(tooBig) {
-            rectangle.setBounds(bounds);
+            userEditableRectangle.setBounds(bounds);
         }
-        userEditableRectangleBounds = rectangle.getBounds();
+        userEditableRectangleBounds = userEditableRectangle.getBounds();
 
     });
+}
+
+
+function createWigleRequest() {
+    var bounds = userEditableRectangle.getBounds();
+
+    // jako vysledek dostanu nejaky html to zobrazim uzivateli
+    $.ajax(ADD_WIGLE_REQUEST_URL, {
+        data: {
+            lat1: bounds.getSouthWest().lat(),
+            lat2: bounds.getNorthEast().lat(),
+            lon1: bounds.getSouthWest().lng(),
+            lon2: bounds.getNorthEast().lng()
+        }
+
+    }).done(function(data) {
+        alert(data);
+        $("#beginWigleRequest").show();
+        $("#wigleCreateRequest").hide();
+        userEditableRectangle.setMap(null);
+        userEditableRectangle = null;
+    });
+
+
 }
