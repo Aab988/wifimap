@@ -10,8 +10,12 @@ html, body {
 
 h1 {
 	color: #3484D2;
+    margin: 5px;
 }
 
+h2 {
+    margin: 5px;
+}
 
 #ajax-spinner {
 	margin: 15px 0 0 15px;
@@ -114,11 +118,13 @@ html.js .jshidden {
     font-weight: 300;
 }
 
-#search {
+#right-panel {
     height: 100%;
     width: 20%;
     background-color: #dddddd;
     float: left;
-
 }
 
+.padding-10 {
+    padding: 10px;
+}
