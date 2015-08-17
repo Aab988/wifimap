@@ -17,7 +17,7 @@ class WigleDownload extends Download implements \IDownload {
 	/**
      * Maximum results returned by wigle to one query
      */
-    const MAX_RESULTS_COUNT = 100;
+    const MAX_RESULTS_COUNT = 500;
 
     /**
      * name of cookie file
@@ -38,6 +38,8 @@ class WigleDownload extends Download implements \IDownload {
 	 * Wigle download overlay image URL
 	 */
 	const WIGLE_IMAGE_OVERLAY_URL = "https://wigle.net/gps/gps/GPSDB/onlinemap2/";
+
+    const WIGLE_QOS_GRAD_IMAGE_URL = "https://wigle.net/images/qos_grad.png";
 
 	/**
 	 * Wigle web url
@@ -60,19 +62,24 @@ class WigleDownload extends Download implements \IDownload {
      */
 	private $generatedCoords = array();
 
-	/**
-	 * create and exec CURL request
-	 *
-	 * @param string $url
-	 * @param array $params associative array, key - param name, value - param value
-	 * @param bool|true $withCookie
-	 * @return mixed CURL result
-	 */
-	private function sendCurlRequest($url,$params,$withCookie = true) {
+    private $wigleNetColors = array();
+
+    /**
+     * create and exec CURL request
+     *
+     * @param string $url
+     * @param array $params associative array, key - param name, value - param value
+     * @param bool|true $withCookie
+     * @param bool $withHeader
+     * @return mixed CURL result
+     */
+	private function sendCurlRequest($url,$params,$withCookie = true,$withHeader = false) {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL,$url);
 		curl_setopt($ch, CURLOPT_POSTFIELDS,http_build_query($params));
-		curl_setopt($ch, CURLOPT_HEADER, true);
+        if($withHeader) {
+            curl_setopt($ch, CURLOPT_HEADER, true);
+        }
 		curl_setopt($ch, CURLOPT_COOKIESESSION, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -86,6 +93,22 @@ class WigleDownload extends Download implements \IDownload {
 		return $result;
 	}
 
+
+    private function fillWigleNetColors() {
+        $image = imagecreatefrompng(self::WIGLE_QOS_GRAD_IMAGE_URL);
+        for($x = 0; $x< 100; $x++) {
+            for($y = 0; $y<12; $y++) {
+                $color = dechex(imagecolorat($image, $x,$y));
+                if(!in_array($color,$this->wigleNetColors)) {
+                    $this->wigleNetColors[] = $color;
+                }
+            }
+        }
+		$this->wigleNetColors[] = "ff0000";
+		$this->wigleNetColors[] = "00ff00";
+    }
+
+
 	/**
 	 * Login to Wigle and save cookie
 	 */
@@ -94,20 +117,26 @@ class WigleDownload extends Download implements \IDownload {
     }
 
 
-	/**
-	 * @param float $longmin
-	 * @param float $longmax
-	 * @param float $latmin
-	 * @param float $latmax
-	 * @return string JSON with Wigle data
-	 */
-    private function getDataFromWigle($longmin, $longmax, $latmin, $latmax) {
-		return $this->sendCurlRequest(self::WIGLE_GETDATA_URL,array(
-			"longrange1"=>$longmin,
-			"longrange2"=>$longmax,
-			"latrange1"=>$latmin,
-			"latrange2"=>$latmax
-		));
+    /**
+     * @param float $longmin
+     * @param float $longmax
+     * @param float $latmin
+     * @param float $latmax
+     * @param int $first
+     * @return string JSON with Wigle data
+     */
+    private function getDataFromWigle($longmin, $longmax, $latmin, $latmax, $first = 0) {
+        $arr = array(
+            "longrange1"=>$longmin,
+            "longrange2"=>$longmax,
+            "latrange1"=>$latmin,
+            "latrange2"=>$latmax
+        );
+        if($first != 0) {
+            $arr["first"] = $first;
+            $arr["last"] = $first + 99;
+        }
+		return $this->sendCurlRequest(self::WIGLE_GETDATA_URL,$arr);
     }
 
     /**
@@ -144,32 +173,52 @@ class WigleDownload extends Download implements \IDownload {
      */
     public function download() {
         $this->loginToWigle();
-        $query = $this->database->table("download_queue")->select("id,lat_start,lat_end,lon_start,lon_end")
+        $query = $this->database->table("download_queue")->select("id,lat_start,lat_end,lon_start,lon_end,from,to")
             ->where("downloaded = ?", 0)
             ->order("rand()")
             ->limit(1)
             ->fetch();
 
-        $results = $this->getDataFromWigle(doubleval($query['lon_start']), doubleval($query['lon_end']), doubleval($query['lat_start']), doubleval($query['lat_end']));
+        $lon_start = doubleval($query['lon_start']);
+        $lon_end = doubleval($query['lon_end']);
+        $lat_start = doubleval($query['lat_start']);
+        $lat_end = doubleval($query['lat_end']);
 
-        if(json_decode($results,true)["success"] == true) {
-            $ws = $this->parseData($results);
+        $results = $this->getDataFromWigle($lon_start, $lon_end, $lat_start, $lat_end, (int) $query["from"]);
+
+        $results_decoded = json_decode($results,true);
+
+        if($results_decoded["success"] == true) {
+            $ws = $this->parseData($results_decoded);
             $this->saveAll($ws);
             $this->database->table("download_queue")
 				->where("id = ?", $query["id"])
                 ->update(array("downloaded"=>1,"downloaded_nets_count"=>count($ws)));
+
+            if((int)$results_decoded["resultCount"] == 100) {
+                $this->database->query("insert into download_queue", array(
+                    "id_source" => self::ID_SOURCE,
+                    "lat_start" => $lat_start,
+                    "lat_end" => $lat_end,
+                    "lon_start" => $lon_start,
+                    "lon_end" => $lon_end,
+                    "downloaded" => 0,
+                    "from" => (int)$results_decoded["last"],
+                    "to" => (int) $results_decoded["last"] + 99
+                ));
+            }
         }
         else {
             echo "too many queries";
         }
+
 	}
 
     /**
-     * @param string $results JSON results
+     * @param $data decoded JSON
      * @return Wifi[]
      */
-    private function parseData($results) {
-        $data = json_decode($results,true);
+    private function parseData($data) {
         $ws = array();
         foreach($data["results"] as $net) {
             $ws[] = $this->parseLine($net);
@@ -186,15 +235,25 @@ class WigleDownload extends Download implements \IDownload {
 	 * @param float $lon_end
 	 */
     public function generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end) {
+        $this->fillWigleNetColors();
 
+
+		//dump($this->wigleNetColors);
 		// rounding to 2 decimal points
         $lat_start = round($lat_start-0.005,2); $lat_end = round($lat_end+0.005,2);
         $lon_start = round($lon_start-0.005,2); $lon_end = round($lon_end+0.005,2);
 
 		$coords = $this->divideLatLngInitially($lat_start, $lat_end, $lon_start, $lon_end);
 
+		$i = 0;
         foreach($coords as $key=>$ar) {
             $coords[$key] = $this->improveLatLngRange($ar["lat_start"],$ar["lat_end"],$ar["lon_start"],$ar["lon_end"]);
+			$i++;
+			$this->database->query("insert into log", array(
+				"operation" => "wiglecrongeneration",
+				"data" => $ar["lat_start"]."|".$ar["lat_end"]."|".$ar["lon_start"]."|".$ar["lon_end"],
+				"procent" => ($i / (double)count($coords)) * 100
+			));
         }
 		$this->iterateArray($coords);
         $this->saveAll2downloadQueue();
@@ -257,8 +316,18 @@ class WigleDownload extends Download implements \IDownload {
     private function improveLatLngRange($lat_start,$lat_end,$lon_start,$lon_end) {
 		$coords = array();
         $count = $this->analyzeImage($lat_start,$lat_end,$lon_start,$lon_end);
+		$this->database->query("insert into log", array(
+			"operation" => "vypocetbarev",
+			"data" => $count,
+			"procent" => 0
+		));
         if($count > self::MAX_RESULTS_COUNT) {
 
+			$this->database->query("insert into log", array(
+				"operation" => "zanoreni",
+				"data" => $count,
+				"procent" => 0
+			));
             for($lat = round($lat_start,6); round($lat,6) < round($lat_end,6); $lat += ($lat_end - $lat_start)/2.0) {
                 for ($lon = round($lon_start,6); round($lon,6) < round($lon_end,6); $lon += ($lon_end - $lon_start) / 2.0) {
 
@@ -274,7 +343,7 @@ class WigleDownload extends Download implements \IDownload {
         }
         else {
             $coords = array("lat_start"=>$lat_start,"lat_end"=>$lat_end,"lon_start"=>$lon_start,"lon_end"=>$lon_end, 'calculated_nets_count'=>$count);
-        }
+		}
         return $coords;
     }
 
@@ -313,10 +382,9 @@ class WigleDownload extends Download implements \IDownload {
         $points = 0;
         for($x = 0; $x< 256; $x++) {
             for($y = 0; $y<256; $y++) {
-                if(dechex(imagecolorat($image, $x,$y)) != "7a000000") {
-                    $points++;
-                }
-                //echo dechex(imagecolorat($image, $x,$y)) . '<br />';
+				if(in_array(dechex(imagecolorat($image, $x,$y)),$this->wigleNetColors)) {
+					$points++;
+				}
             }
         }
         return $points;
