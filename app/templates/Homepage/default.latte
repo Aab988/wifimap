@@ -5,3 +5,21 @@
 
 
 {/block}
+{block menu}
+    <h1>Vyhledávání</h1>
+            <form onsubmit="return searchFormSubmit()" method="post">
+                <input type="text" name="ssid" id="form-ssid" />
+                <input type="submit" />
+            </form>
+
+            <button onclick="return resetAllFilters()">Zrušit filtr</button>
+    		<br />
+    		<button id="beginWigleRequest" onclick="beginWigleRequest()">Požádat o stažení z Wigle</button>
+
+    		<h3>Zobrazení</h3>
+            <div id="menu">
+            	<a href="">Volné sítě</a>
+            	<a href="">Vypočtené polohy sítí</a>
+            	<a href="">Statistiky</a>
+            </div>
+{/block}

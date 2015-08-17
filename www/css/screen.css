@@ -12,6 +12,7 @@ h1 {
 	color: #3484D2;
 }
 
+
 #ajax-spinner {
 	margin: 15px 0 0 15px;
 	padding: 13px;
@@ -55,9 +56,19 @@ form .error {
 html.js .jshidden {
 	display: none;
 }
+
+
+
+#content {
+    float: left;
+    width: 80%;
+    height: 100%;
+}
+
+
 #mapa {
     height: 100%;
-    width: 80%;
+    width: 100%;
     float: left;
 
 }
