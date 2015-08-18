@@ -25,14 +25,11 @@
 
         <button onclick="return resetAllFilters()">Zrušit všechny filtry</button>
 
-        <button id="beginWigleRequest" onclick="beginWigleRequest()">Požádat o stažení z Wigle</button>
-        <div id="wigleCreateRequest">{include wigleCreateRequest}</div>
+        <button id="beginWigleRequest">Požádat o stažení z Wigle</button>
+
+        <div id="wigleRequestInfo"></div>
+
     </div>
 
 {/block}
 
-{block wigleCreateRequest}
-    <p>Na mapě se Vám zobrazil obdélník, jenž si můžete libovolně upravovat. Jediné omezení je v jeho maximální možné velikosti.</p>
-    <p>Po označení vámi vybrané plochy klikněte na tlačítko Požádat o stažení</p>
-    <button onclick="createWigleRequest()">Požádat o stažení</button>
-{/block}

@@ -39,6 +39,9 @@ class WigleDownload extends Download implements \IDownload {
 	 */
 	const WIGLE_IMAGE_OVERLAY_URL = "https://wigle.net/gps/gps/GPSDB/onlinemap2/";
 
+    /**
+     * Wigle QOS grad color image URL
+     */
     const WIGLE_QOS_GRAD_IMAGE_URL = "https://wigle.net/images/qos_grad.png";
 
 	/**
@@ -46,6 +49,10 @@ class WigleDownload extends Download implements \IDownload {
 	 */
 	const WIGLE_URL = "https://wigle.net";
 
+    // error/info return constants
+    const ERR_ALREADY_IN_QUEUE = "ALREADY_IN_QUEUE";
+    const ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
+    const INFO_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
 
 	/**
      * @var string Wigle login
@@ -62,6 +69,9 @@ class WigleDownload extends Download implements \IDownload {
      */
 	private $generatedCoords = array();
 
+    /**
+     * @var array wigle wifi colors
+     */
     private $wigleNetColors = array();
 
     /**
@@ -94,6 +104,9 @@ class WigleDownload extends Download implements \IDownload {
 	}
 
 
+    /**
+     * get colors from wigle net qos grad image
+     */
     private function fillWigleNetColors() {
         $image = imagecreatefrompng(self::WIGLE_QOS_GRAD_IMAGE_URL);
         for($x = 0; $x< 100; $x++) {
@@ -446,7 +459,15 @@ class WigleDownload extends Download implements \IDownload {
         ));
     }
 
-
+    /**
+     * finds if this area is already in download queue
+     *
+     * @param float $lat_start
+     * @param float $lat_end
+     * @param float $lon_start
+     * @param float $lon_end
+     * @return bool|mixed|\Nette\Database\Table\IRow
+     */
     private function getRequestAlreadyExistingInLatLngRange($lat_start, $lat_end, $lon_start, $lon_end) {
         $query = $this->database->table("wigle_request")
             ->where("lat_start <= ?",$lat_start)
@@ -456,7 +477,16 @@ class WigleDownload extends Download implements \IDownload {
         return $query->fetch();
     }
 
-
+    /**
+     * process wigle request and determine what to do
+     * returns status code
+     *
+     * @param mixed|float $lat1
+     * @param mixed|float $lat2
+     * @param mixed|float $lon1
+     * @param mixed|float $lon2
+     * @return bool|string
+     */
     public function processWigleRequestCreation($lat1,$lat2,$lon1,$lon2) {
         $lat1 = doubleval($lat1);
         $lat2 = doubleval($lat2);
@@ -483,23 +513,25 @@ class WigleDownload extends Download implements \IDownload {
             $er = $existingRequest->toArray();
             // pokud processed = N pak je ve frontě a neni staženo
             if($er["processed"] == "N") {
-                return "tato plocha je již ve frontě";
+                return self::ERR_ALREADY_IN_QUEUE;
             }
             else {
                 $today = new DateTime();
                 $diff = $today->diff($er["processed_date"]);
                 if($diff->days < 7) {
-                    return "tato plocha byla stažena méně než před týdnem, nelze požadovat aktualizaci dat dříve než týden po jejím stažení";
+                    return self::ERR_RECENTLY_DOWNLOADED;
                 }
                 else {
                     $this->addWigleRequest($lat1,$lat2,$lon1,$lon2);
-                    return "plocha bude aktualizována";
+                    return self::INFO_ADDED_TO_QUEUE;
                 }
             }
         }
         else {
             $this->addWigleRequest($lat1,$lat2,$lon1,$lon2);
+            return self::INFO_ADDED_TO_QUEUE;
         }
+        return false;
     }
 
 }

@@ -27,5 +27,4 @@ class HomepagePresenter extends BasePresenter
 
 		//$this->template->wifi = $this->database->table("wifi")->where("id_zdroj=2")->order("rand()");
 	}
-
 }

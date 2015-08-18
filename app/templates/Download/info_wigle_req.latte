@@ -1,0 +1,11 @@
+{if $code == App\Model\WigleDownload::ERR_ALREADY_IN_QUEUE}
+<p>Již existuje</p>
+{elseif $code == App\Model\WigleDownload::ERR_RECENTLY_DOWNLOADED}
+<p>tato plocha byla stažena méně než před týdnem, nelze požadovat aktualizaci dat dříve než týden po jejím stažení</p>
+{elseif $code == App\Model\WigleDownload::INFO_ADDED_TO_QUEUE}
+<p>bylo přidáno do fronty</p>
+{else}
+<p>Nastala chyba při přidávání do fronty</p>
+{/if}
+
+<button onclick="endWigleRequest()">Zavřít</button>

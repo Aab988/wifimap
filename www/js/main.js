@@ -15,13 +15,13 @@ var IMAGE_URL = BASE_URL + "wifi/image";
 var ADD_WIGLE_REQUEST_URL = BASE_URL + "download/addwiglerequest";
 
 
+
 // google maps search markers
 var markers = [];
 
 var mainInfoWindow;
 
-var userEditableRectangleBounds;
-var userEditableRectangle;
+var uer = new UER();
 
 // params in URL
 var hashParams = {};
@@ -114,9 +114,6 @@ init();
                 map.setZoom(GEOLOCATION_ZOOM);
             });
         }
-
-
-
 
         // prekryvna vrstva
       //  map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
@@ -266,20 +263,19 @@ function resetAllFilters() {
     redrawOverlay();
 }
 
-
-
-function beginWigleRequest() {
-    var center = map.getCenter();
-    var bounds = map.getBounds();
+function createUserEditableRectangle() {
+    var center = map.getCenter(); // stred mapy
+    var bounds = map.getBounds(); // okraje mapy
 
     var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
     var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
 
-    if(deltaLat / 2 > 0.04) {
-        deltaLat = 0.08;
+    // vypocet velikosti obdelniku
+    if(deltaLat > USER_EDITABLE_RECTANGLE_LAT_MAX) {
+        deltaLat = USER_EDITABLE_RECTANGLE_LAT_MAX;
     }
-    if(deltaLon /2 > 0.08) {
-        deltaLon = 0.16;
+    if(deltaLon > USER_EDITABLE_RECTANGLE_LON_MAX) {
+        deltaLon = USER_EDITABLE_RECTANGLE_LON_MAX;
     }
 
     var bounds = new google.maps.LatLngBounds(
@@ -293,77 +289,33 @@ function beginWigleRequest() {
         draggable: true,
         editable: true
     });
-
-    $("#beginWigleRequest").hide();
-    $("#wigleCreateRequest").show();
     userEditableRectangleBounds = userEditableRectangle.getBounds();
-
-
-
-    userEditableRectangle.addListener("bounds_changed", function() {
-
-        var bounds = userEditableRectangle.getBounds();
-
-        var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
-        var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
-
-
-        var deltaNElat = Math.abs(bounds.getNorthEast().lat() - userEditableRectangleBounds.getNorthEast().lat());
-        var deltaNElon = Math.abs(bounds.getNorthEast().lng() - userEditableRectangleBounds.getNorthEast().lng());
-
-        var deltaSWlat = Math.abs(bounds.getSouthWest().lat() - userEditableRectangleBounds.getSouthWest().lat());
-        var deltaSWlon = Math.abs(bounds.getSouthWest().lng() - userEditableRectangleBounds.getSouthWest().lng());
-
-        var nBounds = {
-            lat1: bounds.getSouthWest().lat(),
-            lat2: bounds.getNorthEast().lat(),
-            lon1: bounds.getSouthWest().lng(),
-            lon2: bounds.getNorthEast().lng()
-        };
-
-        console.log(nBounds);
-
-        var tooBig = false;
-        if(deltaLat / 2 > 0.021) {
-
-            if(deltaNElat > 0) {
-                nBounds.lat2 = nBounds.lat1 + 0.04;
-            }
-            if(deltaSWlat > 0) {
-                nBounds.lat1 = nBounds.lat2 - 0.04;
-            }
-            tooBig = true;
-        }
-        if(deltaLon/2 > 0.041) {
-
-            if(deltaNElon > 0) {
-                nBounds.lon2 = nBounds.lon1 + 0.08;
-            }
-            if(deltaSWlon > 0) {
-                nBounds.lon1 = nBounds.lon2 - 0.08;
-            }
-            tooBig = true;
-        }
-
-        // southWest, northEast
-        bounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(nBounds.lat1, nBounds.lon1),
-            new google.maps.LatLng(nBounds.lat2, nBounds.lon2)
-        );
-
-        if(tooBig) {
-            userEditableRectangle.setBounds(bounds);
-        }
-        userEditableRectangleBounds = userEditableRectangle.getBounds();
-
-    });
 }
 
 
-function createWigleRequest() {
-    var bounds = userEditableRectangle.getBounds();
+$('#beginWigleRequest').click(function(event){
 
-    // jako vysledek dostanu nejaky html to zobrazim uzivateli
+    uer.createUserEditableRectangle();
+    uer.createListener();
+    // vytvořit menitelny rectangle
+    //createUserEditableRectangle();
+    // skryt tlacitko
+    $(this).hide();
+    // vypsat napovedu text + tlacitko na potvrzeni
+    $.ajax(ADD_WIGLE_REQUEST_URL, {
+        data: {
+            show: 'HELP'
+        }
+    }).done(function(data) {
+       $("#wigleRequestInfo").html(data);
+    });
+});
+
+function createWigleRequest() {
+
+    // vzit souradnice
+    var bounds = uer.getUserEditableRectangle().getBounds();
+    // zavolat AJAXem vytvoreni pozadavku na wigle
     $.ajax(ADD_WIGLE_REQUEST_URL, {
         data: {
             lat1: bounds.getSouthWest().lat(),
@@ -373,12 +325,13 @@ function createWigleRequest() {
         }
 
     }).done(function(data) {
-        alert(data);
-        $("#beginWigleRequest").show();
-        $("#wigleCreateRequest").hide();
-        userEditableRectangle.setMap(null);
-        userEditableRectangle = null;
+        $("#wigleRequestInfo").html(data);
+        uer.getUserEditableRectangle().setMap(null);
+        uer.setUserEditableRectangle(null);
     });
-
-
 }
+function endWigleRequest() {
+    $("#wigleRequestInfo").html(null);
+    $('#beginWigleRequest').show();
+}
+

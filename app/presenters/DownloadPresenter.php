@@ -29,10 +29,12 @@ class DownloadPresenter extends BasePresenter {
     
     public function renderWigle() {
         $this->wigleDownload->download();
+		$this->terminate();
     }
     
     public function renderWifileaks() {
         $this->wifileaksDownload->download("../temp/wifileaks.tsv");
+		$this->terminate();
         
     }
 
@@ -59,11 +61,24 @@ class DownloadPresenter extends BasePresenter {
 
 
 
-    public function renderAddWigleRequest($lat1,$lat2,$lon1,$lon2) {
-        echo "wigle request";
+    public function renderAddWigleRequest() {
 
-        echo $this->wigleDownload->processWigleRequestCreation($lat1,$lat2,$lon1,$lon2);
-        $this->terminate();
+
+        if($this->getHttpRequest()->getQuery("show") == "HELP") {
+            $this->template->setFile( __DIR__. "/../templates/Download/wigle_create_request_info.latte");
+			return;
+        }
+		else {
+			$lat1 = doubleval($this->getHttpRequest()->getQuery("lat1"));
+			$lat2 = doubleval($this->getHttpRequest()->getQuery("lat2"));
+			$lon1 = doubleval($this->getHttpRequest()->getQuery("lon1"));
+			$lon2 = doubleval($this->getHttpRequest()->getQuery("lon2"));
+
+			$state = $this->wigleDownload->processWigleRequestCreation($lat1,$lat2,$lon1,$lon2);
+			$this->template->setFile( __DIR__. "/../templates/Download/info_wigle_req.latte");
+			$this->template->code = $state;
+		}
+
     }
 
 }
