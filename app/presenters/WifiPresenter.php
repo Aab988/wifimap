@@ -101,12 +101,28 @@ class WifiPresenter extends BasePresenter {
             case 'MODE_SEARCH':
                 // vyhledavani
 				$ssid = $this->getHttpRequest()->getQuery("ssid");
+                $dlat = abs($lat2 - $lat1);
+                $dlon = abs($lon2 - $lon1);
+
+                $lat1 = $lat1 - (0.125 * $dlat);
+                $lat2 = $lat2 + (0.125 * $dlat);
+
+                $lon1 = $lon1 - (0.125 * $dlon);
+                $lon2 = $lon2 + (0.125 * $dlon);
 				$nets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
 				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
 				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
                 break;
             case 'MODE_HIGHLIGHT':
                 $ssid = $this->getHttpRequest()->getQuery("ssid");
+                $dlat = abs($lat2 - $lat1);
+                $dlon = abs($lon2 - $lon1);
+
+                $lat1 = $lat1 - (0.125 * $dlat);
+                $lat2 = $lat2 + (0.125 * $dlat);
+
+                $lon1 = $lon1 - (0.125 * $dlon);
+                $lon2 = $lon2 + (0.125 * $dlon);
                 $allNets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
                 $highlitedNets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
                 $zoom = intval($this->getHttpRequest()->getQuery("zoom"));
@@ -120,6 +136,15 @@ class WifiPresenter extends BasePresenter {
 				if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
 				if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
 
+                $dlat = abs($lat2 - $lat1);
+                $dlon = abs($lon2 - $lon1);
+
+                $lat1 = $lat1 - (0.125 * $dlat);
+                $lat2 = $lat2 + (0.125 * $dlat);
+
+                $lon1 = $lon1 - (0.125 * $dlon);
+                $lon2 = $lon2 + (0.125 * $dlon);
+
 				$nets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
 				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
 				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
@@ -127,6 +152,7 @@ class WifiPresenter extends BasePresenter {
         }
 		header( "Content-type: image/png" );
 		imagepng( $img );
+
     }
 
 }

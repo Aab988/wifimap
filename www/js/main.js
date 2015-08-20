@@ -116,7 +116,7 @@ init();
         }
 
         // prekryvna vrstva
-      //  map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+        map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 
         // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {

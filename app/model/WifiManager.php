@@ -102,7 +102,7 @@ class WifiManager extends Nette\Object {
 	 */
 	public function getNetsProcessClick(Nette\Http\Request $request) {
 
-		$detail = null;
+		$detail = false;
 
 		if($request->getQuery("net")) {
 			$id = intval($request->getQuery("net"));
@@ -164,7 +164,7 @@ class WifiManager extends Nette\Object {
 		$sql->order("distance");
 
 
-		if($detail == null) {
+		if(!$detail) {
 			$detail = $sql->fetch()->toArray();
 		}
 
