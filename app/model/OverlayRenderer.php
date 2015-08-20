@@ -14,78 +14,189 @@ class OverlayRenderer extends Nette\Object {
 
 	const IMAGE_BIGGER = 320;
 
+	const SHOW_LABEL_ZOOM = 18;
+
+
+	private $imgcolors = array();
 	private $colors = array();
 	// vygeneruju 320*320 = 1,25 * 256 -> pak ořežu na 256*256
 
+	/**
+	 * sets color shades for each element
+	 *
+	 */
+	private function setColors() {
+		$this->colors["background"] = new \Color(254,254,254);
+		$this->colors["text"] = new \Color(0,0,0);
+		$this->colors["wigle"] = new \Color(0,255,0);
+		$this->colors["wifileaks"] = new \Color(255,0,0);
+		$this->colors["highlighted"] = new \Color(0,0,255);
+	}
 
+	/**
+	 * adds colors to image
+	 *
+	 * @param resource $img
+	 */
+	private function allocateColors2Img($img) {
+		foreach($this->colors as $key=>$color) {
+			$this->imgcolors[$key] = imagecolorallocate($img,$color->r,$color->g,$color->b);
+		}
+	}
 
-	private function createBigImage() {
-		$img = imagecreate(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$this->colors["background"] = imagecolorallocate($img, 255,0,0);
-		imagecolortransparent($img,$this->colors["background"]);
-
-		$this->colors["text"] = imagecolorallocate($img,0,0,0);
-		$this->colors["wifileaks"] = imagecolorallocate($img,255,0,0);
-		$this->colors["wigle"] = imagecolorallocate($img,0,255,0);
-
+	/**
+	 *
+	 * @param int $width
+	 * @param int $height
+	 * @return resource
+	 */
+	private function createImage($width,$height) {
+		$this->setColors();
+		$img = imagecreate($width,$height);
+		$this->allocateColors2Img($img);
+		imagecolortransparent($img,$this->imgcolors["background"]);
 		return $img;
 	}
 
+	/**
+	 * crops bigger image to default size image
+	 * @uses OverlayRenderer::IMAGE_WIDTH as default width
+	 * @uses OverlayRenderer::IMAGE_HEIGHT as default height
+	 * @param resource $img
+	 * @return resource
+	 */
 	private function cropImage($img) {
-		$newImg = imagecreate(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-
-		$imc = imagecolorallocate($newImg, 255, 0, 0);
-		imagecolortransparent( $newImg, $imc );
-
-		imagecopy($newImg, $img, 0,0,32,32,256,256);
-
-
+		$newImg = $this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		$width = imagesx($img);
+		$height = imagesy($img);
+		imagecopy($newImg, $img, 0,0,($width - self::IMAGE_WIDTH)/	2,($height - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
 		// return imagecrop($img,array("x"=>32,"y"=>32,"width"=>256,"height"=>256));
 		return $newImg;
+	}
 
+	/**
+	 * counts lat lng range shown in one pixel
+	 *
+	 * onepxlat -> latitude range in one pixel
+	 * onepxlon -> longitude range in one pixel
+	 *
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
+	 *
+	 * @uses OverlayRenderer::IMAGE_BIGGER as size of image
+	 * @return object
+	 */
+	private function getConversionRation($lat1,$lat2,$lon1,$lon2) {
+		$one_pixel_lat = abs($lat2 - $lat1) / self::IMAGE_BIGGER;
+		$one_pixel_lon = abs($lon2 - $lon1) /  self::IMAGE_BIGGER;
+		return (object) array("onepxlat" => $one_pixel_lat, "onepxlon" => $one_pixel_lon);
 	}
 
 
+
+	/**
+	 * convert latitude/longitude to pixels
+	 *
+	 * @param float $latitude latitude to convert
+	 * @param float $longitude longitude to convert
+	 * @param float $lat1 image begin latitude
+	 * @param float $lon1 image begin longitude
+	 * @param float $one_pixel_lat latitude range in one pixel
+	 * @param float $one_pixel_lon longitude range in one pixel
+	 * @uses OverlayRenderer::IMAGE_BIGGER as height of image
+	 * @return object coords in pixels
+	 */
+	private function latLngToPx($latitude, $longitude,$lat1,$lon1, $one_pixel_lat,$one_pixel_lon)
+	{
+		$y = round(self::IMAGE_BIGGER - (($latitude - $lat1) / (double)$one_pixel_lat));
+		$x = round(($longitude - $lon1) / (double)$one_pixel_lon);
+
+		if ($x < 0) {
+			$x = -$x;
+		}
+		if ($y < 0) {
+			$y = -$y;
+		}
+		return (object) array("x"=>$x, "y"=>$y);
+	}
+
+
+	/**
+	 * add one point label text
+	 * @param resource $img
+	 * @param object $w
+	 * @param int $x
+	 * @param int $y
+	 */
+	private function addPointLabel($img, $w, $x, $y) {
+		if(trim($w->ssid) == "") {
+			imagestring($img, 1, $x+7, $y, $w->mac, $this->imgcolors["text"]);
+		}
+		else {
+			imagestring($img, 1, $x+7, $y, $w->ssid, $this->imgcolors["text"]);
+		}
+	}
+
+
+	/**
+	 * create image for MODE_ALL overlay
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
+	 * @param int $zoom
+	 * @param array $nets
+	 * @return resource image
+	 */
 	public function drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets) {
 
-		$my_img = $this->createBigImage();
-
-		$one_pixel_lat = abs($lat2 - $lat1) / self::IMAGE_BIGGER;
-		$one_pixel_lon = abs($lon2 - $lon1) /  self::IMAGE_BIGGER;
+		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRation($lat1,$lat2,$lon1,$lon2);
 
 		foreach($nets as $w) {
-			$y =  self::IMAGE_BIGGER - (($w->latitude - $lat1) / (double)$one_pixel_lat);
-			$x = ($w->longitude - $lon1) / (double)$one_pixel_lon;
-
-			$x = round($x);
-			$y = round($y);
-
-			if($x < 0) { $x = -$x;}
-			if($y< 0) {$y = -$y;}
-
-			if($x < self::IMAGE_BIGGER && $y <  self::IMAGE_BIGGER && imagecolorat($my_img, $x,$y) == $this->colors["wifileaks"]) {
-				$x++; $y++;
-			}
-			if($w->id_source== 2) {
-				imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $this->colors["wigle"]);
-			}
-			else {
-				imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $this->colors["wifileaks"]);
-			}
-			if($zoom > 18) {
-				imagestring($my_img, 1, $x+7, $y, $w->ssid, $this->colors["text"]);
-			}
+			$xy = $this->latLngToPx($w->latitude,$w->longitude,$lat1,$lon1,$op->onepxlat,$op->onepxlon);
+			$this->drawOneNetModeAll($my_img,$w,$xy->x,$xy->y,$zoom);
 		}
-
 		return $this->cropImage($my_img);
 	}
 
-	public function drawModeHighlight($lat1,$lat2,$lon1,$lon2,$zoom,$allNets,$highlightedNets) {
-		$my_img = $this->createBigImage();
-		$highlighted_colour = imagecolorallocate($my_img,0,0,255);
+	/**
+	 * draw one net to MODE_ALL overlay
+	 * @param resource $img
+	 * @param object $w
+	 * @param int $x
+	 * @param int $y
+	 * @param int $zoom
+	 * @uses OverlayRenderer::SHOW_LABEL_ZOOM as zoom from which is shown text label
+	 */
+	private function drawOneNetModeAll($img,$w,$x,$y,$zoom) {
+		if($w->id_source == WigleDownload::ID_SOURCE) {
+			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wigle"]);
+		}
+		else {
+			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wifileaks"]);
+		}
+		if($zoom > self::SHOW_LABEL_ZOOM) {
+			$this->addPointLabel($img,$w,$x,$y);
+		}
+	}
 
-		$one_pixel_lat = abs($lat2 - $lat1) / self::IMAGE_BIGGER;
-		$one_pixel_lon = abs($lon2 - $lon1) /  self::IMAGE_BIGGER;
+	/**
+	 * create image for MODE_HIGHLIGHT overlay
+	 * @param float $lat1
+	 * @param float $lat2
+	 * @param float $lon1
+	 * @param float $lon2
+	 * @param int $zoom
+	 * @param array $allNets
+	 * @param array $highlightedNets
+	 * @return resource
+	 */
+	public function drawModeHighlight($lat1,$lat2,$lon1,$lon2,$zoom,$allNets,$highlightedNets) {
+		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRation($lat1,$lat2,$lon1,$lon2);
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
@@ -93,34 +204,36 @@ class OverlayRenderer extends Nette\Object {
 		}
 
 		foreach($allNets as $w) {
-			$y =  self::IMAGE_BIGGER - (($w->latitude - $lat1) / (double)$one_pixel_lat);
-			$x = ($w->longitude - $lon1) / (double)$one_pixel_lon;
-
-			$x = round($x);
-			$y = round($y);
-
-			if($x < 0) { $x = -$x;}
-			if($y< 0) {$y = -$y;}
-
-			if($x < self::IMAGE_BIGGER && $y <  self::IMAGE_BIGGER && imagecolorat($my_img, $x,$y) == $this->colors["wifileaks"]) {
-				$x++; $y++;
-			}
-
-			if($w->id_source== 2) {
-				imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $this->colors["wigle"]);
-			}
-			else {
-				imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $this->colors["wifileaks"]);
-			}
-
-			if(in_array($w->id,$highlightedIds)) {
-				imagefilledrectangle($my_img, $x - 2, $y - 2, $x + 2, $y + 2, $highlighted_colour);
-			}
-			if($zoom > 18) {
-				imagestring($my_img, 1, $x+7, $y, $w->ssid, $this->colors["text"]);
-			}
+			$xy = $this->latLngToPx($w->latitude,$w->longitude,$lat1,$lon1,$op->onepxlat,$op->onepxlon);
+			$this->drawOneNetModeHighlight($my_img,$w,$xy->x,$xy->y,$zoom,$highlightedIds);
 		}
 		return $this->cropImage($my_img);
+	}
+
+	/**
+	 * draw one net to MODE_HIGHLIGHT overlay
+	 *
+	 * @param resource $img
+	 * @param object $w
+	 * @param int $x
+	 * @param int $y
+	 * @param int $zoom
+	 * @param int[] $highlightedIds
+	 */
+	private function drawOneNetModeHighlight($img,$w,$x,$y,$zoom,$highlightedIds) {
+		if($w->id_source == WigleDownload::ID_SOURCE) {
+			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wigle"]);
+		}
+		else {
+			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wifileaks"]);
+		}
+
+		if(in_array($w->id,$highlightedIds)) {
+			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["highlighted"]);
+		}
+		if($zoom > self::SHOW_LABEL_ZOOM) {
+			$this->addPointLabel($img,$w,$x,$y);
+		}
 	}
 
 }
