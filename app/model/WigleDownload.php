@@ -534,4 +534,147 @@ class WigleDownload extends Download implements \IDownload {
         return false;
     }
 
+
+    public function findNotInQueueRectsInLatLngRange() {
+        $lat1 = 50.21605376832277;
+        $lat2 = 50.23606150790367;
+        $lon1 = 15.801542195377579;
+        $lon2 = 15.840568481184846;
+
+        // vzit z db všechny co se alespoň částečně nachází v tomto rozptylu
+        $data = $this->database->table("wigle_request")
+            ->select("lat_start,lat_end,lon_start,lon_end")
+            ->where('lat_start >= ? OR lat_end <= ?', $lat1,$lat2)
+            ->where('lon_start >= ? OR lon_end <= ?', $lon1,$lon2)
+            ->where('processed','N')
+            ->fetchAll();
+        echo "DATA";
+        dump($data);
+
+        $mappingX = array($lat1,$lat2);
+        $mappingY = array($lon1,$lon2);
+        foreach($data as $d) {
+            $lat_start = doubleval($d['lat_start']); $lat_end = doubleval($d['lat_end']);
+            $lon_start = doubleval($d['lon_start']); $lon_end = doubleval($d['lon_end']);
+
+            //echo "$lat_start - $lat_end <br />	";
+
+            //echo "$lon_start - $lon_end <br />	";
+
+            if(!in_array($lat_start,$mappingX) && $lat_start >= $lat1 && $lat_start <= $lat2) {
+                $mappingX[] = $lat_start;
+            }
+            if(!in_array($lat_end,$mappingX) && $lat_end <= $lat2 && $lat_end >= $lat1) {
+                $mappingX[] = $lat_end;
+            }
+            if(!in_array($lon_start,$mappingY) && $lon_start >= $lon1 && $lon_start <= $lon2) {
+                $mappingY[] = $lon_start;
+            }
+            if(!in_array($lon_end,$mappingY) && $lon_end <= $lon2 && $lon_end >= $lon1) {
+                $mappingY[] = $lon_end;
+            }
+        }
+        sort($mappingX);
+        sort($mappingY);
+
+        echo "MAPPING";
+        dump($mappingX);
+        dump($mappingY);
+
+// TODO: vygenerovat mapovani a vygenerovat tohle pole
+        $array = array();
+        for($x = 0; $x < count($mappingX)-1;$x++) {
+            for($y = 0; $y < count($mappingY)-1; $y++) {
+
+                $lat_start = $mappingX[$x];
+                $lat_end = $mappingX[$x + 1];
+                $lon_start = $mappingY[$y];
+                $lon_end = $mappingY[$y + 1];
+
+                $val = 0;
+                foreach($data as $d) {
+                    if($lat_start >= doubleval($d['lat_start']) && $lat_end <= doubleval($d['lat_end'])
+                        && $lon_start >= doubleval($d['lon_start']) && $lon_end <= doubleval($d['lon_end'])) {
+                        $val = 1;
+                        continue;
+                    }
+                }
+                /*if(!isset($array[$y][$x])) {
+                    $array[$y][$x] = $val;
+                }
+                else {
+                    if($array[$y][$x] != 1) {*/
+                $array[$y][$x] = $val;
+                /*}
+            }*/
+            }
+        }
+
+        /*$array = array(
+            array(0,0,0,1,1,1,0),
+            array(1,1,0,1,1,1,0),
+            array(1,1,0,0,0,0,0),
+            array(1,1,0,0,0,1,1),
+            array(0,0,0,0,0,1,1),
+            array(0,1,1,1,0,1,1)
+        );*/
+        //dump($array);
+        echo "PLOCHA<br /><br />";
+        for($x = 0; $x < count($array);$x++) {
+            for ($y = 0; $y < count($array[$x]); $y++) {
+                echo $array[$x][$y];
+            }
+            echo '<br />';
+        }
+
+
+        /*$array = array(
+            array(0,0,0,1,1,1,0),
+            array(1,1,0,1,1,1,0),
+            array(1,1,0,0,0,0,0),
+            array(1,1,0,0,0,1,1),
+            array(0,0,0,0,0,1,1),
+            array(0,1,1,1,0,1,1)
+        );*/
+
+        /*	$mappingX = array(50.12,50.14,50.15,50.17,50.19,50.20,50.25);
+            $mappingY = array(15.81,15.83,15.84,15.85,15.87,15.88,15.90,15.95);
+        */
+
+        $rects = array();
+        for($x = 0; $x < count($array); $x++) {
+            $ar = array();$nul = 0; $one = 0;$from = 0;
+            for($y = 0; $y < count($array[0]); $y++) {
+                if($array[$x][$y] == 0) {
+                    if($one > 0) {$from = $y;$one = 0;}
+                    $nul++;
+                }
+                else {
+                    if($nul > 0) {$ar[] = array("from" => $from, "to" => $from + $nul);$nul = 0;}
+                    $one++;
+                }
+            }
+            if($nul > 0) {
+                $ar[] = array("from" => $from, "to" => $from + $nul);
+            }
+            $rects[$x] = $ar;
+        }
+        dump($rects);
+
+        $unmapped = array();
+        for($x = 0; $x < count($rects); $x++) {
+            foreach($rects[$x] as $zero) {
+                //$unmapped[] = array("x"=> array("from"=>$mappingX[$x],"to"=>$mappingX[$x+1]), "y" => array("from" => $mappingY[$zero["from"]], "to" => $mappingY[$zero["to"]]));
+                $unmapped[] = array("x"=> array("from"=>$mappingX[$zero["from"]],"to"=>$mappingX[$zero['to']]), "y" => array("from" => $mappingY[$x], "to" => $mappingY[$x+1]));
+            }
+        }
+        dump($unmapped);
+
+    }
+
+
+
+
+
+
 }

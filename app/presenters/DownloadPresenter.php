@@ -81,4 +81,10 @@ class DownloadPresenter extends BasePresenter {
 
     }
 
+
+    public function renderRectGen() {
+        $this->wigleDownload->findNotInQueueRectsInLatLngRange();
+        $this->terminate();
+    }
+
 }
