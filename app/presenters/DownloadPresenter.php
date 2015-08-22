@@ -83,7 +83,11 @@ class DownloadPresenter extends BasePresenter {
 
 
     public function renderRectGen() {
-        $this->wigleDownload->findNotInQueueRectsInLatLngRange();
+        $lat1 = 50.21605376832277;
+        $lat2 = 50.23606150790367;
+        $lon1 = 15.801542195377579;
+        $lon2 = 15.840568481184846;
+        $this->wigleDownload->findNotInQueueRectsInLatLngRange($lat1,$lat2,$lon1,$lon2);
         $this->terminate();
     }
 

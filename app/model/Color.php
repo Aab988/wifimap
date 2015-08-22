@@ -4,6 +4,7 @@
  * Date: 20.08.2015
  * Time: 21:23
  */
+namespace App\Model;
 class Color {
     public $r, $g, $b;
 
