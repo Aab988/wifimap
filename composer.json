@@ -1,17 +1,11 @@
 {
-	"name": "nette/sandbox",
-	"description": "The sandbox is a pre-packaged Nette Framework project, basic configured structure for your application.",
-	"homepage": "http://nette.org",
+	"name": "wifimap",
+	"description": "Vizualizacni aplikace wifi siti, nekolik zdroju dat",
 	"type": "project",
 	"license": ["Unlicense"],
 	"authors": [
 		{
-			"name": "David Grudl",
-			"homepage": "http://davidgrudl.com"
-		},
-		{
-			"name": "Nette Community",
-			"homepage": "http://nette.org/contributors"
+			"name": "Roman Vlček"
 		}
 	],
 	"require": {

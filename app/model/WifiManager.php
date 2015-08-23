@@ -165,7 +165,9 @@ class WifiManager extends Nette\Object {
 
 
 		if(!$detail) {
-			$detail = $sql->fetch()->toArray();
+			if($sql->fetch()) {
+				$detail = $sql->fetch()->toArray();
+			}
 		}
 
 
