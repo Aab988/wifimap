@@ -42,14 +42,7 @@ class DownloadPresenter extends BasePresenter {
 
 
     public function renderPrepareWigleDownload($lat_start,$lat_end,$lon_start,$lon_end) {
-        $lat_start = doubleval($lat_start); $lat_end = doubleval($lat_end);
-        $lon_start = doubleval($lon_start); $lon_end = doubleval($lon_end);
-        if($lat_end < $lat_start) {
-            $tmp = $lat_start;	$lat_start = $lat_end;	$lat_end = $tmp;
-        }
-        if($lon_end < $lon_start) {
-            $tmp = $lon_start;	$lon_start = $lon_end;	$lon_end = $tmp;
-        }
+        $coords = new Coords($lat_start,$lat_end,$lon_start,$lon_end);
 
 		// ceska republika rozsah
 		//$this->wigleDownload->generateLatLngDownloadArray(48.54570549184746,51.055207338584964,12.073974609375,18.8525390625);
@@ -70,12 +63,12 @@ class DownloadPresenter extends BasePresenter {
 			return;
         }
 		else {
-			$lat1 = doubleval($this->getHttpRequest()->getQuery("lat1"));
-			$lat2 = doubleval($this->getHttpRequest()->getQuery("lat2"));
-			$lon1 = doubleval($this->getHttpRequest()->getQuery("lon1"));
-			$lon2 = doubleval($this->getHttpRequest()->getQuery("lon2"));
-
-			$state = $this->wigleRequest->processWigleRequestCreation(new Coords($lat1,$lat2,$lon1,$lon2));
+			$state = $this->wigleRequest->processWigleRequestCreation(new Coords(
+                    $this->getHttpRequest()->getQuery("lat1"),
+                    $this->getHttpRequest()->getQuery("lat2"),
+                    $this->getHttpRequest()->getQuery("lon1"),
+                    $this->getHttpRequest()->getQuery("lon2")
+            ));
 			$this->template->setFile( __DIR__. "/../templates/Download/info_wigle_req.latte");
 			$this->template->code = $state;
 		}

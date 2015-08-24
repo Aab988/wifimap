@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Presenters;
+use App\Model\Coords;
 use App\Model\OverlayRenderer;
 use App\Model\WifiManager;
 use Nette;
@@ -26,7 +27,6 @@ class WifiPresenter extends BasePresenter {
     const MODE_SEARCH = "MODE_SEARCH";
     const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
 
-
     /**
      * @var WifiManager
      * @inject
@@ -47,13 +47,20 @@ class WifiPresenter extends BasePresenter {
     } */
 
 
-
     public function renderProcessClick() {
         echo $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
         $this->terminate();
     }
 
-
+    /**
+     * @param $lat1
+     * @param $lat2
+     * @param $lon1
+     * @param $lon2
+     * @param $zoom
+     *
+     * @deprecated
+     */
     public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom) {
         
         // spocitam rozdil latitud a longtitud
@@ -96,58 +103,32 @@ class WifiPresenter extends BasePresenter {
 
 
       public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
+          $coords = new Coords($lat1, $lat2, $lon1, $lon2);
 
-        switch($mode) {
+          $coords->increaseLatRange(0.125);
+          $coords->increaseLonRange(0.125);
+
+          switch($mode) {
             case 'MODE_SEARCH':
                 // vyhledavani
 				$ssid = $this->getHttpRequest()->getQuery("ssid");
-                $dlat = abs($lat2 - $lat1);
-                $dlon = abs($lon2 - $lon1);
-
-                $lat1 = $lat1 - (0.125 * $dlat);
-                $lat2 = $lat2 + (0.125 * $dlat);
-
-                $lon1 = $lon1 - (0.125 * $dlon);
-                $lon2 = $lon2 + (0.125 * $dlon);
-				$nets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
+				$nets = $this->wifiManager->getNetsModeSearch($coords,array("ssid"=>$ssid));
 				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
-				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
+				$img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
                 break;
             case 'MODE_HIGHLIGHT':
                 $ssid = $this->getHttpRequest()->getQuery("ssid");
-                $dlat = abs($lat2 - $lat1);
-                $dlon = abs($lon2 - $lon1);
 
-                $lat1 = $lat1 - (0.125 * $dlat);
-                $lat2 = $lat2 + (0.125 * $dlat);
-
-                $lon1 = $lon1 - (0.125 * $dlon);
-                $lon2 = $lon2 + (0.125 * $dlon);
-                $allNets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
-                $highlitedNets = $this->wifiManager->getNetsModeSearch($lat1,$lat2,$lon1,$lon2,array("ssid"=>$ssid));
+                $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
+                $highlitedNets = $this->wifiManager->getNetsModeSearch($coords,array("ssid"=>$ssid));
                 $zoom = intval($this->getHttpRequest()->getQuery("zoom"));
-                $img = $this->overlayRenderer->drawModeHighlight($lat1,$lat2,$lon1,$lon2,$zoom,$allNets,$highlitedNets);
+                $img = $this->overlayRenderer->drawModeHighlight($coords,$zoom,$allNets,$highlitedNets);
                 break;
             default:
-                // normalni zobrazeni - vsechny site
-				$lat1 = doubleval($lat1); $lat2 = doubleval($lat2);
-				$lon1 = doubleval($lon1); $lon2 = doubleval($lon2);
 
-				if($lat2 < $lat1) { $pom = $lat1; $lat1 = $lat2; $lat2 = $pom;}
-				if($lon2 < $lon1) { $pom = $lon1; $lon1 = $lon2; $lon2 = $pom;}
-
-                $dlat = abs($lat2 - $lat1);
-                $dlon = abs($lon2 - $lon1);
-
-                $lat1 = $lat1 - (0.125 * $dlat);
-                $lat2 = $lat2 + (0.125 * $dlat);
-
-                $lon1 = $lon1 - (0.125 * $dlon);
-                $lon2 = $lon2 + (0.125 * $dlon);
-
-				$nets = $this->wifiManager->getAllNetsInLatLngRange($lat1,$lat2,$lon1,$lon2);
+				$nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
 				$zoom = intval($this->getHttpRequest()->getQuery("zoom"));
-				$img = $this->overlayRenderer->drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets);
+				$img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
                 break;
         }
 		header( "Content-type: image/png" );

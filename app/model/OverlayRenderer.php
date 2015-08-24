@@ -80,17 +80,13 @@ class OverlayRenderer extends Nette\Object {
 	 * onepxlat -> latitude range in one pixel
 	 * onepxlon -> longitude range in one pixel
 	 *
-	 * @param float $lat1
-	 * @param float $lat2
-	 * @param float $lon1
-	 * @param float $lon2
-	 *
+	 * @param Coords $coords
 	 * @uses OverlayRenderer::IMAGE_BIGGER as size of image
 	 * @return object
 	 */
-	private function getConversionRation($lat1,$lat2,$lon1,$lon2) {
-		$one_pixel_lat = abs($lat2 - $lat1) / self::IMAGE_BIGGER;
-		$one_pixel_lon = abs($lon2 - $lon1) /  self::IMAGE_BIGGER;
+	private function getConversionRation($coords) {
+		$one_pixel_lat = abs($coords->getLatEnd() - $coords->getLatStart()) / self::IMAGE_BIGGER;
+		$one_pixel_lon = abs($coords->getLonEnd() - $coords->getLonStart()) /  self::IMAGE_BIGGER;
 		return (object) array("onepxlat" => $one_pixel_lat, "onepxlon" => $one_pixel_lon);
 	}
 
@@ -142,21 +138,18 @@ class OverlayRenderer extends Nette\Object {
 
 	/**
 	 * create image for MODE_ALL overlay
-	 * @param float $lat1
-	 * @param float $lat2
-	 * @param float $lon1
-	 * @param float $lon2
+	 * @param Coords $coords
 	 * @param int $zoom
 	 * @param array $nets
 	 * @return resource image
 	 */
-	public function drawModeAll($lat1,$lat2,$lon1,$lon2,$zoom,$nets) {
+	public function drawModeAll($coords,$zoom,$nets) {
 
 		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($lat1,$lat2,$lon1,$lon2);
+		$op = $this->getConversionRation($coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd());
 
 		foreach($nets as $w) {
-			$xy = $this->latLngToPx($w->latitude,$w->longitude,$lat1,$lon1,$op->onepxlat,$op->onepxlon);
+			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
 			$this->drawOneNetModeAll($my_img,$w,$xy->x,$xy->y,$zoom);
 		}
 		return $this->cropImage($my_img);
@@ -185,18 +178,15 @@ class OverlayRenderer extends Nette\Object {
 
 	/**
 	 * create image for MODE_HIGHLIGHT overlay
-	 * @param float $lat1
-	 * @param float $lat2
-	 * @param float $lon1
-	 * @param float $lon2
+	 * @param Coords $coords
 	 * @param int $zoom
 	 * @param array $allNets
 	 * @param array $highlightedNets
 	 * @return resource
 	 */
-	public function drawModeHighlight($lat1,$lat2,$lon1,$lon2,$zoom,$allNets,$highlightedNets) {
+	public function drawModeHighlight($coords,$zoom,$allNets,$highlightedNets) {
 		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($lat1,$lat2,$lon1,$lon2);
+		$op = $this->getConversionRation($coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd());
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
@@ -204,7 +194,7 @@ class OverlayRenderer extends Nette\Object {
 		}
 
 		foreach($allNets as $w) {
-			$xy = $this->latLngToPx($w->latitude,$w->longitude,$lat1,$lon1,$op->onepxlat,$op->onepxlon);
+			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
 			$this->drawOneNetModeHighlight($my_img,$w,$xy->x,$xy->y,$zoom,$highlightedIds);
 		}
 		return $this->cropImage($my_img);

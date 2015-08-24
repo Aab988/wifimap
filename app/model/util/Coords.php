@@ -26,6 +26,7 @@ class Coords {
 
     /**
      * gets doubleval of all values and sort them by size
+     *  and set as object values
      *
      * @param string|float $lat1
      * @param string|float $lat2
@@ -55,6 +56,51 @@ class Coords {
         $this->lon_start = $lon1;
         $this->lon_end = $lon2;
     }
+
+    /**
+     * sort latitude and longitude by size
+     */
+    public function sortBySize() {
+        $this->sortCoordsLatLngBySize($this->lat_start,$this->lat_end,$this->lon_start,$this->lon_end);
+    }
+
+    /**
+     * get absolute value of latitude difference (delta latitude)
+     * @return number
+     */
+    public function getDeltaLat() {
+        return abs($this->lat_end - $this->lat_start);
+    }
+
+    /**
+     * get absolute value of longitude difference (delta longitude)
+     * @return number
+     */
+    public function getDeltaLon() {
+        return abs($this->lon_end - $this->lon_start);
+    }
+
+
+    /**
+     * enlarge latitude range by $k * deltaLatitude
+     * @param float $k
+     */
+    public function increaseLatRange($k) {
+        $deltaLat = $this->getDeltaLat();
+        $this->lat_start = $this->lat_start - ($k * $deltaLat);
+        $this->lat_end = $this->lat_end + ($k * $deltaLat);
+    }
+
+    /**
+     * enlarge longitude range by $k * deltaLongitude
+     * @param float $k
+     */
+    public function increaseLonRange($k) {
+        $deltaLon = $this->getDeltaLon();
+        $this->lon_start = $this->lon_start - ($k * $deltaLon);
+        $this->lon_end = $this->lon_end + ($k * $deltaLon);
+    }
+
 
     /**
      * @return string
