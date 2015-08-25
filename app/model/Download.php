@@ -58,7 +58,12 @@ class Download extends Nette\Object {
         foreach($wifis as $w) {
             $data[] = $this->prepareArrayForDB($w);
             if(count($data) == $howmany) {
-                $this->database->query("insert into wifi", $data);
+                try {
+                    $this->database->query("insert into wifi", $data);
+                }
+                catch(\PDOException $pdoe) {
+                    echo $pdoe->getMessage();
+                }
                 $data = array();
             }
         }
@@ -72,8 +77,10 @@ class Download extends Nette\Object {
      * @return array
      */
     private function prepareArrayForDB(Wifi $wifi) {
+        $wifi->synchronizeSecurity();
         $array = array(
             "id_source" => $wifi->getSource(),
+            "date_added" => date("Y-m-d"),
             "mac" => $wifi->getMac(),
             "ssid" => $wifi->getSsid(),
             "sec" => $wifi->getSec(),

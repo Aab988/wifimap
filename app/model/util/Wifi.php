@@ -324,6 +324,51 @@ class Wifi extends Nette\Object {
         $this->source = $source;
     }
 
+    /**
+     * synchronize security values between wigle and wifileaks
+     */
+    public function synchronizeSecurity() {
+        // security 0 - open, 1- WEP, 2- WPA1, 3-WPA2,4-other
+        if($this->source == WifileaksDownload::ID_SOURCE) {
+            switch(intval($this->sec)) {
+                case 0:
+                    $this->freenet = 'Y'; $this->paynet = '?'; $this->wep = 'N';
+                    break;
+                case 1:
+                    $this->freenet = '?'; $this->paynet = '?'; $this->wep = 'Y';
+                    break;
+                case 2:
+                    $this->freenet = '?'; $this->paynet = '?'; $this->wep = 'W';
+                    break;
+                case 3:
+                    $this->freenet = '?'; $this->paynet = '?'; $this->wep = '2';
+                    break;
+                case 4:
+                    $this->freenet = '?'; $this->paynet = '?'; $this->wep = '4';
+                    break;
+            }
+
+        }
+        if($this->source == WigleDownload::ID_SOURCE) {
+            switch($this->wep) {
+                case '?':
+                    $this->sec = ($this->freenet == 'Y') ? 0 : 4;
+                    break;
+                case 'Y':
+                    $this->sec = 1;break;
+                case 'N':
+                    if($this->freenet != 'N' && $this->paynet != 'Y') $this->freenet = 'Y';
+                    $this->sec = 0;break;
+                case 'W':
+                    $this->sec = 2;break;
+                case '2':
+                    $this->sec = 3;break;
+                default:
+                    $this->sec = 4;break;
+            }
+        }
+    }
+
 
     
 }
