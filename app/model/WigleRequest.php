@@ -15,6 +15,9 @@ class WigleRequest extends Nette\Object {
     const ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
     const INFO_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
 
+    const DIVIDE_AREA_ONLY_NOT_IN_QUEUE = true;
+
+
     /** @var Nette\Database\Context */
     private $database;
 
@@ -42,6 +45,9 @@ class WigleRequest extends Nette\Object {
         ));
     }
 
+
+
+
     /**
      * finds request already existing in this area in wigle request queue
      * only request which is whole in passed area
@@ -66,6 +72,12 @@ class WigleRequest extends Nette\Object {
      */
     public function processWigleRequestCreation($coords) {
 
+        $coords = new Coords(
+            round($coords->getLatStart()-0.005,2),
+            round($coords->getLatEnd()+0.005,2),
+            round($coords->getLonStart()-0.005,2),
+            round($coords->getLonEnd()+0.005,2));
+
         $existingRequest = $this->getRequestAlreadyExistingInLatLngRange($coords);
 
         if($existingRequest) {
@@ -88,11 +100,37 @@ class WigleRequest extends Nette\Object {
             }
         }
         else {
-            $this->addWigleRequest($coords);
-            return self::INFO_ADDED_TO_QUEUE;
+            if(self::DIVIDE_AREA_ONLY_NOT_IN_QUEUE) {
+                $rects = $this->findNotInQueueRectsInLatLngRange($coords);
+                foreach($rects as $rect) {
+                    $this->addWigleRequest($rect);
+                }
+                if(count($rects) > 0) {
+                    return self::INFO_ADDED_TO_QUEUE;
+                }
+                else {
+                    return self::ERR_ALREADY_IN_QUEUE;
+                }
+            }
+            else {
+                $this->addWigleRequest($coords);
+                return self::INFO_ADDED_TO_QUEUE;
+            }
         }
-        return false;
     }
+
+    /**
+     * @return bool|mixed|Nette\Database\Table\IRow
+     */
+    public function getEldestWigleRequest() {
+        return $this->database->table("wigle_request")
+            ->select('id,lat_start,lat_end,lon_start,lon_end')
+            ->where('processed', 'N')
+            ->order('date ASC')
+            ->fetch();
+    }
+
+
 
     /**
      * get all nets trespassing to area created by latitude and longitude range
@@ -125,6 +163,7 @@ class WigleRequest extends Nette\Object {
         // get all requests in this range
         $data = $this->getAllRequestsInLatLngRange($coords);
 
+
         // create latitude, longitude XY mapping
         $mapping = $this->createMappingXY($data,$coords);
         $mappingX = $mapping['xMap'];
@@ -132,14 +171,23 @@ class WigleRequest extends Nette\Object {
 
         // create mapepd array
         $array = $this->createMappedArray($data,$mappingX,$mappingY);
-
         // find rectangles
         $rects = $this->findRectanglesIn01Array($array);
-
         // unmap rectangles back to latitude and longitude
         $unmapped = $this->unmapArrayOfRectanglesFromIndexToLatLng($rects,$mappingX,$mappingY);
-        dump($unmapped);
+
         return $unmapped;
+    }
+
+
+    /**
+     * @param Nette\Database\Table\IRow $request
+     */
+    public function setProcessed($request) {
+        $request->update(array(
+            'processed' => 'Y',
+            'processed_date' => new DateTime()
+        ));
     }
 
     /**
@@ -257,6 +305,8 @@ class WigleRequest extends Nette\Object {
 
         return array('xMap'=>$mappingX,'yMap'=>$mappingY);
     }
+
+
 
 
 }

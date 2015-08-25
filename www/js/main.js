@@ -305,6 +305,13 @@ $('#beginWigleRequest').click(function(event){
     $.ajax(ADD_WIGLE_REQUEST_URL, {
         data: {
             show: 'HELP'
+        },
+        beforeSend: function(){
+            $("#wigleRequestInfo").html(null);
+            $(".loader").show();
+        },
+        complete: function(){
+            $(".loader").hide();
         }
     }).done(function(data) {
        $("#wigleRequestInfo").html(data);
@@ -322,8 +329,14 @@ function createWigleRequest() {
             lat2: bounds.getNorthEast().lat(),
             lon1: bounds.getSouthWest().lng(),
             lon2: bounds.getNorthEast().lng()
+        },
+        beforeSend: function(){
+            $("#wigleRequestInfo").html(null);
+            $(".loader").show();
+        },
+        complete: function(){
+            $(".loader").hide();
         }
-
     }).done(function(data) {
         $("#wigleRequestInfo").html(data);
         uer.getUserEditableRectangle().setMap(null);

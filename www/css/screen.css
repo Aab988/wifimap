@@ -134,3 +134,14 @@ html.js .jshidden {
 #wigleCreateRequest {
     display: none;
 }
+
+
+.loader {
+    display: none;
+    width: inherit;
+    height: 200px;
+    background: rgba( 255, 255, 255, 0 )
+    url('../images/spinner.gif')
+    50% 50%
+    no-repeat;
+}
