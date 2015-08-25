@@ -32,7 +32,8 @@ class Download extends Nette\Object {
             $this->database->query("insert into wifi", $this->prepareArrayForDB($wifi));
         }
         catch(\PDOException $e) {
-            echo $e->getMessage();
+            // TODO: LOG ERROR
+            //echo $e->getMessage();
         }
     }
 

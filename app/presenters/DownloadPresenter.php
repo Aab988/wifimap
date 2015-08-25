@@ -2,35 +2,35 @@
 
 namespace App\Presenters;
 
-use App\Model\Coords;
-use App\Model\DownloadQueue;
+use \App\Model\Coords;
+use \App\Model\DownloadQueue;
 use \App\Model\WigleDownload, \App\Model\WifileaksDownload, \Nette\Http;
-use App\Model\WigleRequest;
+use \App\Model\WigleRequest;
 
 class DownloadPresenter extends BasePresenter {
 
     /**
      *
-     * @var WigleDownload
+     * @var \App\Model\WigleDownload
      * @inject
      */
     public $wigleDownload;
     
     /**
      *
-     * @var WifileaksDownload
+     * @var \App\Model\WifileaksDownload
      * @inject
      */
     public $wifileaksDownload;
 
     /**
-     * @var WigleRequest
+     * @var \App\Model\WigleRequest
      * @inject
      */
     public $wigleRequest;
 
     /**
-     * @var DownloadQueue
+     * @var \App\Model\DownloadQueue
      * @inject
      */
     public $downloadQueue;
@@ -51,9 +51,30 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderWifileaks() {
+        $this->setIni(600,'2048M');
         $this->wifileaksDownload->download("../temp/wifileaks.tsv");
 		$this->terminate();
-        
+    }
+
+    /**
+     * set script variables
+     *
+     * @param int $max_execution_time number of seconds
+     * @param string $max_memory fe: '256M'
+     *
+     */
+    private function setIni($max_execution_time,$max_memory) {
+        if(ini_get('safe_mode')) {
+            echo "safe mode is on";
+        }
+        else {
+            echo "Safe mode is off";
+            $tl = set_time_limit($max_execution_time);
+            if(!$tl) { echo "<br />nepovedlo se zvysit timelimit";}
+            $is = ini_set('memory_limit',$max_memory);
+            if(!$is) { echo "<br />nepovedlo se zvysit maximum memory";}
+        }
+
     }
 
 
@@ -103,6 +124,7 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderProcessWigleRequest() {
+        $this->setIni(3600, '1024M');
         $req = $this->wigleRequest->getEldestWigleRequest();
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords);

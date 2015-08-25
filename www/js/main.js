@@ -135,7 +135,9 @@ init();
                 delete params.gm;
 
                 $.getJSON(PROCESS_CLICK_URL,params,function(data){
-                    createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
+                    if(data.detail) {
+                        createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
+                    }
                 });
             }
         });

@@ -134,8 +134,9 @@ class WifiManager extends Nette\Object {
 		$sql->order("distance");
 
 		if(!$detail) {
-			if($sql->fetch()) {
-				$detail = $sql->fetch()->toArray();
+			$f = $sql->fetch();
+			if($f) {
+				$detail = $f->toArray();
 			}
 		}
 
