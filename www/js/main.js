@@ -350,3 +350,10 @@ function endWigleRequest() {
     $('#beginWigleRequest').show();
 }
 
+function cancelWigleRequest() {
+    uer.getUserEditableRectangle().setMap(null);
+    uer.setUserEditableRectangle(null);
+    $("#wigleRequestInfo").html(null);
+    $('#beginWigleRequest').show();
+}
+
