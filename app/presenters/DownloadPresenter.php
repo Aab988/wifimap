@@ -51,7 +51,7 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderWifileaks() {
-        $this->setIni(600,'2048M');
+        $this->setIni(300,'128M');
         $this->wifileaksDownload->download("../temp/wifileaks.tsv");
 		$this->terminate();
     }
