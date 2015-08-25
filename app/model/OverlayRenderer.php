@@ -26,11 +26,11 @@ class OverlayRenderer extends Nette\Object {
 	 *
 	 */
 	private function setColors() {
-		$this->colors["background"] = new \Color(254,254,254);
-		$this->colors["text"] = new \Color(0,0,0);
-		$this->colors["wigle"] = new \Color(0,255,0);
-		$this->colors["wifileaks"] = new \Color(255,0,0);
-		$this->colors["highlighted"] = new \Color(0,0,255);
+		$this->colors["background"] = new Color(254,254,254);
+		$this->colors["text"] = new Color(0,0,0);
+		$this->colors["wigle"] = new Color(0,255,0);
+		$this->colors["wifileaks"] = new Color(255,0,0);
+		$this->colors["highlighted"] = new Color(0,0,255);
 	}
 
 	/**
@@ -146,7 +146,7 @@ class OverlayRenderer extends Nette\Object {
 	public function drawModeAll($coords,$zoom,$nets) {
 
 		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd());
+		$op = $this->getConversionRation($coords);
 
 		foreach($nets as $w) {
 			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
@@ -186,7 +186,7 @@ class OverlayRenderer extends Nette\Object {
 	 */
 	public function drawModeHighlight($coords,$zoom,$allNets,$highlightedNets) {
 		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd());
+		$op = $this->getConversionRation($coords);
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
