@@ -15,7 +15,7 @@ class WigleDownload extends Download implements \IDownload {
 
 
     /** name of cookie file */
-    const COOKIE_FILE = "../temp/cookie.txt";
+    const COOKIE_FILE = "cookie.txt";
 
     /** Wigle login URL */
     const WIGLE_LOGIN_URL = "https://wigle.net/api/v1/jsonLogin";
@@ -40,12 +40,13 @@ class WigleDownload extends Download implements \IDownload {
      */
     public function download() {
 
-        $this->loginToWigle();
+        //$this->loginToWigle();
+        echo $this->loginToWigle();
         $query = $this->downloadQueue->getRandomNotDownloadedRecord();
         $coords = new Coords($query['lat_start'],$query['lat_end'],$query['lon_start'],$query['lon_end']);
         $results = $this->getDataFromWigle($coords, (int) $query["from"]);
         $results_decoded = json_decode($results,true);
-
+        dump($results_decoded);
         if($results_decoded["success"] == true) {
             $ws = $this->parseData($results_decoded);
             $this->saveAll($ws);

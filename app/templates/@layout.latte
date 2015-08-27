@@ -23,6 +23,7 @@
 		var MODE_ALL = {App\Presenters\WifiPresenter::MODE_ALL};
 		var MODE_SEARCH = {App\Presenters\WifiPresenter::MODE_SEARCH};
 		var MODE_HIGHLIGHT = {App\Presenters\WifiPresenter::MODE_HIGHLIGHT};
+		var MODE_ONE_SOURCE = {App\Presenters\WifiPresenter::MODE_ONE_SOURCE};
 	</script>
 
 	<div n:foreach="$flashes as $flash" class="flash {$flash->type}">{$flash->message}</div>
@@ -39,6 +40,7 @@
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
 	<script src="{$basePath}/js/mercator.js"></script>
 	<script src="{$basePath}/js/user_editable_rectangle.js"></script>
+	<script src="{$basePath}/js/utils.js"></script>
 	<script src="{$basePath}/js/main.js"></script>
 	{/block}
 </body>

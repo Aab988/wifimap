@@ -106,7 +106,7 @@ init();
 
 
     function initializeMap() {
-       
+
 
         var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
         map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
@@ -124,12 +124,6 @@ init();
         else {
             map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
         }
-
-
-
-        // prekryvna vrstva
-
-
 
         // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {
@@ -258,13 +252,6 @@ function highlightFormSubmit(form) {
     return false;
 }
 
-function getUrlVars() {
-    var vars = {};
-    window.location.href.replace(/[#&]+([^=&]+)=([^&#]*)/gi, function(m,key,value) {
-        vars[key] = value;
-    });
-    return vars;
-}
 
 /**
  * zruseni vsech nastaveni - modu a jeho parametru
@@ -278,42 +265,10 @@ function resetAllFilters() {
     redrawOverlay();
 }
 
-function createUserEditableRectangle() {
-    var center = map.getCenter(); // stred mapy
-    var bounds = map.getBounds(); // okraje mapy
-
-    var deltaLat = Math.abs(bounds.getNorthEast().lat() - bounds.getSouthWest().lat());
-    var deltaLon = Math.abs(bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
-
-    // vypocet velikosti obdelniku
-    if(deltaLat > USER_EDITABLE_RECTANGLE_LAT_MAX) {
-        deltaLat = USER_EDITABLE_RECTANGLE_LAT_MAX;
-    }
-    if(deltaLon > USER_EDITABLE_RECTANGLE_LON_MAX) {
-        deltaLon = USER_EDITABLE_RECTANGLE_LON_MAX;
-    }
-
-    var bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(center.lat() - deltaLat/6, center.lng() - deltaLon/6),
-        new google.maps.LatLng(center.lat() + deltaLat/6, center.lng() + deltaLon/6)
-    );
-
-    userEditableRectangle = new google.maps.Rectangle({
-        map: map,
-        bounds: bounds,
-        draggable: true,
-        editable: true
-    });
-    userEditableRectangleBounds = userEditableRectangle.getBounds();
-}
-
-
-$('#beginWigleRequest').click(function(event){
-
+$('#beginWigleRequest').click(function(){
     uer.createUserEditableRectangle();
     uer.createListener();
-    // vytvořit menitelny rectangle
-    //createUserEditableRectangle();
+
     // skryt tlacitko
     $(this).hide();
     // vypsat napovedu text + tlacitko na potvrzeni
@@ -362,7 +317,6 @@ function endWigleRequest() {
     $("#wigleRequestInfo").html(null);
     $('#beginWigleRequest').show();
 }
-
 function cancelWigleRequest() {
     uer.getUserEditableRectangle().setMap(null);
     uer.setUserEditableRectangle(null);
@@ -370,3 +324,24 @@ function cancelWigleRequest() {
     $('#beginWigleRequest').show();
 }
 
+
+
+$(document).ready(function(){
+    $("#mi-one-source").click(function(){
+        $("#ul-one-source").toggle(100);
+    });
+
+    $(".mi-source").click(function() {
+        $(".mi-source").each(function() {
+            $(this).removeClass("active");
+        });
+        // nastavit prekryvnou vrstvu
+        hashParams.mode = MODE_ONE_SOURCE;
+        hashParams.source = this.id;
+        window.location.hash = $.param(hashParams);
+        redrawOverlay();
+
+        $(this).addClass("active");
+    });
+
+});

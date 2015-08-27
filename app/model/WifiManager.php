@@ -5,6 +5,7 @@
  * Time: 10:10
  */
 namespace App\Model;
+use App\Presenters\WifiPresenter;
 use Nette;
 
 class WifiManager extends Nette\Object {
@@ -48,6 +49,12 @@ class WifiManager extends Nette\Object {
 		return $q;
 	}
 
+	private function getOneSourceQuery($coords,$id_source) {
+		$q = $this->getNetsRangeQuery($coords);
+		$q->where("id_source",$id_source);
+		return $q;
+	}
+
 
 	/**
 	 * return nets data in passed lat lng range
@@ -71,6 +78,20 @@ class WifiManager extends Nette\Object {
 		$q = $this->getSearchQuery($coords,$params);
 		return $q->fetchAll();
 	}
+
+	/**
+	 * return nets for one source mode
+	 *
+	 * @param Coords $coords
+	 * @param int $source_id
+	 * @return array|Nette\Database\Table\IRow[]
+	 */
+	public function getNetsModeOneSource($coords,$source_id) {
+
+		return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
+	}
+
+
 
 	/**
 	 * return one net details by ID
@@ -117,15 +138,19 @@ class WifiManager extends Nette\Object {
 
 
 		switch($request->getQuery("mode")) {
-			case 'MODE_HIGHLIGHT':
+			case WifiPresenter::MODE_HIGHLIGHT:
 				$sql = $this->getNetsRangeQuery($requestCoords);
 				break;
 
-			case 'MODE_SEARCH':
+			case WifiPresenter::MODE_SEARCH:
 				$params = array("ssid"=>$request->getQuery("ssid"));
 				$sql = $this->getSearchQuery($requestCoords,$params);
 				break;
-
+			case WifiPresenter::MODE_ONE_SOURCE:
+				$srca = explode("-",$request->getQuery("source"));
+				$source = (isset($srca[1]))?intval($srca[1]):-1;
+				$sql = $this->getOneSourceQuery($requestCoords,$source);
+				break;
 			default:
 				$sql = $this->getNetsRangeQuery($requestCoords);
 		}
@@ -153,5 +178,8 @@ class WifiManager extends Nette\Object {
 
 		return json_encode($json);
 	}
+
+
+
 
 }

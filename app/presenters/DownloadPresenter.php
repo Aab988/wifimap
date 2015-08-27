@@ -65,14 +65,18 @@ class DownloadPresenter extends BasePresenter {
      */
     public static function setIni($max_execution_time,$max_memory) {
         if(ini_get('safe_mode')) {
-            echo "safe mode is on";
+            //echo "safe mode is on";
         }
         else {
-            echo "Safe mode is off";
+            //echo "Safe mode is off";
             $tl = set_time_limit($max_execution_time);
-            if(!$tl) { echo "<br />nepovedlo se zvysit timelimit";}
+            if(!$tl) {
+            //echo "<br />nepovedlo se zvysit timelimit";
+            }
             $is = ini_set('memory_limit',$max_memory);
-            if(!$is) { echo "<br />nepovedlo se zvysit maximum memory";}
+            if(!$is) {
+                            //echo "<br />nepovedlo se zvysit maximum memory";
+            }
         }
 
     }
