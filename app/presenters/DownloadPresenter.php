@@ -51,7 +51,7 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderWifileaks() {
-        $this->setIni(300,'128M');
+        self::setIni(600,'128M');
         $this->wifileaksDownload->download("../temp/wifileaks.tsv");
 		$this->terminate();
     }
@@ -63,7 +63,7 @@ class DownloadPresenter extends BasePresenter {
      * @param string $max_memory fe: '256M'
      *
      */
-    private function setIni($max_execution_time,$max_memory) {
+    public static function setIni($max_execution_time,$max_memory) {
         if(ini_get('safe_mode')) {
             echo "safe mode is on";
         }
@@ -124,7 +124,8 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderProcessWigleRequest() {
-        $this->setIni(3600, '1024M');
+
+        self::setIni(1200, '256M');
         $req = $this->wigleRequest->getEldestWigleRequest();
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords);

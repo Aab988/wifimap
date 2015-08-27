@@ -103,6 +103,8 @@ class WifiPresenter extends BasePresenter {
 
 
       public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
+          DownloadPresenter::setIni(180,'512M');
+
           $coords = new Coords($lat1, $lat2, $lon1, $lon2);
 
           $coords->increaseLatRange(0.125);
