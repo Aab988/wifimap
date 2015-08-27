@@ -103,7 +103,10 @@ init();
         return false;
     }
 
+
+
     function initializeMap() {
+       
 
         var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
         map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
@@ -112,11 +115,21 @@ init();
             navigator.geolocation.getCurrentPosition(function(position) {
                 map.setCenter(new google.maps.LatLng(position.coords.latitude,position.coords.longitude));
                 map.setZoom(GEOLOCATION_ZOOM);
+                map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+            },
+            function() {
+                map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
             });
         }
+        else {
+            map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+        }
+
+
 
         // prekryvna vrstva
-        map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
+
+
 
         // odchytnuti kliknuti do mapy -> zobrazeni info okna
         google.maps.event.addListener(map, 'click', function(event) {
