@@ -89,10 +89,8 @@ class WifiManager extends Nette\Object {
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getNetsModeOneSource($coords,$source_id) {
-		dump($this->getOneSourceQuery($coords,$source_id));
 
-
-		//return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
+		return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
 
 	}
 
