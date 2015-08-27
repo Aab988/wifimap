@@ -51,7 +51,9 @@ class WifiManager extends Nette\Object {
 
 	private function getOneSourceQuery($coords,$id_source) {
 		$q = $this->getNetsRangeQuery($coords);
-		$q->where("id_source",$id_source);
+		if($id_source > 0) {
+			$q->where("id_source",$id_source);
+		}
 		return $q;
 	}
 
@@ -87,8 +89,11 @@ class WifiManager extends Nette\Object {
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getNetsModeOneSource($coords,$source_id) {
+		dump($this->getOneSourceQuery($coords,$source_id));
 
-		return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
+
+		//return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
+
 	}
 
 

@@ -135,7 +135,7 @@ class WifiPresenter extends BasePresenter
             case self::MODE_ONE_SOURCE:
                 $srca = explode("-",$this->getHttpRequest()->getQuery("source"));
                 // id Source (-1 = neznamy,takze se zobrazi oba)
-                $source = (isset($srca[1]))?intval($srca[1]):-1;
+                $source = (isset($srca[1]))?intval($srca[1]):0;
                 $nets = $this->wifiManager->getNetsModeOneSource($coords,$source);
                 $img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
                 break;
