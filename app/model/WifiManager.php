@@ -94,6 +94,22 @@ class WifiManager extends Nette\Object {
 
 	}
 
+	private function getFreeNetsQuery($coords) {
+		$q = $this->getNetsRangeQuery($coords);
+		$q->where('sec = ? OR freenet = ?',0,'Y');
+		return $q;
+	}
+
+	/**
+	 * return all free nets
+	 *
+	 * @param Coords $coords
+	 * @return array|Nette\Database\Table\IRow[]
+	 */
+	public function getFreeNets($coords) {
+		return $this->getFreeNetsQuery($coords)->fetchAll();
+	}
+
 
 
 	/**
@@ -153,6 +169,9 @@ class WifiManager extends Nette\Object {
 				$srca = explode("-",$request->getQuery("source"));
 				$source = (isset($srca[1]))?intval($srca[1]):-1;
 				$sql = $this->getOneSourceQuery($requestCoords,$source);
+				break;
+			case WifiPresenter::MODE_FREE:
+				$sql = $this->getFreeNetsQuery($requestCoords);
 				break;
 			default:
 				$sql = $this->getNetsRangeQuery($requestCoords);

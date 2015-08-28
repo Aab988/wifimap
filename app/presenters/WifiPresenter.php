@@ -30,6 +30,7 @@ class WifiPresenter extends BasePresenter
     const MODE_SEARCH = "MODE_SEARCH";
     const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
     const MODE_ONE_SOURCE = "MODE_ONE_SOURCE";
+    const MODE_FREE = "MODE_FREE";
 
     /**
      * @var WifiManager
@@ -137,6 +138,10 @@ class WifiPresenter extends BasePresenter
                 // id Source (-1 = neznamy,takze se zobrazi oba)
                 $source = (isset($srca[1]))?intval($srca[1]):0;
                 $nets = $this->wifiManager->getNetsModeOneSource($coords,$source);
+                $img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
+                break;
+            case self::MODE_FREE:
+                $nets = $this->wifiManager->getFreeNets($coords);
                 $img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
                 break;
             default:

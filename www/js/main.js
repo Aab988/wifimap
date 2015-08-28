@@ -259,6 +259,7 @@ function highlightFormSubmit(form) {
 function resetAllFilters() {
     delete hashParams.ssid;
     delete hashParams.mode;
+    delete hashParams.source;
     //console.log(hashParams);
     window.location.hash = $.param(hashParams);
 
@@ -342,6 +343,12 @@ $(document).ready(function(){
         redrawOverlay();
 
         $(this).addClass("active");
+    });
+
+    $("#mi-free-nets").click(function(){
+        hashParams.mode = MODE_FREE;
+        window.location.hash = $.param(hashParams);
+        redrawOverlay();
     });
 
 });
