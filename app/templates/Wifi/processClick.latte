@@ -1,39 +1,46 @@
-<b>{$nets[0]->ssid}</b>
+<b>
+{if $detail->ssid}
+    {$detail->ssid}
+{elseif $detail->mac}
+    {$detail->mac}
+{/if}
+</b>
 <table>
     <tr>
         <td>Latitude</td>
-        <td>{$nets[0]->latitude}</td>
+        <td>{$detail->latitude}</td>
     </tr>
     <tr>
         <td>Longitude</td>
-        <td>{$nets[0]->longitude}</td>
+        <td>{$detail->longitude}</td>
     </tr>
     <tr>
         <td>Altitude</td>
-        <td>{$nets[0]->altitude} m</td>
+        <td>{$detail->altitude} m</td>
     </tr>
     <tr>
         <td>MAC</td>
-        <td>{$nets[0]->mac}</td>
+        <td>{$detail->mac}</td>
     </tr>
-    {if $nets[0]->channel}
+    {if $detail->channel}
     <tr>
         <td>Kanál</td>
-        <td>{$nets[0]->channel}</td>
+        <td>{$detail->channel}</td>
     </tr>
     {/if}
 </table>
-{if count($nets) > 1}
-<span>Na tomto místě se nachází další sítě ({count($nets)-1})</span><br />
-<?php
-    $max = (count($nets)>10)?10:count($nets)-1;
-?>
-<span>{$max} dalších sítí nejblíže k bodu kliknutí</span><br />
-
-
-{for $i = 1; $i <= $max; $i++}
-    <b>{$nets[$i]->ssid}</b><br />
-{/for}
-
-{/if}
-
+<form onsubmit="return highlightFormSubmit(this);">
+    <select name="highlight-by">
+        {if $detail->ssid}<option value="ssid">SSID</option>{/if}
+        {if $detail->mac}<option value="mac">MAC</option>{/if}
+        {if $detail->channel}<option value="channel">Kanál</option>{/if}
+    </select>
+    {if $detail->ssid}<input type="hidden" name="ssid" value="{$detail->ssid}">{/if}
+    {if $detail->mac}<input type="hidden" name="mac" value="{$detail->mac}">{/if}
+    {if $detail->channel}<input type="hidden" name="channel" value="{$detail->channel}" />{/if}
+    <input type="submit" value="Označit" />
+</form>
+<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: {$count} - pro zpřesnění informací přibližte mapu</span><br />
+{foreach array_slice($others,0,5,true) as $other}
+    <a href="" onclick="return changeIW({$other->id})">{($other->ssid) ? $other->ssid : $other->mac}</a><br />
+{/foreach}

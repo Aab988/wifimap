@@ -41,39 +41,12 @@ init();
             case MODE_SEARCH:
                 if(hashParams.ssid) $("#form-ssid").val(hashParams.ssid);
                 break;
-
+            case MODE_ONE_SOURCE:
+                $("#ul-one-source").show(100);
+                if(hashParams.source) $("#" + hashParams.source).addClass("active");
+                break;
         }
         hashParams.mode = (hashParams.mode) ? hashParams.mode : MODE_ALL;
-    }
-
-
-    function createInfoWindowContent(data) {
-        var name = (data.detail.ssid.trim() != "") ? data.detail.ssid : data.detail.mac;
-
-
-        var content = "<b>" + name + "</b>";
-        content += "<table>" +
-            "<tr><td>Latitude:</td><td>"+data.detail.latitude+"</td></tr>" +
-            "<tr><td>Longitude:</td><td>"+data.detail.longitude+"</td></tr>" +
-            "<tr><td>Altitude:</td><td>"+data.detail.altitude+"</td></tr>" +
-            "<tr><td>MAC:</td><td>" + data.detail.mac + "</td></tr>";
-        if(data.detail.channel) {
-            content+="<tr><td>Kanál:</td><td>"+data.detail.channel+"</td></tr>";
-        }
-        content += "</table>";
-
-        content += "<form onclick=\"return highlightFormSubmit(this);\">";
-        content += "<input type=\"submit\" value=\"Označit\" />";
-        content += "<input type=\"hidden\" name=\"ssid\" value=\""+ data.detail.ssid +"\">";
-        content += "</form>";
-
-        if(data.others) {
-            content += "<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: " + (data.count-1) +" - pro zpřesnění informací přibližte mapu</span><br />";
-            for(var i = 0; i < data.others.length; i++) {
-                content += "<a href=\"\" onclick=\"return changeIW(" + data.others[i].id +");\">" + ((data.others[i].ssid.trim() != "") ? data.others[i].ssid : data.others[i].mac) + " </a><br />";
-            }
-        }
-        return content;
     }
 
     function createInfoWindow(content,position) {
@@ -97,8 +70,8 @@ init();
         delete params.gm;
 
         $.getJSON(PROCESS_CLICK_URL, params, function(data) {
-            mainInfoWindow.setContent(createInfoWindowContent(data));
-            mainInfoWindow.setPosition(new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
+            mainInfoWindow.setContent(data.iw);
+            mainInfoWindow.setPosition(new google.maps.LatLng(data.latitude, data.longitude));
         });
         return false;
     }
@@ -142,8 +115,8 @@ init();
                 delete params.gm;
 
                 $.getJSON(PROCESS_CLICK_URL,params,function(data){
-                    if(data.detail) {
-                        createInfoWindow(createInfoWindowContent(data),new google.maps.LatLng(data.detail.latitude, data.detail.longitude));
+                    if(data) {
+                        createInfoWindow(data.iw,new google.maps.LatLng(data.lat, data.lng));
                     }
                 });
             }
@@ -242,10 +215,15 @@ function searchFormSubmit() {
 }
 
 function highlightFormSubmit(form) {
-
-    var ssid = form["ssid"].value;
+    console.log("asdf");
+    var by = form["highlight-by"].value;
+    var val = form[by].value;
+    //var ssid = form["ssid"].value;
     hashParams.mode = MODE_HIGHLIGHT;
-    hashParams.ssid = ssid;
+    hashParams.by = by;
+    hashParams.val = val;
+
+    //hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();
 
@@ -257,6 +235,12 @@ function highlightFormSubmit(form) {
  * zruseni vsech nastaveni - modu a jeho parametru
  */
 function resetAllFilters() {
+    $(".mi-source").removeClass("active");
+    $("#ul-one-source").hide(100);
+
+
+
+
     delete hashParams.ssid;
     delete hashParams.mode;
     delete hashParams.source;
@@ -333,6 +317,9 @@ $(document).ready(function(){
     });
 
     $(".mi-source").click(function() {
+        if($(this).hasClass("active")) {
+            return;
+        }
         $(".mi-source").each(function() {
             $(this).removeClass("active");
         });

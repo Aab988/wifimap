@@ -24,7 +24,7 @@ class WifiManager extends Nette\Object {
 	 * @param Coords $coords
 	 * @return Nette\Database\Table\Selection
 	 */
-	private function getNetsRangeQuery($coords) {
+	public function getNetsRangeQuery($coords) {
 		$q = $this->database->table("wifi")
 			->where("latitude < ?", $coords->getLatEnd())
 			->where("latitude > ?", $coords->getLatStart())
@@ -119,7 +119,48 @@ class WifiManager extends Nette\Object {
 	 * @return bool|mixed|Nette\Database\Table\IRow
 	 */
 	public function getDetailById($id) {
-		return $this->database->table("wifi")->where("id",$id)->fetch();
+		return $this->database->table("wifi")->select('id,mac,latitude,longitude,ssid,channel,altitude')->where("id",$id)->fetch();
+	}
+
+
+
+	public function getClickQueryByMode(Nette\Http\Request $request, $click_lat = null, $click_lon = null) {
+		if(!$click_lat && !$click_lon) {
+			$click_lat = doubleval($request->getQuery("click_lat"));
+			$click_lon = doubleval($request->getQuery("click_lon"));
+		}
+		$mapCoords = new Coords($request->getQuery("map_lat1"),$request->getQuery("map_lat2"),$request->getQuery("map_lon1"),$request->getQuery("map_lon2"));
+
+		$lat1 = (doubleval($click_lat) - self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLat());
+		$lat2 = (doubleval($click_lat) + self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLat());
+		$lon1 = (doubleval($click_lon) - self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLon());
+		$lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLon());
+
+		$requestCoords = new Coords($lat1,$lat2,$lon1,$lon2);
+
+		switch($request->getQuery("mode")) {
+			case WifiPresenter::MODE_HIGHLIGHT:
+				$sql = $this->getNetsRangeQuery($requestCoords);
+				break;
+
+			case WifiPresenter::MODE_SEARCH:
+				$params = array("ssid"=>$request->getQuery("ssid"));
+				$sql = $this->getSearchQuery($requestCoords,$params);
+				break;
+			case WifiPresenter::MODE_ONE_SOURCE:
+				$srca = explode("-",$request->getQuery("source"));
+				$source = (isset($srca[1]))?intval($srca[1]):-1;
+				$sql = $this->getOneSourceQuery($requestCoords,$source);
+				break;
+			case WifiPresenter::MODE_FREE:
+				$sql = $this->getFreeNetsQuery($requestCoords);
+				break;
+			default:
+				$sql = $this->getNetsRangeQuery($requestCoords);
+		}
+		$sql->select("id,mac,latitude,longitude,ssid,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
+		$sql->order("distance");
+		return $sql;
 	}
 
 
@@ -154,7 +195,6 @@ class WifiManager extends Nette\Object {
 		$lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLon());
 
 		$requestCoords = new Coords($lat1,$lat2,$lon1,$lon2);
-
 
 		switch($request->getQuery("mode")) {
 			case WifiPresenter::MODE_HIGHLIGHT:
@@ -198,8 +238,16 @@ class WifiManager extends Nette\Object {
 			$json["others"][] = $nb->toArray();
 		}
 
-		return json_encode($json);
+		return $json;
+		//return json_encode($json);
 	}
+
+
+
+
+
+
+
 
 
 
