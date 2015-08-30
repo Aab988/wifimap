@@ -81,6 +81,14 @@ class WifiManager extends Nette\Object {
 		return $q->fetchAll();
 	}
 
+
+
+	public function getNetsBySt($coords,$param, $value) {
+		$q = $this->getNetsRangeQuery($coords);
+		$q->where($param,$value);
+		return $q->fetchAll();
+	}
+
 	/**
 	 * return nets for one source mode
 	 *

@@ -55,44 +55,24 @@ class WifiPresenter extends BasePresenter
 
     public function renderProcessClick()
     {
-        /**
-         * pokud mam nastaveny parametr NET - pak to = ID site ktera bude detail (vytahnout detail podle id)
-         * jinak
-         * vytahnout site pro dany mod serazene podle vzdalenosti
-         * POKUD nejakou najdu pak 1. sit (nejblizsi) bude detail
-         * a nekolik ostatnich zobrazim na preklik
-         * JINAK vratim json s prazdnymi parametry (JS si poradi s tim aby takove infowindows nezobrazoval)
-         *
-         */
+
         $httpr = $this->getHttpRequest();
         // pokud je nedostatecny zoom vratit prazdny
 
-
-        // ulozit sestaveny dotaz podle daneho modu (to udela model - jedna funkce poresi vsechny mody (vrati jen dane dotazy)
         $r = $this->wifiManager->getClickQueryByMode($httpr);
-
         $detail = null;
-
         if($httpr->getQuery("net")) {
             $net = intval($httpr->getQuery("net"));
-            // vzit detail podle ID
             $detail = $this->wifiManager->getDetailById($net);
-
-
             $r = $this->wifiManager->getClickQueryByMode($httpr,$detail->latitude,$detail->longitude);
-            // vim ID detailu takze ostatnim pridat podminku ze id!=id_detailu
-            //$r->where("id != ?",$detail->id);
         }
         else {
-            // detail je prvni sit
             $f = $r->fetch();
             if($f) {
                 $detail = $f;
             }
         }
-
         $json = array();
-        // ostatni ID (krom detailu) jsou dalsi body (brat jich jen 5)
         $others = $r->fetchAll();
         $this->template->count = count($others);
         unset($others[$detail["id"]]);
@@ -100,22 +80,11 @@ class WifiPresenter extends BasePresenter
             $json['lat'] = $detail->latitude;
             $json['lng'] = $detail->longitude;
         }
-
-        // vezmu site
-        /*$nets = $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
-        dump($nets);*/
-
-        //echo $this->wifiManager->getNetsProcessClick($this->getHttpRequest());
         $this->template->setFile( __DIR__. "/../templates/Wifi/processClick.latte");
         $this->template->detail = $detail;
         $this->template->others = $others;
-
-
         $temp =  (string)$this->template;
-       // $temp = preg_replace('/\s+/', '', $temp);
         $json['iw'] = $temp;
-
-        //dump($json);
         echo json_encode($json,JSON_UNESCAPED_UNICODE);
         $this->terminate();
     }
@@ -189,11 +158,18 @@ class WifiPresenter extends BasePresenter
                 $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
             case self::MODE_HIGHLIGHT:
-                $ssid = $this->getHttpRequest()->getQuery("ssid");
-
-                $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-                $highlitedNets = $this->wifiManager->getNetsModeSearch($coords, array("ssid" => $ssid));
-                $img = $this->overlayRenderer->drawModeHighlight($coords, $zoom, $allNets, $highlitedNets);
+                $allowedBy = array('ssid','mac','channel');
+                $by = $this->getHttpRequest()->getQuery("by");
+                if(in_array($by,$allowedBy)) {
+                    $val = $this->getHttpRequest()->getQuery("val");
+                    $highlitedNets = $this->wifiManager->getNetsBySt($coords,$by,$val);
+                    $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
+                    $img = $this->overlayRenderer->drawModeHighlight($coords, $zoom, $allNets, $highlitedNets);
+                }
+                else {
+                    $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
+                    $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                }
                 break;
             case self::MODE_ONE_SOURCE:
                 $srca = explode("-",$this->getHttpRequest()->getQuery("source"));
