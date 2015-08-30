@@ -4,6 +4,7 @@ namespace App\Presenters;
 
 use \App\Model\Coords;
 use \App\Model\DownloadQueue;
+use App\Model\WifiManager;
 use \App\Model\WigleDownload, \App\Model\WifileaksDownload, \Nette\Http;
 use \App\Model\WigleRequest;
 
@@ -35,6 +36,12 @@ class DownloadPresenter extends BasePresenter {
      */
     public $downloadQueue;
 
+    /**
+     * @var WifiManager
+     * @inject
+     */
+    public $wifiManager;
+
 
     /**
      * CRON - 50times a day
@@ -54,6 +61,43 @@ class DownloadPresenter extends BasePresenter {
         self::setIni(600,'128M');
         $this->wifileaksDownload->download("../temp/wifileaks.tsv");
 		$this->terminate();
+    }
+
+
+
+    public function renderGoogle() {
+        // https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true&wifi=mac:00-0c-42-2b-44-ac|ssid:DivecAirNetZapadWPA|ss:80wifi=mac:00-0c-42-23-1a-0e|ssid:MedAirNet|ss:20
+        $click_lat = 50.19069300754107;
+        $click_lon = 15.804262161254883;
+
+        $mapCoords = new Coords(50.18899429884056,50.19191362607472,15.797227464556954,15.808954082370064);
+
+        $dlat = $mapCoords->getDeltaLat();
+        $dlon = $mapCoords->getDeltaLon();
+
+        $coords = new Coords(
+            $click_lat-$dlat*0.03,
+            $click_lat+$dlat*0.03,
+            $click_lon-$dlon*0.03,
+            $click_lon+$dlon*0.03
+        );
+
+
+        //$database = $this->wifileaksDownload->getDatabase();
+        $nets = $this->wifiManager->getNetsRangeQuery($coords)->limit(2);
+        $q = "";
+        $ss = -80;
+        foreach($nets as $net) {
+            $mac = str_replace(":","-",$net->mac);
+            $q.='&wifi=mac:'.$mac.'|ssid:'.$net->ssid.'|ss:'.$ss;
+            $ss = -20;
+        }
+        dump($nets->fetchAll());
+        $url = "https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true".$q;
+        echo $url;
+        dump(json_decode(file_get_contents($url)));
+
+        $this->terminate();
     }
 
     /**

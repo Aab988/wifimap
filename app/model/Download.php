@@ -104,4 +104,10 @@ class Download extends Nette\Object {
         return $array;
     }
 
+    /**
+     * @return Nette\Database\Context
+     */
+    public function getDatabase() {
+        return $this->database;
+    }
 }
