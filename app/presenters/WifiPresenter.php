@@ -7,7 +7,6 @@ use App\Model\OverlayRenderer;
 use App\Model\WifiManager;
 use Latte\Template;
 use Nette;
-
 //use Nette\Caching\Cache;
 
 class WifiPresenter extends BasePresenter
@@ -153,8 +152,23 @@ class WifiPresenter extends BasePresenter
         switch ($mode) {
             case self::MODE_SEARCH:
                 // vyhledavani
-                $ssid = $this->getHttpRequest()->getQuery("ssid");
-                $nets = $this->wifiManager->getNetsModeSearch($coords, array("ssid" => $ssid));
+                $request = $this->getHttpRequest();
+                $params = array();
+                if ($request->getQuery("ssidmac")) {
+                    if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",urldecode($request->getQuery("ssidmac")))) {
+                        $params['mac'] = urldecode($request->getQuery("ssidmac"));
+                    }
+                    else {
+                        $params["ssid"] = $request->getQuery("ssidmac");
+                    }
+                }
+                if($request->getQuery("channel")!=null && $request->getQuery("channel") != "") {
+                    $params['channel'] = intval($request->getQuery("channel"));
+                }
+                if($request->getQuery("security") && $request->getQuery("security") != "") {
+                    $params['sec'] = intval($request->getQuery("security"));
+                }
+                $nets = $this->wifiManager->getNetsModeSearch($coords, $params);
                 $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
             case self::MODE_HIGHLIGHT:

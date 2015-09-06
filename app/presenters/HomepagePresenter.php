@@ -6,7 +6,6 @@ use Nette,
 	App\Model;
 use Nette\Application\UI;
 
-
 /**
  * Homepage presenter.
  */
@@ -18,6 +17,12 @@ class HomepagePresenter extends BasePresenter
 	 * @inject
 	 */
 	public $sourceManager;
+
+	/**
+	 * @var Model\WifiManager
+	 * @inject
+	 */
+	public $wifiManager;
 
 
 	public $database;
@@ -34,13 +39,29 @@ class HomepagePresenter extends BasePresenter
 	}
 
 
-
-	protected function createComponentRegistrationForm()
-	{
+	protected function createComponentSearchForm() {
 		$form = new UI\Form;
-		$form->addSelect('source', 'Vyberte zdroj:', $this->sourceManager->getAllSourcesAsKeyVal());
-		$form->addSubmit("submit");
-		$form->onSuccess[] = array($this, 'registrationFormSucceeded');
+
+		$ssidmacTxt = $form->addText('ssidmac', 'SSID/MAC:');
+		//$ssidmac->getControlPrototype()->id='ssidmac';
+
+		$channelsQ = $this->wifiManager->getAllChannels();
+		$channels = array();
+		foreach($channelsQ as $ch) {
+			$channels[$ch->channel] = $ch->channel;
+		}
+
+
+		$channelSelect = $form->addSelect('channel','Kanál:', $channels)
+			->setPrompt('Všechny kanály');
+
+		$securitySelect = $form->addSelect('security', 'Zabezpečení:', array('Otevřená', 'WEP', 'WPA1', 'WPA2', 'jiné'))
+			->setPrompt("Všechny typy");
+
+		$form->addSubmit('search', 'Vyhledat');
+		//$form->getElementPrototype()->onsubmit = 'return searchFormSubmit()';
+		//$form->getElementPrototype()->id = 'searchForm';
 		return $form;
 	}
+
 }

@@ -45,7 +45,17 @@ class WifiManager extends Nette\Object {
 
 		$q = $this->getNetsRangeQuery($coords);
 		$q->select("id,latitude,longitude,ssid,mac,id_source");
-		$q->where("ssid LIKE ?", "%".$params["ssid"]."%");
+		foreach($params as $param => $val) {
+			switch($param) {
+				case 'ssid':
+					$q->where("$param LIKE ?","%$val%"); break;
+				case 'mac':
+					$mac = str_replace("-",":",$val);
+					$q->where("$param LIKE ?","%$mac%"); break;
+				default:
+					$q->where($param,$val); break;
+			}
+		}
 		return $q;
 	}
 
@@ -152,7 +162,21 @@ class WifiManager extends Nette\Object {
 				break;
 
 			case WifiPresenter::MODE_SEARCH:
-				$params = array("ssid"=>$request->getQuery("ssid"));
+				$params = array();
+				if ($request->getQuery("ssidmac")) {
+					if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",$request->getQuery("ssidmac"))) {
+						$params['mac'] = $request->getQuery("ssidmac");
+					}
+					else {
+						$params["ssid"] = $request->getQuery("ssidmac");
+					}
+				}
+				if($request->getQuery("channel") && $request->getQuery("channel") != "") {
+					$params['channel'] = intval($request->getQuery("channel"));
+				}
+				if($request->getQuery("security") && $request->getQuery("security") != "") {
+					$params['sec'] = intval($request->getQuery("security"));
+				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
 				break;
 			case WifiPresenter::MODE_ONE_SOURCE:
@@ -210,7 +234,21 @@ class WifiManager extends Nette\Object {
 				break;
 
 			case WifiPresenter::MODE_SEARCH:
-				$params = array("ssid"=>$request->getQuery("ssid"));
+				$params = array();
+				if ($request->getQuery("ssidmac")) {
+					if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",urldecode($request->getQuery("ssidmac")))) {
+						$params['mac'] = urldecode($request->getQuery("ssidmac"));
+					}
+					else {
+						$params["ssid"] = $request->getQuery("ssidmac");
+					}
+				}
+				if($request->getQuery("channel") && $request->getQuery("channel") != "") {
+					$params['channel'] = intval($request->getQuery("channel"));
+				}
+				if($request->getQuery("security") && $request->getQuery("security") != "") {
+					$params['sec'] = intval($request->getQuery("security"));
+				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
 				break;
 			case WifiPresenter::MODE_ONE_SOURCE:
@@ -251,8 +289,17 @@ class WifiManager extends Nette\Object {
 	}
 
 
-
-
+	/**
+	 * get all channels that are used
+	 * @return array|Nette\Database\Table\IRow[]
+	 */
+	public function getAllChannels()
+	{
+		return $this->database->table("wifi")
+			->select("DISTINCT channel")
+			->where("channel IS NOT NULL")
+			->fetchAll();
+	}
 
 
 

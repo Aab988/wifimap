@@ -238,9 +238,9 @@ function resetAllFilters() {
     $(".mi-source").removeClass("active");
     $("#ul-one-source").hide(100);
 
-
-
-
+    delete hashParams.ssidmac;
+    delete hashParams.channel;
+    delete hashParams.security;
     delete hashParams.ssid;
     delete hashParams.mode;
     delete hashParams.source;
@@ -337,5 +337,28 @@ $(document).ready(function(){
         window.location.hash = $.param(hashParams);
         redrawOverlay();
     });
+
+
+    $("#frm-searchForm").submit(function(e) {
+        e.preventDefault();
+        delete hashParams.ssidmac;
+        delete hashParams.channel;
+        delete hashParams.security;
+
+        ssidmac = $(this).find("#frm-searchForm-ssidmac").val();
+        channel = $(this).find("#frm-searchForm-channel").val();
+        security = $(this).find("#frm-searchForm-security").val();
+        hashParams.mode = MODE_SEARCH;
+
+        if(ssidmac) hashParams.ssidmac = ssidmac;
+        if(channel) hashParams.channel = channel;
+        if(security) hashParams.security = security;
+
+        window.location.hash = $.param(hashParams);
+        redrawOverlay();
+
+    });
+
+
 
 });

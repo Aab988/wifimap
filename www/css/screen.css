@@ -151,3 +151,7 @@ html.js .jshidden {
 .active {
     color: #007F00;
 }
+
+#frm-searchForm input {
+    max-width: 140px;
+}
