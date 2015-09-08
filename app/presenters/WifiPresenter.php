@@ -165,7 +165,7 @@ class WifiPresenter extends BasePresenter
                 if($request->getQuery("channel")!=null && $request->getQuery("channel") != "") {
                     $params['channel'] = intval($request->getQuery("channel"));
                 }
-                if($request->getQuery("security") && $request->getQuery("security") != "") {
+                if($request->getQuery("security")!=null && $request->getQuery("security") != "") {
                     $params['sec'] = intval($request->getQuery("security"));
                 }
                 $nets = $this->wifiManager->getNetsModeSearch($coords, $params);

@@ -164,17 +164,17 @@ class WifiManager extends Nette\Object {
 			case WifiPresenter::MODE_SEARCH:
 				$params = array();
 				if ($request->getQuery("ssidmac")) {
-					if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",$request->getQuery("ssidmac"))) {
-						$params['mac'] = $request->getQuery("ssidmac");
+					if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",urldecode($request->getQuery("ssidmac")))) {
+						$params['mac'] = urldecode($request->getQuery("ssidmac"));
 					}
 					else {
 						$params["ssid"] = $request->getQuery("ssidmac");
 					}
 				}
-				if($request->getQuery("channel") && $request->getQuery("channel") != "") {
+				if($request->getQuery("channel")!=null && $request->getQuery("channel") != "") {
 					$params['channel'] = intval($request->getQuery("channel"));
 				}
-				if($request->getQuery("security") && $request->getQuery("security") != "") {
+				if($request->getQuery("security")!=null && $request->getQuery("security") != "") {
 					$params['sec'] = intval($request->getQuery("security"));
 				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
