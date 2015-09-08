@@ -1,5 +1,6 @@
 <?php
-namespace App\Model;
+namespace App\Service;
+use App\Model\Wifi;
 
 class WifileaksDownload extends Download implements \IDownload {
 

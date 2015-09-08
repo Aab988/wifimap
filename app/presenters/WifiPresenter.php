@@ -3,9 +3,8 @@
 namespace App\Presenters;
 
 use App\Model\Coords;
-use App\Model\OverlayRenderer;
-use App\Model\WifiManager;
-use Latte\Template;
+use App\Service\OverlayRenderer;
+use App\Service\WifiManager;
 use Nette;
 //use Nette\Caching\Cache;
 

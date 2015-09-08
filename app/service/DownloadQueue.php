@@ -4,8 +4,12 @@
  * Date: 23.08.2015
  * Time: 21:12
  */
-namespace App\Model;
+namespace App\Service;
 use Nette;
+use App\Model\Coords;
+use App\Model\ArrayUtil;
+
+
 
 class DownloadQueue extends Nette\Object {
 

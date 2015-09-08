@@ -1,5 +1,6 @@
 <?php
-namespace App\Model;
+namespace App\Service;
+use App\Model\Wifi;
 use Nette;
 
 /**
@@ -83,7 +84,7 @@ class Download extends Nette\Object {
             "date_added" => date("Y-m-d"),
             "mac" => $wifi->getMac(),
             "ssid" => $wifi->getSsid(),
-            "sec" => $wifi->getSec(),
+            "sec" => $wifi->getSec()+1,
             "latitude" => $wifi->getLatitude(),
             "longitude" => $wifi->getLongitude(),
             "altitude" => $wifi->getAltitude(),

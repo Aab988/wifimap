@@ -4,8 +4,10 @@
  * Date: 31.07.2015
  * Time: 10:10
  */
-namespace App\Model;
+namespace App\Service;
 use App\Presenters\WifiPresenter;
+use App\Model\Coords;
+
 use Nette;
 
 class WifiManager extends Nette\Object {
@@ -114,7 +116,7 @@ class WifiManager extends Nette\Object {
 
 	private function getFreeNetsQuery($coords) {
 		$q = $this->getNetsRangeQuery($coords);
-		$q->where('sec = ? OR freenet = ?',0,'Y');
+		$q->where('sec = ? OR freenet = ?',1,'Y');
 		return $q;
 	}
 

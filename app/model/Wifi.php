@@ -1,6 +1,8 @@
 <?php
 namespace App\Model;
 use Nette;
+use App\Service\WifileaksDownload;
+use App\Service\WigleDownload;
 
 class Wifi extends Nette\Object {
     /** @var string  */

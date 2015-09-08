@@ -1,7 +1,10 @@
 <?php
-namespace App\Model;
+namespace App\Service;
 use Nette\Utils;
 use Nette\Utils\DateTime;
+use App\Model\Coords;
+use App\Model\Wifi;
+
 
 /**
  * Class WigleDownload

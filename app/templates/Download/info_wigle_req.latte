@@ -1,8 +1,8 @@
-{if $code == App\Model\WigleRequest::ERR_ALREADY_IN_QUEUE}
+{if $code == App\Service\WigleRequest::ERR_ALREADY_IN_QUEUE}
 <p>Tato plocha je již ve frontě (buď samostatně nebo obsažená v jiné ploše).</p>
-{elseif $code == App\Model\WigleRequest::ERR_RECENTLY_DOWNLOADED}
+{elseif $code == App\Service\WigleRequest::ERR_RECENTLY_DOWNLOADED}
 <p>Tato plocha byla stažena méně než před týdnem. Nelze požadovat aktualizaci dat dříve než týden po jejich stažení.</p>
-{elseif $code == App\Model\WigleRequest::INFO_ADDED_TO_QUEUE}
+{elseif $code == App\Service\WigleRequest::INFO_ADDED_TO_QUEUE}
 <p>Váš požadavek byl přidán do fronty.</p>
 {else}
 <p>Nastala chyba při přidávání do fronty.</p>

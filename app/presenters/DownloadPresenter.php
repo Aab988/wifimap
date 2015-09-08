@@ -3,41 +3,38 @@
 namespace App\Presenters;
 
 use \App\Model\Coords;
-use \App\Model\DownloadQueue;
-use App\Model\WifiManager;
-use \App\Model\WigleDownload, \App\Model\WifileaksDownload, \Nette\Http;
-use \App\Model\WigleRequest;
+use \App\Service;
 
 class DownloadPresenter extends BasePresenter {
 
     /**
      *
-     * @var \App\Model\WigleDownload
+     * @var \App\Service\WigleDownload
      * @inject
      */
     public $wigleDownload;
     
     /**
      *
-     * @var \App\Model\WifileaksDownload
+     * @var \App\Service\WifileaksDownload
      * @inject
      */
     public $wifileaksDownload;
 
     /**
-     * @var \App\Model\WigleRequest
+     * @var \App\Service\WigleRequest
      * @inject
      */
     public $wigleRequest;
 
     /**
-     * @var \App\Model\DownloadQueue
+     * @var \App\Service\DownloadQueue
      * @inject
      */
     public $downloadQueue;
 
     /**
-     * @var WifiManager
+     * @var \App\Service\WifiManager
      * @inject
      */
     public $wifiManager;

@@ -5,6 +5,7 @@ namespace App\Presenters;
 use Nette,
 	App\Model;
 use Nette\Application\UI;
+use App\Service;
 
 /**
  * Homepage presenter.
@@ -13,13 +14,13 @@ class HomepagePresenter extends BasePresenter
 {
 
 	/**
-	 * @var Model\SourceManager
+	 * @var Service\SourceManager
 	 * @inject
 	 */
 	public $sourceManager;
 
 	/**
-	 * @var Model\WifiManager
+	 * @var Service\WifiManager
 	 * @inject
 	 */
 	public $wifiManager;

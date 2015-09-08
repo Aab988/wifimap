@@ -1,6 +1,115 @@
 {block content}
+    <h1>Statistiky ({$actualStatistics->created|date:'j. n. Y'})</h1>
+    <div class="top">
+        <h2>Celkové statistiky</h2>
+        <table id="totalStatistics">
+            <tr>
+                <td>Aktuální počet sítí:</td>
+                <?php
+                    $totalNetsChange = ($secondLatestStatistics)?$actualStatistics->total_nets - $secondLatestStatistics->total_nets:null;
+                    $freeNetsChange = ($secondLatestStatistics)?$actualStatistics->free_nets - $secondLatestStatistics->free_nets:null;
+                ?>
+                <td>{$actualStatistics->total_nets|number:0:',':' '}{ifset $totalNetsChange} (změna {if $totalNetsChange > 0}+{/if}{$totalNetsChange|number:0:',':' '}){/ifset}</td>
+            </tr>
+            <tr>
+                <td>Volných:</td>
+                <td>{$actualStatistics->free_nets|number:0:',':' '}{ifset $freeNetsChange} (změna {if $freeNetsChange > 0}+{/if}{$freeNetsChange|number:0:',':' '}){/ifset}</td>
+            </tr>
+        </table>
+        <div id="total_history" class="chart"></div>
+        <div id="total_pie" class="chart"></div>
+    </div>
 
-    <span style="font-size: 50px;">Tato sekce je zatím ve vývoji</span>
+    <div class="left">
+        <h2>Zdroje</h2>
+        <table>
+            <thead>
+                <th>Zdroj</th>
+                <th>Celkem sítí</th>
+                <th>Volných sítí</th>
+            </thead>
+            <tbody>
+            {foreach $sourceStatisticsActual as $ssa}
+                <tr>
+                    <td>{$ssa->name}</td>
+                    <td>{$ssa->total_nets|number:0:',':' '}</td>
+                    <td>{$ssa->free_nets|number:0:',':' '}</td>
+                </tr>
+            {/foreach}
+            </tbody>
+        </table>
+        <div id="sources_pie"></div>
+        <div id="sources_history_chart"></div>
+    </div>
+
+    <div class="right">
+        <h2>Zabezpečení</h2>
+    </div>
+
+    <script>
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                      ['Datum', 'Celkový počet sítí','Počet volných sítí'],
+                      {foreach $allStatistics as $st}
+                        [{$st->created|date:'j. n. Y'},{$st->total_nets},{$st->free_nets}],
+                      {/foreach}
+                    ]);
+                    var options = {
+                      title: 'Historie',
+                      curveType: 'function',
+                      legend: { position: 'bottom',},
+
+                    };
+                    var chartTotalHistory = new google.visualization.LineChart(document.getElementById('total_history'));
+                    chartTotalHistory.draw(data, options);
+
+            data = google.visualization.arrayToDataTable([
+                      ['Typ', 'Počet sítí'],
+                      ['Volné(FreeWifi a otevřené)', {$actualStatistics->free_nets}],
+                      ['Soukromé (zabezpečené)', {($actualStatistics->total_nets - $actualStatistics->free_nets)}]
+                    ]);
+                    options = {
+                      title: 'Podíl',
+                      curveType: 'function',
+                      legend: { position: 'bottom',},
+                       pieHole: 0.4,
+                    };
+                    var chartTotalFree = new google.visualization.PieChart(document.getElementById('total_pie'));
+                    chartTotalFree.draw(data, options);
+
+            data = google.visualization.arrayToDataTable([
+                                  ['Zdroj', 'Počet sítí'],
+                                  {foreach $sourceStatisticsActual as $ssa}
+                                  [{$ssa->name},{$ssa->total_nets}],
+                                  {/foreach}
+                                ]);
+                                options = {
+                                  title: 'Podíl',
+                                  curveType: 'function',
+                                  legend: { position: 'bottom',}
+                                };
+                                var chartSources = new google.visualization.PieChart(document.getElementById('sources_pie'));
+                                chartSources.draw(data, options);
+
+
+            data = google.visualization.arrayToDataTable([
+                ['Datum','Zdroj', 'Počet sítí'],
+                {foreach $sourceStatisticsAll as $ssa}
+                [{$ssa->created|date:'j. n. Y'},{$ssa->name},{$ssa->total_nets}],
+                {/foreach}
+                ]);
+                options = {
+                title: 'Podíl',
+                legend: { position: 'bottom',}
+                };
+                var chartSourcesHistory = new google.charts.Bar(document.getElementById('sources_history_chart'));
+                chartSourcesHistory.draw(data, options);
+
+
+
+
+            }
+</script>
 
 {/block}
 {block right}

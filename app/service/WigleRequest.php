@@ -4,9 +4,11 @@
  * Date: 23.08.2015
  * Time: 22:26
  */
-namespace App\Model;
+namespace App\Service;
 use Nette;
 use Nette\Utils\DateTime;
+use App\Model\Coords;
+
 
 class WigleRequest extends Nette\Object {
 

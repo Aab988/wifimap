@@ -4,8 +4,10 @@
  * Date: 27.08.2015
  * Time: 15:49
  */
-namespace App\Model;
+namespace App\Service;
 use Nette;
+use App\Model\Source;
+
 class SourceManager extends Nette\Object {
 
     /**

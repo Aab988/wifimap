@@ -4,8 +4,10 @@
  * Date: 31.07.2015
  * Time: 10:13
  */
-namespace App\Model;
+namespace App\Service;
 use Nette;
+use App\Model\Color;
+use App\Model\Coords;
 
 class OverlayRenderer extends Nette\Object {
 

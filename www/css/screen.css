@@ -67,6 +67,8 @@ html.js .jshidden {
     float: left;
     width: 80%;
     height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 
@@ -154,4 +156,43 @@ html.js .jshidden {
 
 #frm-searchForm input {
     max-width: 140px;
+}
+
+
+
+.top {
+    width: 100%;
+    float: left;
+    
+}
+
+.top .chart {
+    margin: 0;
+    padding: 0;
+    width: 50%;
+    float: left;
+    height: 400px;
+
+}
+
+.left {
+    width: 50%;
+    height: 300px;
+    float: left;
+}
+
+.right {
+    height: 300px;
+    width: 50%;
+    float: right;
+}
+#totalStatistics {
+    margin: 0 auto;
+}
+#totalStatistics tr td {
+    font-size: 30px;
+}
+
+#totalStatistics tr td:first-child {
+    text-align: right;
 }

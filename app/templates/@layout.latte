@@ -14,7 +14,19 @@
 	<link rel="stylesheet" media="print" href="{$basePath}/css/print.css">
 	<link rel="shortcut icon" href="{$basePath}/favicon.ico">
 	
-	{block head}{/block}
+	{block head}
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+          google.load('visualization', '1.0', {'packages':['corechart','bar']});
+          google.setOnLoadCallback(draw);
+
+
+			function draw() {
+				drawChart();
+			}
+
+        </script>
+	{/block}
 </head>
 
 <body>
