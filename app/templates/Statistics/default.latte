@@ -6,14 +6,14 @@
             <tr>
                 <td>Aktuální počet sítí:</td>
                 <?php
-                    $totalNetsChange = ($secondLatestStatistics)?$actualStatistics->total_nets - $secondLatestStatistics->total_nets:null;
-                    $freeNetsChange = ($secondLatestStatistics)?$actualStatistics->free_nets - $secondLatestStatistics->free_nets:null;
+                    $totalNetsChange = ($secondLatestStatistics)?$actualStatistics->getTotalNets() - $secondLatestStatistics->getTotalNets():null;
+                    $freeNetsChange = ($secondLatestStatistics)?$actualStatistics->getFreeNets() - $secondLatestStatistics->getFreeNets():null;
                 ?>
-                <td>{$actualStatistics->total_nets|number:0:',':' '}{ifset $totalNetsChange} (změna {if $totalNetsChange > 0}+{/if}{$totalNetsChange|number:0:',':' '}){/ifset}</td>
+                <td>{$actualStatistics->getTotalNets()|number:0:',':' '}{ifset $totalNetsChange} (změna {if $totalNetsChange > 0}+{/if}{$totalNetsChange|number:0:',':' '}){/ifset}</td>
             </tr>
             <tr>
                 <td>Volných:</td>
-                <td>{$actualStatistics->free_nets|number:0:',':' '}{ifset $freeNetsChange} (změna {if $freeNetsChange > 0}+{/if}{$freeNetsChange|number:0:',':' '}){/ifset}</td>
+                <td>{$actualStatistics->getFreeNets()|number:0:',':' '}{ifset $freeNetsChange} (změna {if $freeNetsChange > 0}+{/if}{$freeNetsChange|number:0:',':' '}){/ifset}</td>
             </tr>
         </table>
         <div id="total_history" class="chart"></div>
@@ -24,16 +24,18 @@
         <h2>Zdroje</h2>
         <table>
             <thead>
-                <th>Zdroj</th>
-                <th>Celkem sítí</th>
-                <th>Volných sítí</th>
+                <tr>
+                    <th>Zdroj</th>
+                    <th>Celkem sítí</th>
+                    <th>Volných sítí</th>
+                </tr>
             </thead>
             <tbody>
-            {foreach $sourceStatisticsActual as $ssa}
+            {foreach $actualStatistics->getStatisticsSource() as $ssa}
                 <tr>
-                    <td>{$ssa->name}</td>
-                    <td>{$ssa->total_nets|number:0:',':' '}</td>
-                    <td>{$ssa->free_nets|number:0:',':' '}</td>
+                    <td>{$ssa->getSource()->getName()}</td>
+                    <td>{$ssa->getTotalNets()|number:0:',':' '}</td>
+                    <td>{$ssa->getFreeNets()|number:0:',':' '}</td>
                 </tr>
             {/foreach}
             </tbody>
@@ -44,71 +46,109 @@
 
     <div class="right">
         <h2>Zabezpečení</h2>
+        <table>
+        <thead>
+            <tr>
+                <th>Typ zabezpečení</th>
+                <th>Počet sítí</th>
+            </tr>
+        </thead>
+        <tbody>
+            {foreach $actualStatistics->getStatisticsSecurity() as $sse}
+                <tr>
+                    <td>{$sse->getWifiSecurity()->getLabel()}</td>
+                    <td>{$sse->getTotalNets()|number:0:',':' '}</td>
+                </tr>
+            {/foreach}
+        </tbody>
+        </table>
+        <div id="security_pie"></div>
+        <div id="security_history_chart"></div>
     </div>
 
     <script>
         function drawChart() {
             var data = google.visualization.arrayToDataTable([
-                      ['Datum', 'Celkový počet sítí','Počet volných sítí'],
-                      {foreach $allStatistics as $st}
-                        [{$st->created|date:'j. n. Y'},{$st->total_nets},{$st->free_nets}],
-                      {/foreach}
-                    ]);
-                    var options = {
-                      title: 'Historie',
-                      curveType: 'function',
-                      legend: { position: 'bottom',},
-
-                    };
-                    var chartTotalHistory = new google.visualization.LineChart(document.getElementById('total_history'));
-                    chartTotalHistory.draw(data, options);
+                ['Datum', 'Celkový počet sítí','Počet volných sítí'],
+                {foreach $allStatistics as $st}
+                [{$st->getCreated()|date:'j. n. Y'},{$st->getTotalNets()},{$st->getFreeNets()}],
+                {/foreach}]);
+            var options = {
+                title: 'Historie',
+                curveType: 'function',
+                legend: { position: 'bottom',},
+            };
+            var chartTotalHistory = new google.visualization.LineChart(document.getElementById('total_history'));
+            chartTotalHistory.draw(data, options);
 
             data = google.visualization.arrayToDataTable([
-                      ['Typ', 'Počet sítí'],
-                      ['Volné(FreeWifi a otevřené)', {$actualStatistics->free_nets}],
-                      ['Soukromé (zabezpečené)', {($actualStatistics->total_nets - $actualStatistics->free_nets)}]
-                    ]);
-                    options = {
-                      title: 'Podíl',
-                      curveType: 'function',
-                      legend: { position: 'bottom',},
-                       pieHole: 0.4,
-                    };
-                    var chartTotalFree = new google.visualization.PieChart(document.getElementById('total_pie'));
-                    chartTotalFree.draw(data, options);
-
-            data = google.visualization.arrayToDataTable([
-                                  ['Zdroj', 'Počet sítí'],
-                                  {foreach $sourceStatisticsActual as $ssa}
-                                  [{$ssa->name},{$ssa->total_nets}],
-                                  {/foreach}
-                                ]);
-                                options = {
-                                  title: 'Podíl',
-                                  curveType: 'function',
-                                  legend: { position: 'bottom',}
-                                };
-                                var chartSources = new google.visualization.PieChart(document.getElementById('sources_pie'));
-                                chartSources.draw(data, options);
-
-
-            data = google.visualization.arrayToDataTable([
-                ['Datum','Zdroj', 'Počet sítí'],
-                {foreach $sourceStatisticsAll as $ssa}
-                [{$ssa->created|date:'j. n. Y'},{$ssa->name},{$ssa->total_nets}],
-                {/foreach}
-                ]);
-                options = {
+                ['Typ', 'Počet sítí'],
+                ['Volné(FreeWifi a otevřené)', {$actualStatistics->getFreeNets()}],
+                ['Soukromé (zabezpečené)', {($actualStatistics->getTotalNets() - $actualStatistics->getFreeNets())}]]);
+            options = {
                 title: 'Podíl',
-                legend: { position: 'bottom',}
-                };
-                var chartSourcesHistory = new google.charts.Bar(document.getElementById('sources_history_chart'));
-                chartSourcesHistory.draw(data, options);
+                legend: { position: 'bottom',},
+                pieHole: 0.4,
+            };
+            var pieTotalFree = new google.visualization.PieChart(document.getElementById('total_pie'));
+            pieTotalFree.draw(data, options);
 
+            data = google.visualization.arrayToDataTable([
+                ['Zdroj', 'Počet sítí'],
+                {foreach $actualStatistics->getStatisticsSource() as $ssa}
+                [{$ssa->getSource()->getName()},{$ssa->getTotalNets()}],
+                {/foreach}]);
+            options = {
+                title: 'Podíl',
+                legend: { position: 'right',}
+            };
+            var pieSources = new google.visualization.PieChart(document.getElementById('sources_pie'));
+            pieSources.draw(data, options);
 
+            data = google.visualization.arrayToDataTable([
+                ['Datum',{foreach $allStatistics[0]->getStatisticsSource() as $gss}{$gss->getSource()->getName()},{/foreach}],
+                {foreach $allStatistics as $as}
+                    [{$as->getCreated()|date:'j. n. Y'},
+                    {foreach $as->getStatisticsSource() as $ss}
+                        {$ss->getTotalNets()},
+                    {/foreach}
+                    ],
+                {/foreach}]);
+            options = {
+                title: 'Podíl',
+                legend: { position: 'bottom'}
+            };
+            var chartSourcesHistory = new google.charts.Bar(document.getElementById('sources_history_chart'));
+            chartSourcesHistory.draw(data, options);
 
+            data = google.visualization.arrayToDataTable([
+                ['Typ zabezpečení', 'Počet sítí'],
+                {foreach $actualStatistics->getStatisticsSecurity() as $ssa}
+                    [{$ssa->getWifiSecurity()->getLabel()},{$ssa->getTotalNets()}],
+                {/foreach}]);
+            options = {
+                title: 'Podíl',
+                legend: { position: 'right',}
+            };
+            var pieSecurity = new google.visualization.PieChart(document.getElementById('security_pie'));
+            pieSecurity.draw(data, options);
 
-            }
+            data = google.visualization.arrayToDataTable([
+                ['Datum',{foreach $allStatistics[0]->getStatisticsSecurity() as $gss}{$gss->getWifiSecurity()->getLabel()},{/foreach}],
+                {foreach $allStatistics as $as}
+                    [{$as->getCreated()|date:'j. n. Y'},
+                    {foreach $as->getStatisticsSecurity() as $ss}
+                        {$ss->getTotalNets()},
+                    {/foreach}
+                    ],
+                {/foreach}]);
+            options = {
+                title: 'Podíl',
+                legend: { position: 'bottom'}
+            };
+            var chartSecurityHistory = new google.charts.Bar(document.getElementById('security_history_chart'));
+            chartSecurityHistory.draw(data, options);
+        }
 </script>
 
 {/block}

@@ -196,3 +196,7 @@ html.js .jshidden {
 #totalStatistics tr td:first-child {
     text-align: right;
 }
+
+#security_history_chart,#sources_history_chart {
+    width: 80%;
+}
