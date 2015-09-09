@@ -17,14 +17,11 @@
 	{block head}
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
-          google.load('visualization', '1.0', {'packages':['corechart','bar']});
-          google.setOnLoadCallback(draw);
-
-
-			function draw() {
-				drawChart();
-			}
-
+    	google.load('visualization', '1.0', {'packages':['corechart','bar']});
+        google.setOnLoadCallback(draw);
+		function draw() {
+			drawChart();
+		}
         </script>
 	{/block}
 </head>

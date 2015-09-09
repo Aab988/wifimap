@@ -176,16 +176,22 @@ html.js .jshidden {
 }
 
 .left {
-    width: 50%;
-    height: 300px;
+    width: 48%;
     float: left;
+    padding: 0.9%;
 }
 
 .right {
-    height: 300px;
-    width: 50%;
+    width: 48%;
     float: right;
+    border-left: 1px solid #666666;
+    padding: 0.9%;
 }
+
+.top table,.left table,.right table {
+    width: 100%;
+}
+
 #totalStatistics {
     margin: 0 auto;
 }

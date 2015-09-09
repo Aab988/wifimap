@@ -1,7 +1,8 @@
 {block content}
-    <h1>Statistiky ({$actualStatistics->created|date:'j. n. Y'})</h1>
+    <h1>Statistiky ({($actualStatistics)?$actualStatistics->created|date:'j. n. Y':''})</h1>
     <div class="top">
         <h2>Celkové statistiky</h2>
+        {if $actualStatistics}
         <table id="totalStatistics">
             <tr>
                 <td>Aktuální počet sítí:</td>
@@ -16,12 +17,18 @@
                 <td>{$actualStatistics->getFreeNets()|number:0:',':' '}{ifset $freeNetsChange} (změna {if $freeNetsChange > 0}+{/if}{$freeNetsChange|number:0:',':' '}){/ifset}</td>
             </tr>
         </table>
+        {/if}
+        {if count($allStatistics) > 1}
         <div id="total_history" class="chart"></div>
+        {/if}
+        {if $actualStatistics}
         <div id="total_pie" class="chart"></div>
+        {/if}
     </div>
 
     <div class="left">
         <h2>Zdroje</h2>
+        {if $actualStatistics->getStatisticsSource()}
         <table>
             <thead>
                 <tr>
@@ -41,16 +48,21 @@
             </tbody>
         </table>
         <div id="sources_pie"></div>
+        {/if}
         <div id="sources_history_chart"></div>
     </div>
 
     <div class="right">
         <h2>Zabezpečení</h2>
+        {if $actualStatistics->getStatisticsSecurity()}
         <table>
         <thead>
             <tr>
                 <th>Typ zabezpečení</th>
                 <th>Počet sítí</th>
+                {ifset $secondLatestStatistics}
+                <th>Změna</th>
+                {/ifset}
             </tr>
         </thead>
         <tbody>
@@ -58,16 +70,24 @@
                 <tr>
                     <td>{$sse->getWifiSecurity()->getLabel()}</td>
                     <td>{$sse->getTotalNets()|number:0:',':' '}</td>
+                    {ifset $secondLatestStatistics}
+                    <td>
+                        {var $change = $sse->getTotalNets() - $secondLatestStatistics->getStatisticsSecurityByIdSecurity($sse->getWifiSecurity()->getId())->getTotalNets()}
+                        {if $change > 0}+{/if}{$change|number:0:',':' '}
+                    </td>
+                    {/ifset}
                 </tr>
             {/foreach}
         </tbody>
         </table>
         <div id="security_pie"></div>
+        {/if}
         <div id="security_history_chart"></div>
     </div>
 
     <script>
         function drawChart() {
+            {if count($allStatistics) > 1}
             var data = google.visualization.arrayToDataTable([
                 ['Datum', 'Celkový počet sítí','Počet volných sítí'],
                 {foreach $allStatistics as $st}
@@ -80,7 +100,8 @@
             };
             var chartTotalHistory = new google.visualization.LineChart(document.getElementById('total_history'));
             chartTotalHistory.draw(data, options);
-
+            {/if}
+            {if $actualStatistics}
             data = google.visualization.arrayToDataTable([
                 ['Typ', 'Počet sítí'],
                 ['Volné(FreeWifi a otevřené)', {$actualStatistics->getFreeNets()}],
@@ -92,7 +113,8 @@
             };
             var pieTotalFree = new google.visualization.PieChart(document.getElementById('total_pie'));
             pieTotalFree.draw(data, options);
-
+            {/if}
+            {if $actualStatistics->getStatisticsSource()}
             data = google.visualization.arrayToDataTable([
                 ['Zdroj', 'Počet sítí'],
                 {foreach $actualStatistics->getStatisticsSource() as $ssa}
@@ -104,15 +126,33 @@
             };
             var pieSources = new google.visualization.PieChart(document.getElementById('sources_pie'));
             pieSources.draw(data, options);
+            {/if}
 
+            {if count($allStatistics) > 1}
+            <?php
+                $maxStatSourceLength = 0;
+                $maxStatSourceLengthIndex = 0;
+                foreach($allStatistics as $key=>$as) {
+                    if(count($as->getStatisticsSource())>$maxStatSourceLength) {
+                        $maxStatSourceLength = count($as->getStatisticsSource());
+                        $maxStatSourceLengthIndex = $key;
+                    }
+                }
+            ?>
             data = google.visualization.arrayToDataTable([
-                ['Datum',{foreach $allStatistics[0]->getStatisticsSource() as $gss}{$gss->getSource()->getName()},{/foreach}],
+                ['Datum',{foreach $allStatistics[$maxStatSourceLengthIndex]->getStatisticsSource() as $gss}{$gss->getSource()->getName()},{/foreach}],
+                {for $i = 0; $i < $maxStatSourceLength; $i++}
+                    {var $as = $allStatistics[$i]}
+
+                {/for}
                 {foreach $allStatistics as $as}
+                    {if $as->getStatisticsSource()}
                     [{$as->getCreated()|date:'j. n. Y'},
-                    {foreach $as->getStatisticsSource() as $ss}
-                        {$ss->getTotalNets()},
-                    {/foreach}
+                    {for $i = 0; $i < $maxStatSourceLength; $i++}
+                        {ifset $as->getStatisticsSource()[$i]}{$as->getStatisticsSource()[$i]->getTotalNets()}{else}0{/ifset},
+                    {/for}
                     ],
+                    {/if}
                 {/foreach}]);
             options = {
                 title: 'Podíl',
@@ -120,7 +160,8 @@
             };
             var chartSourcesHistory = new google.charts.Bar(document.getElementById('sources_history_chart'));
             chartSourcesHistory.draw(data, options);
-
+            {/if}
+            {if $actualStatistics->getStatisticsSecurity()}
             data = google.visualization.arrayToDataTable([
                 ['Typ zabezpečení', 'Počet sítí'],
                 {foreach $actualStatistics->getStatisticsSecurity() as $ssa}
@@ -132,15 +173,18 @@
             };
             var pieSecurity = new google.visualization.PieChart(document.getElementById('security_pie'));
             pieSecurity.draw(data, options);
+            {/if}
 
+            {if count($allStatistics) > 1}
             data = google.visualization.arrayToDataTable([
-                ['Datum',{foreach $allStatistics[0]->getStatisticsSecurity() as $gss}{$gss->getWifiSecurity()->getLabel()},{/foreach}],
+                ['Datum',{foreach $allSecurityTypes as $gss}{$gss->getLabel()},{/foreach}],
                 {foreach $allStatistics as $as}
+                    {if $as->getStatisticsSecurity()}
                     [{$as->getCreated()|date:'j. n. Y'},
-                    {foreach $as->getStatisticsSecurity() as $ss}
-                        {$ss->getTotalNets()},
-                    {/foreach}
-                    ],
+                    {foreach $allSecurityTypes as $ast}
+                        {if $as->getStatisticsSecurityByIdSecurity($ast->getId())}{$as->getStatisticsSecurityByIdSecurity($ast->getId())->getTotalNets()}{else}0{/if},
+                    {/foreach}],
+                    {/if}
                 {/foreach}]);
             options = {
                 title: 'Podíl',
@@ -148,6 +192,7 @@
             };
             var chartSecurityHistory = new google.charts.Bar(document.getElementById('security_history_chart'));
             chartSecurityHistory.draw(data, options);
+            {/if}
         }
 </script>
 

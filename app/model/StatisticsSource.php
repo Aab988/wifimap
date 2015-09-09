@@ -14,9 +14,9 @@ class StatisticsSource extends  Nette\Object {
     /** @var Source $source */
     private $source;
     /** @var int $total_nets */
-    private $total_nets;
+    private $total_nets = 0;
     /** @var int $free_nets */
-    private $free_nets;
+    private $free_nets = 0;
 
     /**
      * @return int

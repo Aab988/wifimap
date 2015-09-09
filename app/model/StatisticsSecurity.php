@@ -13,7 +13,7 @@ class StatisticsSecurity extends Nette\Object {
     /** @var WifiSecurity $wifiSecurity */
     private $wifiSecurity;
     /** @var int $total_nets */
-    private $total_nets;
+    private $total_nets = 0;
 
     /**
      * @return int

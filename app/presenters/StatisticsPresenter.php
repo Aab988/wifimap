@@ -3,6 +3,7 @@
 namespace App\Presenters;
 
 use App\Service\StatisticsManager;
+use App\Service\WifiSecurityService;
 use Nette,
 	App\Model;
 
@@ -18,6 +19,11 @@ class StatisticsPresenter extends BasePresenter {
 	 */
 	public $statisticsManager;
 
+	/**
+	 * @var WifiSecurityService
+	 * @inject
+	 */
+	public $wsservice;
 
 	public $database;
 
@@ -34,56 +40,12 @@ class StatisticsPresenter extends BasePresenter {
 		$allStats = $this->statisticsManager->getAllStatistics();
 
 
-		//dump($latestStat);
-		//dump($allStats);
-
+		$this->template->allSecurityTypes = $this->wsservice->getAllWifiSecurityTypes();
 		$this->template->actualStatistics = $this->statisticsManager->getLatestStatistics();
-		$this->template->secondLatestStatistics = ($allStats[count($allStats)-2])?$allStats[count($allStats)-2]:null;
+		$this->template->secondLatestStatistics = (isset ($allStats[count($allStats)-2]))?$allStats[count($allStats)-2]:null;
 
 		$this->template->allStatistics = $allStats;
 
-		// vzit statistiku nejnovejsi
-		// vzit všechny starší statistiky
-
-		// vezmu vsechny statistiky
-		/*$statistics = $this->database->table("statistics")->order("created DESC")->fetchAll();
-		$actualStatistics = null;
-		if($statistics) {
-			$stat_keys = array_keys($statistics);
-			$keyfirst = $stat_keys[0];
-			$actualStatistics = $statistics[$keyfirst];
-			$this->template->actualStatistics = $actualStatistics;
-			if(count($stat_keys>=2)) {
-				$second = $statistics[$stat_keys[1]];
-				$this->template->secondLatestStatistics = $second;
-			}
-		}
-
-		$this->template->allStatistics = array_reverse($statistics,true);
-		*/
-
-		// vzit nejnovejsi statistiky zdroju
-		/*$source_statistics_actual = $this->database
-			->query("select ss.total_nets,ss.free_nets,s.name
- 						from statistics_source ss join source s on (ss.id_source = s.id)
- 						where id_statistics=?",$actualStatistics->id)
-			->fetchAll();
-
-		// vzit historii statistik zdroju
-		$source_statistics_all = $this->database->query("select st.created,ss.total_nets,ss.free_nets,s.name from statistics_source ss join statistics st on (ss.id_statistics = st.id) join source s on (ss.id_source = s.id)")->fetchAll();
-
-		$this->template->sourceStatisticsActual = $source_statistics_actual;
-		$this->template->sourceStatisticsAll = $source_statistics_all;
-
-		// vzit nejnovejsi statistiky zabezpeceni
-		// vzit historii statistik zabezpeceni
-		*/
-
-
-
-
-
-		//$this->template->wifi = $this->database->table("wifi")->where("id_zdroj=2")->order("rand()");
 	}
 
 

@@ -12,13 +12,13 @@ class Statistics extends Nette\Object {
     /** @var Nette\Utils\DateTime $created */
     private $created;
     /** @var  int $total_nets */
-    private $total_nets;
+    private $total_nets = 0;
     /** @var  int $free_nets */
-    private $free_nets;
+    private $free_nets = 0;
     /** @var StatisticsSecurity[] $statisticsSecurity */
-    private $statisticsSecurity;
+    private $statisticsSecurity = array();
     /** @var StatisticsSource[] $statisticsSource */
-    private $statisticsSource;
+    private $statisticsSource = array();
 
 
     /**
@@ -33,6 +33,32 @@ class Statistics extends Nette\Object {
      */
     public function addStatisticsSource($statisticsSource) {
         $this->statisticsSource[] = $statisticsSource;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatisticsSecurityLength() {
+        return count($this->statisticsSecurity);
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatisticsSourceLength() {
+        return count($this->statisticsSource);
+    }
+
+    /**
+     *
+     * @param $id
+     * @return StatisticsSecurity
+     */
+    public function getStatisticsSecurityByIdSecurity($id) {
+        foreach($this->statisticsSecurity as $ss) {
+            if($ss->getWifiSecurity()->getId() == $id) return $ss;
+        }
+        return new StatisticsSecurity();
     }
 
 
