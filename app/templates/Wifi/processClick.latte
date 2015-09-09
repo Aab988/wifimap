@@ -1,3 +1,4 @@
+{ifset $detail}
 <b>
 {if $detail->ssid}
     {$detail->ssid}
@@ -44,3 +45,4 @@
 {foreach array_slice($others,0,5,true) as $other}
     <a href="" onclick="return changeIW({$other->id})">{($other->ssid) ? $other->ssid : $other->mac}</a><br />
 {/foreach}
+{/ifset}

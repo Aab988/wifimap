@@ -1,4 +1,11 @@
 {block content}
+<script type="text/javascript">
+    	google.load('visualization', '1.0', {'packages':['corechart','bar']});
+        google.setOnLoadCallback(draw);
+		function draw() {
+			drawChart();
+		}
+        </script>
     <h1>Statistiky ({($actualStatistics)?$actualStatistics->created|date:'j. n. Y':''})</h1>
     <div class="top">
         <h2>Celkové statistiky</h2>
