@@ -3,10 +3,11 @@
 namespace App\Presenters;
 
 use App\Model\Coords;
+use App\Model\MyUtils;
 use App\Service\OverlayRenderer;
 use App\Service\WifiManager;
 use Nette;
-//use Nette\Caching\Cache;
+use Nette\Caching\Cache;
 
 class WifiPresenter extends BasePresenter
 {
@@ -31,6 +32,21 @@ class WifiPresenter extends BasePresenter
     const MODE_ONE_SOURCE = "MODE_ONE_SOURCE";
     const MODE_FREE = "MODE_FREE";
 
+    /** default mode if its not set */
+    const DEFAULT_MODE = self::MODE_ALL;
+
+    /** can highlight by these params */
+    const MODE_HIGHLIGHT_ALLOWED_BY = array('ssid', 'mac', 'channel');
+
+    /** increasing image latlng range and image size */
+    const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
+
+    /** use cache? */
+    const CACHE_ON = true;
+    /** cache expire time */
+    const CACHE_EXPIRE = "10 minutes";
+
+
     /**
      * @var WifiManager
      * @inject
@@ -43,12 +59,20 @@ class WifiPresenter extends BasePresenter
      */
     public $overlayRenderer;
 
-    // private $cache;
-    /* public function __construct() {
-        // cache
-        $storage = new Nette\Caching\Storages\FileStorage('../temp/sql_cache');
-        $this->cache = new Cache($storage);
-    } */
+    /** @var Cache */
+    private $cache;
+    /** @var array modes that can be used */
+    private $allowedModes = array();
+
+    public function __construct()
+    {
+        if (self::CACHE_ON) {
+            $storage = new Nette\Caching\Storages\FileStorage('../temp/img_cache');
+            $this->cache = new Cache($storage);
+        }
+        // ZAPNUTE MODY (TURNED ON MODES)
+        $this->allowedModes = array(self::MODE_SEARCH,self::MODE_HIGHLIGHT,self::MODE_ALL,self::MODE_FREE,self::MODE_ONE_SOURCE);
+    }
 
 
     public function renderProcessClick()
@@ -59,14 +83,13 @@ class WifiPresenter extends BasePresenter
 
         $r = $this->wifiManager->getClickQueryByMode($httpr);
         $detail = null;
-        if($httpr->getQuery("net")) {
+        if ($httpr->getQuery("net")) {
             $net = intval($httpr->getQuery("net"));
             $detail = $this->wifiManager->getDetailById($net);
-            $r = $this->wifiManager->getClickQueryByMode($httpr,$detail->latitude,$detail->longitude);
-        }
-        else {
+            $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->latitude, $detail->longitude);
+        } else {
             $f = $r->fetch();
-            if($f) {
+            if ($f) {
                 $detail = $f;
             }
         }
@@ -74,16 +97,16 @@ class WifiPresenter extends BasePresenter
         $others = $r->fetchAll();
         $this->template->count = count($others);
         unset($others[$detail["id"]]);
-        if($detail) {
+        if ($detail) {
             $json['lat'] = $detail->latitude;
             $json['lng'] = $detail->longitude;
         }
-        $this->template->setFile( __DIR__. "/../templates/Wifi/processClick.latte");
+        $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
         $this->template->detail = $detail;
         $this->template->others = $others;
-        $temp =  (string)$this->template;
+        $temp = (string)$this->template;
         $json['iw'] = $temp;
-        echo json_encode($json,JSON_UNESCAPED_UNICODE);
+        echo json_encode($json, JSON_UNESCAPED_UNICODE);
         $this->terminate();
     }
 
@@ -140,42 +163,72 @@ class WifiPresenter extends BasePresenter
 
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
+        header("Content-type: image/png");
         DownloadPresenter::setIni(180, '512M');
+        $request = $this->getHttpRequest();
 
-        $zoom = intval($this->getHttpRequest()->getQuery("zoom"));
+        // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod
+        // kontrola kvuli cache key -> aby mi nemohl ulozit na server nejaky skodlivy kod
+        if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
+
+        $zoom = intval($request->getQuery("zoom"));
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
 
-        $coords->increaseLatRange(0.125);
-        $coords->increaseLonRange(0.125);
+        $coords->increaseLatRange(self::INCREASE_LATLNG_RANGE_ABOUT);
+        $coords->increaseLonRange(self::INCREASE_LATLNG_RANGE_ABOUT);
 
-        switch ($mode) {
+        // params for image creation
+        $params = array();
+
+        switch($mode) {
             case self::MODE_SEARCH:
-                // vyhledavani
-                $request = $this->getHttpRequest();
-                $params = array();
-                if ($request->getQuery("ssidmac")) {
-                    if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",urldecode($request->getQuery("ssidmac")))) {
-                        $params['mac'] = urldecode($request->getQuery("ssidmac"));
-                    }
-                    else {
-                        $params["ssid"] = $request->getQuery("ssidmac");
-                    }
+                $ssidmac = $request->getQuery("ssidmac");
+                if($ssidmac) {
+                    if(MyUtils::isMacAddress($ssidmac)) { $params['mac'] = urldecode($ssidmac); }
+                    else { $params['ssid'] = $ssidmac; }
                 }
-                if($request->getQuery("channel")!=null && $request->getQuery("channel") != "") {
-                    $params['channel'] = intval($request->getQuery("channel"));
+                $channel = $request->getQuery('channel');
+                if ($channel != null && $channel != "") { $params['channel'] = intval($channel); }
+                $security = $request->getQuery('security');
+                if($security != null && $security != '') { $params['sec'] = intval($security); }
+                break;
+            case self::MODE_HIGHLIGHT:
+                $by = $request->getQuery("by");
+                if (in_array($by, self::MODE_HIGHLIGHT_ALLOWED_BY)) {
+                    $params['by'] = $by;
+                    $val = $request->getQuery("val");
+                    $params['val'] = $val;
                 }
-                if($request->getQuery("security")!=null && $request->getQuery("security") != "") {
-                    $params['sec'] = intval($request->getQuery("security"));
-                }
+                break;
+            case self::MODE_ONE_SOURCE:
+                $srca = explode("-", $this->getHttpRequest()->getQuery("source"));
+                $source = (isset($srca[1])) ? intval($srca[1]) : 0;
+                $params['source'] = $source;
+                break;
+            case self::MODE_FREE:
+                break;
+            default:
+
+                break;
+        }
+        $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
+
+        if(self::CACHE_ON) {
+            $img = $this->cache->load($key);
+            if($img != null) {
+                echo $img;
+                return;
+            }
+        }
+
+        switch($mode) {
+            case self::MODE_SEARCH:
                 $nets = $this->wifiManager->getNetsModeSearch($coords, $params);
                 $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
             case self::MODE_HIGHLIGHT:
-                $allowedBy = array('ssid','mac','channel');
-                $by = $this->getHttpRequest()->getQuery("by");
-                if(in_array($by,$allowedBy)) {
-                    $val = $this->getHttpRequest()->getQuery("val");
-                    $highlitedNets = $this->wifiManager->getNetsBySt($coords,$by,$val);
+                if(!empty($params)) {
+                    $highlitedNets = $this->wifiManager->getNetsBySt($coords, $params['by'], $params['val']);
                     $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
                     $img = $this->overlayRenderer->drawModeHighlight($coords, $zoom, $allNets, $highlitedNets);
                 }
@@ -185,24 +238,32 @@ class WifiPresenter extends BasePresenter
                 }
                 break;
             case self::MODE_ONE_SOURCE:
-                $srca = explode("-",$this->getHttpRequest()->getQuery("source"));
-                // id Source (-1 = neznamy,takze se zobrazi oba)
-                $source = (isset($srca[1]))?intval($srca[1]):0;
-                $nets = $this->wifiManager->getNetsModeOneSource($coords,$source);
-                $img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
+                $nets = $this->wifiManager->getNetsModeOneSource($coords, $params['source']);
+                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
             case self::MODE_FREE:
                 $nets = $this->wifiManager->getFreeNets($coords);
-                $img = $this->overlayRenderer->drawModeAll($coords,$zoom,$nets);
+                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
             default:
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
                 $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
                 break;
         }
-        header("Content-type: image/png");
-        imagepng($img);
 
+        $image = MyUtils::image2string($img);
+        if(self::CACHE_ON) {
+            $this->cache->save($key, $image, array(Cache::EXPIRE => self::CACHE_EXPIRE));
+        }
+        echo $image;
+        return;
+    }
+
+
+
+
+    private function allowedMode($mode) {
+        return in_array($mode,$this->allowedModes);
     }
 
 }
