@@ -10,19 +10,8 @@ use Nette;
  * Class Download
  * @package App\Model
  */
-class Download extends Nette\Object {
+class Download extends BaseService {
 
-    /**
-     * @var Nette\Database\Context
-     */
-    protected $database;
-
-    /**
-     * @param Nette\Database\Context $database
-     */
-    public function __construct(Nette\Database\Context $database) {
-        $this->database = $database;
-    }
 
     /**
      * save one Wi-fi network into DB

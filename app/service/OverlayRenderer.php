@@ -9,7 +9,7 @@ use Nette;
 use App\Model\Color;
 use App\Model\Coords;
 
-class OverlayRenderer extends Nette\Object {
+class OverlayRenderer extends BaseService {
 
 	const IMAGE_HEIGHT = 256;
 	const IMAGE_WIDTH = 256;

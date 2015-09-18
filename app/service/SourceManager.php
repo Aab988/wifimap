@@ -8,19 +8,8 @@ namespace App\Service;
 use Nette;
 use App\Model\Source;
 
-class SourceManager extends Nette\Object {
+class SourceManager extends BaseService {
 
-    /**
-     * @var Nette\Database\Context
-     */
-    private $database;
-
-    /**
-     * @param Nette\Database\Context $database
-     */
-    public function __construct(Nette\Database\Context $database) {
-        $this->database = $database;
-    }
 
     /**
      * @return Source[]

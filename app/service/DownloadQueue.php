@@ -11,7 +11,7 @@ use App\Model\ArrayUtil;
 
 
 
-class DownloadQueue extends Nette\Object {
+class DownloadQueue extends BaseService {
 
     /** Wigle QOS grad color image URL */
     const WIGLE_QOS_GRAD_IMAGE_URL = "https://wigle.net/images/qos_grad.png";
@@ -28,13 +28,6 @@ class DownloadQueue extends Nette\Object {
     private $generatedCoords = array();
 
 
-    /** @var Nette\Database\Context */
-    private $database;
-
-
-    public function __construct(Nette\Database\Context $database = null) {
-        $this->database = $database;
-    }
 
     /**
      * return one random not downloaded record from queue

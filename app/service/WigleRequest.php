@@ -10,7 +10,7 @@ use Nette\Utils\DateTime;
 use App\Model\Coords;
 
 
-class WigleRequest extends Nette\Object {
+class WigleRequest extends BaseService {
 
     /** ERROR/INFO returned CONSTANTS */
     const ERR_ALREADY_IN_QUEUE = "ALREADY_IN_QUEUE";
@@ -19,17 +19,6 @@ class WigleRequest extends Nette\Object {
 
     const DIVIDE_AREA_ONLY_NOT_IN_QUEUE = true;
 
-
-    /** @var Nette\Database\Context */
-    private $database;
-
-
-    /**
-     * @param Nette\Database\Context $database
-     */
-    public function __construct(Nette\Database\Context $database) {
-        $this->database = $database;
-    }
 
 
     /**
