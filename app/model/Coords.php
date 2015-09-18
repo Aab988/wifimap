@@ -103,6 +103,38 @@ class Coords {
 
 
     /**
+     * @param float $lat
+     * @param float $lng
+     * @param float $range
+     * @return Coords
+     */
+    public static function createCoordsRangeByLatLng($lat,$lng,$range=0.0) {
+        return new self(
+            $lat-$range,
+            $lat+$range,
+            $lng-$range,
+            $lng+$range
+        );
+    }
+
+    /**
+     * return average of lat_start and lat_end
+     * @return float
+     */
+    public function getCenterLat() {
+        return ($this->lat_start + $this->lat_end) / 2.0;
+    }
+
+    /**
+     * return average of lon_start and lon_end
+     * @return float
+     */
+    public function getCenterLng() {
+        return ($this->lon_start + $this->lon_end) / 2.0;
+    }
+
+
+    /**
      * @return string
      */
     public function toString() {

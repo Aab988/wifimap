@@ -5,20 +5,17 @@
  * Time: 10:10
  */
 namespace App\Service;
+use App\Model\Wifi;
 use App\Presenters\WifiPresenter;
 use App\Model\Coords;
 
 use Nette;
 
-class WifiManager extends Nette\Object {
+class WifiManager extends BaseService {
 
 	// polomer kruznice vytvorene z bodu kliknuti
 	const CLICK_POINT_CIRCLE_RADIUS = 0.03;
-	private $database;
 
-	public function __construct(Nette\Database\Context $database) {
-		$this->database = $database;
-	}
 
 	/**
 	 * create query with latitude and longitude range<br>
@@ -303,6 +300,27 @@ class WifiManager extends Nette\Object {
 			->fetchAll();
 	}
 
+
+	/**
+	 * @param Wifi $wifi
+	 * @return bool|mixed|Nette\Database\Table\IRow
+	 */
+	public function getClosestWifiToWifi(Wifi $wifi) {
+		$coords = Coords::createCoordsRangeByLatLng($wifi->getLatitude(),$wifi->getLongitude(),0.03);
+		return $this->getNetsRangeQuery($coords)
+			->order("SQRT(POW(latitude-?,2)+POW(longitude-?,2))",$wifi->getLatitude(),$wifi->getLongitude())
+			->limit(1)->fetch();
+	}
+
+	/**
+	 * @param Coords $coords
+	 * @return array|Nette\Database\Table\IRow[]
+	 */
+	public function get2ClosestWifiToCoords(Coords $coords) {
+		return $this->getNetsRangeQuery($coords)
+			->order("SQRT(POW(latitude-?,2)+POW(longitude-?,2))",$coords->getCenterLat(),$coords->getCenterLng())
+			->limit(2)->fetchAll();
+	}
 
 
 

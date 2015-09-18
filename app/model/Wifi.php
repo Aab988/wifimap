@@ -5,6 +5,7 @@ use App\Service\WifileaksDownload;
 use App\Service\WigleDownload;
 
 class Wifi extends Nette\Object {
+
     /** @var string  */
     private $mac = "";
     /** @var string  */
@@ -45,6 +46,40 @@ class Wifi extends Nette\Object {
     private $qos = "";
     /** @var int */
     private $source;
+    /** @var Nette\Utils\DateTime */
+    private $date_added;
+
+
+    /**
+     * @param \Nette\Database\Table\IRow $row
+     * @return Wifi
+     */
+    public static function createWifiFromDBRow($row) {
+        return self::createWifiFromAssociativeArray($row);
+    }
+
+
+    /**
+     * @param mixed $property
+     * @param mixed $value
+     */
+    public function set($property,$value) {
+        $this->$property = $value;
+    }
+
+    /**
+     * @param $array
+     * @return Wifi
+     */
+    public static function createWifiFromAssociativeArray($array) {
+        $wifi = new self();
+        foreach(array_keys(get_class_vars(get_class($wifi))) as $var) {
+            if(isset($array[$var])) {
+                $wifi->set($var,$array[$var]);
+            }
+        }
+        return $wifi;
+    }
 
     /**
      * @return string
@@ -325,6 +360,24 @@ class Wifi extends Nette\Object {
     public function setSource($source) {
         $this->source = $source;
     }
+
+    /**
+     * @return Nette\Utils\DateTime
+     */
+    public function getDateAdded()
+    {
+        return $this->date_added;
+    }
+
+    /**
+     * @param Nette\Utils\DateTime $date_added
+     */
+    public function setDateAdded($date_added)
+    {
+        $this->date_added = $date_added;
+    }
+
+
 
     /**
      * synchronize security values between wigle and wifileaks
