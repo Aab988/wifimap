@@ -49,7 +49,6 @@ class WigleDownload extends Download implements \IDownload {
         $coords = new Coords($query['lat_start'],$query['lat_end'],$query['lon_start'],$query['lon_end']);
         $results = $this->getDataFromWigle($coords, (int) $query["from"]);
         $results_decoded = json_decode($results,true);
-        dump($results_decoded);
         if($results_decoded["success"] == true) {
             $ws = $this->parseData($results_decoded);
             $this->saveAll($ws);
@@ -177,12 +176,6 @@ class WigleDownload extends Download implements \IDownload {
         $this->password = $password;
     }
 
-    /**
-     * create DownloadQueue instance and set database to it
-     */
-    public function setDownloadQueue() {
-        $this->downloadQueue = new DownloadQueue();
-        $this->downloadQueue->setDatabase($this->database);
-    }
+
 
 }
