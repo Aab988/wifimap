@@ -67,10 +67,16 @@ html.js .jshidden {
     float: left;
     width: 80%;
     height: 100%;
-    overflow-x: hidden;
-    overflow-y: scroll;
+
 }
 
+
+.overflow-hiddenscroll {
+    height: inherit;
+    overflow-x: hidden;
+    overflow-y: auto;
+    white-space: nowrap;
+}
 
 #mapa {
     height: 100%;
@@ -125,11 +131,12 @@ html.js .jshidden {
     width: 20%;
     background-color: #dddddd;
     float: left;
-    overflow: scroll;
+    overflow: auto;
+
 }
 
 .padding-10 {
-    padding: 10px;
+    padding: 10px 10px 100px 10px;
 }
 
 
