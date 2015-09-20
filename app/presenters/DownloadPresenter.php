@@ -3,6 +3,7 @@
 namespace App\Presenters;
 
 use \App\Model\Coords;
+use App\Model\Wifi;
 use \App\Service;
 
 class DownloadPresenter extends BasePresenter {
@@ -20,6 +21,12 @@ class DownloadPresenter extends BasePresenter {
      * @inject
      */
     public $wifileaksDownload;
+
+    /**
+     * @var Service\GoogleDownload
+     * @inject
+     */
+    public $googleDownload;
 
     /**
      * @var \App\Service\WigleRequest
@@ -55,8 +62,14 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderWifileaks() {
-        self::setIni(600,'128M');
-        $this->wifileaksDownload->download("../temp/wifileaks.tsv");
+        self::setIni(600,'512M');
+        $fromtempdir = $this->getHttpRequest()->getQuery("fromtempdir");
+        if($fromtempdir) {
+            $this->wifileaksDownload->download("../temp/wifileaks.tsv");
+        }
+        else {
+            $this->wifileaksDownload->download();
+        }
 		$this->terminate();
     }
 
@@ -67,32 +80,13 @@ class DownloadPresenter extends BasePresenter {
         $click_lat = 50.19069300754107;
         $click_lon = 15.804262161254883;
 
-        $mapCoords = new Coords(50.18899429884056,50.19191362607472,15.797227464556954,15.808954082370064);
+        $wfs = $this->wifiManager->get2ClosestWifiToCoords(Coords::createCoordsRangeByLatLng($click_lat,$click_lon,0.03));
+        dump($wfs);
 
-        $dlat = $mapCoords->getDeltaLat();
-        $dlon = $mapCoords->getDeltaLon();
-
-        $coords = new Coords(
-            $click_lat-$dlat*0.03,
-            $click_lat+$dlat*0.03,
-            $click_lon-$dlon*0.03,
-            $click_lon+$dlon*0.03
-        );
+        $wifi = Wifi::createWifiFromAssociativeArray($wfs[array_keys($wfs)[0]]);
+        dump($wifi);
 
 
-        //$database = $this->wifileaksDownload->getDatabase();
-        $nets = $this->wifiManager->getNetsRangeQuery($coords)->limit(2);
-        $q = "";
-        $ss = -80;
-        foreach($nets as $net) {
-            $mac = str_replace(":","-",$net->mac);
-            $q.='&wifi=mac:'.$mac.'|ssid:'.$net->ssid.'|ss:'.$ss;
-            $ss = -20;
-        }
-        dump($nets->fetchAll());
-        $url = "https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true".$q;
-        echo $url;
-        dump(json_decode(file_get_contents($url)));
 
         $this->terminate();
     }

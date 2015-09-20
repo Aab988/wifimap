@@ -57,7 +57,9 @@ class Download extends BaseService {
                 $data = array();
             }
         }
-        $this->database->query("insert into wifi", $data);
+        if(count($data)) {
+            $this->database->query("insert into wifi", $data);
+        }
     }
 
     /**
@@ -73,7 +75,7 @@ class Download extends BaseService {
             "date_added" => date("Y-m-d"),
             "mac" => $wifi->getMac(),
             "ssid" => $wifi->getSsid(),
-            "sec" => $wifi->getSec()+1,
+            "sec" => $wifi->getSec(),
             "latitude" => $wifi->getLatitude(),
             "longitude" => $wifi->getLongitude(),
             "altitude" => $wifi->getAltitude(),
