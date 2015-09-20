@@ -157,6 +157,13 @@ class OverlayRenderer extends BaseService {
 		return $this->cropImage($my_img);
 	}
 
+
+	public function drawNone() {
+		$my_img = $this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		imagestring($my_img,4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
+		return $my_img;
+	}
+
 	/**
 	 * draw one net to MODE_ALL overlay
 	 * @param resource $img

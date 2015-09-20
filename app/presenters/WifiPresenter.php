@@ -44,8 +44,11 @@ class WifiPresenter extends BasePresenter
     /** use cache? */
     const CACHE_ON = true;
     /** cache expire time */
-    const CACHE_EXPIRE = "10 minutes";
+    const CACHE_EXPIRE = "50 minutes";
+    const IMG_CACHE_DIR = "../temp/img_cache";
 
+
+    const MIN_OVERLAY_ZOOM = 7;
 
     /**
      * @var WifiManager
@@ -67,7 +70,10 @@ class WifiPresenter extends BasePresenter
     public function __construct()
     {
         if (self::CACHE_ON) {
-            $storage = new Nette\Caching\Storages\FileStorage('../temp/img_cache');
+            if(!file_exists(self::IMG_CACHE_DIR)) {
+                mkdir(self::IMG_CACHE_DIR);
+            }
+            $storage = new Nette\Caching\Storages\FileStorage(self::IMG_CACHE_DIR);
             $this->cache = new Cache($storage);
         }
         // ZAPNUTE MODY (TURNED ON MODES)
@@ -172,6 +178,13 @@ class WifiPresenter extends BasePresenter
         if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
 
         $zoom = intval($request->getQuery("zoom"));
+
+        if($zoom < self::MIN_OVERLAY_ZOOM) {
+            $img = $this->overlayRenderer->drawNone();
+            echo MyUtils::image2string($img);
+            return;
+        }
+
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
 
         $coords->increaseLatRange(self::INCREASE_LATLNG_RANGE_ABOUT);
