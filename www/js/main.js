@@ -1,5 +1,6 @@
 /* global google */
 
+
 var map; // google map object
 
 // initial configuration - constants
@@ -83,6 +84,7 @@ init();
 
         var mapOptions = {center:INIT_CENTER,zoom:INIT_ZOOM, draggableCursor: 'default',tilt:0};
         map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
+
         // get user location by HTML5
         if(navigator.geolocation && !hashParams.gm) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -193,6 +195,8 @@ CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
         zoom:zoom
     };
 
+
+
     params = $.extend(params,hashParams);
     delete params.gm;
     img.src = IMAGE_URL +"?" + $.param(params);
@@ -200,7 +204,9 @@ CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
     return img;
 };
 
+
 function redrawOverlay() {
+
     map.overlayMapTypes.removeAt(0);
     map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 }
@@ -230,6 +236,14 @@ function highlightFormSubmit(form) {
     return false;
 }
 
+
+$(document)
+    .ajaxStart(function () {
+        $(".loader").show();
+    })
+    .ajaxStop(function () {
+        $(".loader").hide();
+    });
 
 /**
  * zruseni vsech nastaveni - modu a jeho parametru
@@ -360,5 +374,5 @@ $(document).ready(function(){
     });
 
 
-
 });
+
