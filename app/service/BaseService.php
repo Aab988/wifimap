@@ -10,10 +10,17 @@ use Nette;
 
 class BaseService extends Nette\Object {
 
+    /** @var Nette\Database\Context */
     protected $database;
+    /** @var Logger */
+    protected $logger;
 
+    /**
+     * @param Nette\Database\Context $database
+     */
     public function __construct(Nette\Database\Context $database) {
         $this->database = $database;
+        $this->logger = new Logger($this->database);
     }
 
 }
