@@ -8,6 +8,10 @@
 </b>
 <table>
     <tr>
+        <td>Datum přidání</td>
+        <td>{$detail->dateAdded|date:'j. n. Y'}</td>
+    </tr>
+    <tr>
         <td>Latitude</td>
         <td>{$detail->latitude}</td>
     </tr>
@@ -18,6 +22,10 @@
     <tr>
         <td>Altitude</td>
         <td>{$detail->altitude} m</td>
+    </tr>
+    <tr>
+        <td>Zabezpečení</td>
+        <td>{$detail->sec}</td>
     </tr>
     <tr>
         <td>MAC</td>
