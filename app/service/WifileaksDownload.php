@@ -29,10 +29,10 @@ class WifileaksDownload extends Download implements \IDownload {
         if($file_name != "") {
             try {
                 $insertedRows = $this->parseData($file_name);
-                // TODO: logovat bylo vlozeno $insertedRows zaznamu z wifileaks
+                $this->logger->addLog("wifileaks-download","stazeno $insertedRows siti");
             }
             catch(\Exception $e) {
-                echo $e->getMessage();
+                $this->logger->addLog("error","wifileaks download error" . $e->getMessage());
             }
         }
         else {
@@ -42,12 +42,13 @@ class WifileaksDownload extends Download implements \IDownload {
             if(count($matches)) {
                 $filePath = self::WIFILEAKS_DOWNLOAD_DIR . $matches[0];
                 $insertedRows  = $this->parseData($filePath);
-                // TODO: logovat bylo vlozeno $insertedRows zaznamu z wifileaks
+                $this->logger->addLog("wifileaks-download","stazeno $insertedRows siti");
             }
             else {
-                // TODO: log pokus o stazeni z wigle nebyl uspesny
+                $this->logger->addLog("wifileaks-download","pokus o stazeni z wifileaks nebyl uspesny - zadny soubor nevyhovuje regularnimu vyrazu " . self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN);
             }
         }
+        $this->logger->save();
     }
 
     /**
