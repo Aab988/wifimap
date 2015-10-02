@@ -30,7 +30,7 @@ class OverlayRenderer extends BaseService {
 	private function setColors() {
 		$this->colors["background"] = new Color(254,254,254);
 		$this->colors["text"] = new Color(0,0,0);
-		$this->colors["wigle"] = new Color(0,255,0);
+		$this->colors["wigle"] = new Color(208,0,0);
 		$this->colors["wifileaks"] = new Color(255,0,0);
 		$this->colors["highlighted"] = new Color(0,0,255);
 	}
