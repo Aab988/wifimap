@@ -78,6 +78,7 @@ class Wifi extends Nette\Object {
                 $wifi->set($var,$array[$var]);
             }
         }
+        $wifi->setSource($array['id_source']);
         return $wifi;
     }
 
