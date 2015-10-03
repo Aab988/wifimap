@@ -53,8 +53,10 @@
     {if $detail->channel}<input type="hidden" name="channel" value="{$detail->channel}" />{/if}
     <input type="submit" value="Označit" />
 </form>
-<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: {$count} - pro zpřesnění informací přibližte mapu</span><br />
+{if $count > 1}
+<span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: {$count-1} - pro zpřesnění informací přibližte mapu</span><br />
 {foreach array_slice($others,0,5,true) as $other}
     <a href="" onclick="return changeIW({$other->id})">{($other->ssid) ? $other->ssid : $other->mac}</a><br />
 {/foreach}
+{/if}
 {/ifset}

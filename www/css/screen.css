@@ -97,7 +97,6 @@ html.js .jshidden {
 
 #pac-input {
     background-color: #fff;
-    font-family: Roboto;
     font-size: 15px;
     font-weight: 300;
     margin-left: 12px;
@@ -110,9 +109,6 @@ html.js .jshidden {
     border-color: #4d90fe;
 }
 
-.pac-container {
-    font-family: Roboto;
-}
 
 #type-selector {
     color: #fff;
@@ -121,7 +117,6 @@ html.js .jshidden {
 }
 
 #type-selector label {
-    font-family: Roboto;
     font-size: 13px;
     font-weight: 300;
 }
@@ -132,7 +127,6 @@ html.js .jshidden {
     background-color: #dddddd;
     float: left;
     overflow: auto;
-
 }
 
 .padding-10 {
