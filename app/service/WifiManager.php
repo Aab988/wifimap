@@ -130,13 +130,13 @@ class WifiManager extends BaseService {
 
 
 	/**
-	 * return one net details by ID
+	 * return one wifi by ID
 	 *
-	 * @param $id
-	 * @return bool|mixed|Nette\Database\Table\IRow
+	 * @param int $id
+	 * @return Wifi
 	 */
-	public function getDetailById($id) {
-		return $this->database->table("wifi")->where("id",$id)->fetch();
+	public function getWifiById($id) {
+		return Wifi::createWifiFromDBRow($this->database->table("wifi")->where("id",$id)->fetch());
 	}
 
 
@@ -207,7 +207,7 @@ class WifiManager extends BaseService {
 
 		if($request->getQuery("net")) {
 			$id = intval($request->getQuery("net"));
-			$detail = $this->getDetailById($id)->toArray();
+			$detail = $this->getWifiById($id);
 
 			$click_lat = $detail["latitude"];
 			$click_lon = $detail["longitude"];
@@ -268,13 +268,13 @@ class WifiManager extends BaseService {
 		if(!$detail) {
 			$f = $sql->fetch();
 			if($f) {
-				$detail = $f->toArray();
+				$detail = Wifi::createWifiFromDBRow($f);
 			}
 		}
 
 		$wf = $sql->fetchPairs("id");
 		$nbs = $wf;
-		unset($nbs[$detail["id"]]);
+		unset($nbs[$detail->getId()]);
 
 		$json = array();
 		$json["count"] = count($wf);
@@ -303,13 +303,14 @@ class WifiManager extends BaseService {
 
 	/**
 	 * @param Wifi $wifi
-	 * @return bool|mixed|Nette\Database\Table\IRow
+	 * @return Wifi
 	 */
 	public function getClosestWifiToWifi(Wifi $wifi) {
 		$coords = Coords::createCoordsRangeByLatLng($wifi->getLatitude(),$wifi->getLongitude(),0.03);
-		return $this->getNetsRangeQuery($coords)
+		return Wifi::createWifiFromDBRow($this->getNetsRangeQuery($coords)
+			->where("id != ?", $wifi->getId())
 			->order("SQRT(POW(latitude-?,2)+POW(longitude-?,2))",$wifi->getLatitude(),$wifi->getLongitude())
-			->limit(1)->fetch();
+			->limit(1)->fetch());
 	}
 
 	/**

@@ -4,6 +4,7 @@ namespace App\Presenters;
 
 use App\Model\Coords;
 use App\Model\MyUtils;
+use App\Model\Wifi;
 use App\Service\OverlayRenderer;
 use App\Service\WifiManager;
 use Nette;
@@ -11,7 +12,6 @@ use Nette\Caching\Cache;
 
 class WifiPresenter extends BasePresenter
 {
-
     // MODES
     /*
 * MODY
@@ -25,6 +25,8 @@ class WifiPresenter extends BasePresenter
 * MODE_CALCULATED_POSITION - vypoctena pozice site
 *
 */
+    const EXPORT_CODE = "vX8@rW6Ga971Pj8";
+
 
     const MODE_ALL = "MODE_ALL";
     const MODE_SEARCH = "MODE_SEARCH";
@@ -42,13 +44,14 @@ class WifiPresenter extends BasePresenter
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
     /** use cache? */
-    const CACHE_ON = true;
+    const CACHE_ON = false;
     /** cache expire time */
     const CACHE_EXPIRE = "50 minutes";
     const IMG_CACHE_DIR = "../temp/img_cache";
 
 
-    const MIN_OVERLAY_ZOOM = 7;
+    const MIN_OVERLAY_ZOOM = 10;
+    const MIN_INFO_WINDOW_ZOOM = 10;
 
     /**
      * @var WifiManager
@@ -77,32 +80,38 @@ class WifiPresenter extends BasePresenter
             $this->cache = new Cache($storage);
         }
         // ZAPNUTE MODY (TURNED ON MODES)
-        $this->allowedModes = array(self::MODE_SEARCH,self::MODE_HIGHLIGHT,self::MODE_ALL,self::MODE_FREE,self::MODE_ONE_SOURCE);
+        $this->allowedModes = array(
+            self::MODE_SEARCH,
+            self::MODE_HIGHLIGHT,
+            self::MODE_ALL,
+            self::MODE_FREE,
+            self::MODE_ONE_SOURCE
+        );
     }
 
 
     public function renderProcessClick()
     {
-
         $httpr = $this->getHttpRequest();
-        // pokud je nedostatecny zoom vratit prazdny
+        // pokud je nedostatecny zoom vratit prazdny - nemusim resit -> JS omezeni
+
 
         $r = $this->wifiManager->getClickQueryByMode($httpr);
         $detail = null;
         if ($httpr->getQuery("net")) {
             $net = intval($httpr->getQuery("net"));
-            $detail = $this->wifiManager->getDetailById($net);
+            $detail = $this->wifiManager->getWifiById($net);
             $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->latitude, $detail->longitude);
         } else {
             $f = $r->fetch();
             if ($f) {
-                $detail = $f;
+                $detail = Wifi::createWifiFromDBRow($f);
             }
         }
         $json = array();
         $others = $r->fetchAll();
         $this->template->count = count($others);
-        unset($others[$detail["id"]]);
+        unset($others[$detail->getId()]);
         if ($detail) {
             $json['lat'] = $detail->latitude;
             $json['lng'] = $detail->longitude;
@@ -167,10 +176,21 @@ class WifiPresenter extends BasePresenter
     }
 
 
+    public function renderExport() {
+        if($this->getHttpRequest()->getQuery('c') == self::EXPORT_CODE) {
+            echo 'export';
+        }
+        else {
+            echo 'zadejte spravny kod';
+        }
+        $this->terminate();
+    }
+
+
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
         header("Content-type: image/png");
-        DownloadPresenter::setIni(180, '512M');
+        DownloadPresenter::setIni(180, '1024M');
         $request = $this->getHttpRequest();
 
         // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod

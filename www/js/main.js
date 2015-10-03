@@ -14,6 +14,7 @@ var BASE_URL = location.protocol + "//" + location.host + location.pathname;
 var PROCESS_CLICK_URL = BASE_URL + "wifi/processClick";
 var IMAGE_URL = BASE_URL + "wifi/image";
 var ADD_WIGLE_REQUEST_URL = BASE_URL + "download/addwiglerequest";
+var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
 
 
 
@@ -375,4 +376,24 @@ $(document).ready(function(){
 
 
 });
+
+/**
+ * create google request by wifi id
+ *
+ * @param wid
+ */
+function googleDownloadRequest1(wid) {
+
+    $.ajax(GOOGLE_DOWNLOAD_URL,{
+        data: {
+            wid: wid
+        }
+    }).done(function() {
+        console.log("hotovo");
+    });
+
+    console.log(wid);
+    return false;
+
+}
 

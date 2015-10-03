@@ -5,7 +5,8 @@ use App\Service\WifileaksDownload;
 use App\Service\WigleDownload;
 
 class Wifi extends Nette\Object {
-
+    /** @var int */
+    private $id;
     /** @var string  */
     private $mac = "";
     /** @var string  */
@@ -48,7 +49,6 @@ class Wifi extends Nette\Object {
     private $source;
     /** @var Nette\Utils\DateTime */
     private $date_added;
-
 
     /**
      * @param \Nette\Database\Table\IRow $row
@@ -425,6 +425,21 @@ class Wifi extends Nette\Object {
         }
     }
 
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
-    
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+
 }
