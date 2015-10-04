@@ -13,10 +13,7 @@ var BASE_URL = location.protocol + "//" + location.host + location.pathname;
 
 var PROCESS_CLICK_URL = BASE_URL + "wifi/processClick";
 var IMAGE_URL = BASE_URL + "wifi/image";
-var ADD_WIGLE_REQUEST_URL = BASE_URL + "download/addwiglerequest";
 var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
-
-
 
 // google maps search markers
 var markers = [];
@@ -265,64 +262,88 @@ function resetAllFilters() {
     redrawOverlay();
 }
 
-$('#beginWigleRequest').click(function(){
+function sendRequestAjax(dataurl,requestData,infodiv,callback) {
+    if(!callback) callback = function(){};
+    $.ajax(dataurl, {
+        data: requestData,
+        beforeSend: function(){
+            $(infodiv).html(null);
+        }
+    }).done(function(data) {
+        $(infodiv).html(data);
+        callback();
+    });
+}
+
+
+/**
+ * TODO: mohlo by jit refactorovat -> klidne to i sjednotit a latmax a lonmax vyresit tim ze budu mit dva UER
+ */
+$("#beginGoogleRequest").click(function() {
+    cancelDownloadRequest("#requestInfo","#beginWigleRequest");
+    uer.setLatMax(0.04);
+    uer.setLngMax(0.08);
     uer.createUserEditableRectangle();
     uer.createListener();
-
-    // skryt tlacitko
     $(this).hide();
-    // vypsat napovedu text + tlacitko na potvrzeni
-    $.ajax(ADD_WIGLE_REQUEST_URL, {
-        data: {
-            show: 'HELP'
-        },
-        beforeSend: function(){
-            $("#wigleRequestInfo").html(null);
-            $(".loader").show();
-        },
-        complete: function(){
-            $(".loader").hide();
-        }
-    }).done(function(data) {
-       $("#wigleRequestInfo").html(data);
-    });
+    sendRequestAjax($(this).attr('data-url'),{},"#requestInfo");
 });
 
-function createWigleRequest() {
+$('#beginWigleRequest').click(function(){
+    cancelDownloadRequest("#requestInfo","#beginGoogleRequest");
+    uer.setLatMax(0.08);
+    uer.setLngMax(0.16);
+    uer.createUserEditableRectangle();
+    uer.createListener();
+    $(this).hide();
+    sendRequestAjax($(this).attr('data-url'),{},"#requestInfo");
+});
 
+/**
+ * vytvoreni pozdavaku stahovani
+ * @param url
+ */
+function createDownloadRequest(url,infodiv) {
     // vzit souradnice
     var bounds = uer.getUserEditableRectangle().getBounds();
-    // zavolat AJAXem vytvoreni pozadavku na wigle
-    $.ajax(ADD_WIGLE_REQUEST_URL, {
-        data: {
-            lat1: bounds.getSouthWest().lat(),
-            lat2: bounds.getNorthEast().lat(),
-            lon1: bounds.getSouthWest().lng(),
-            lon2: bounds.getNorthEast().lng()
-        },
-        beforeSend: function(){
-            $("#wigleRequestInfo").html(null);
-            $(".loader").show();
-        },
-        complete: function(){
-            $(".loader").hide();
-        }
-    }).done(function(data) {
-        $("#wigleRequestInfo").html(data);
+    var data = {
+        lat1: bounds.getSouthWest().lat(),
+        lat2: bounds.getNorthEast().lat(),
+        lon1: bounds.getSouthWest().lng(),
+        lon2: bounds.getNorthEast().lng()
+    };
+    sendRequestAjax(url,data,infodiv,function() {
         uer.getUserEditableRectangle().setMap(null);
         uer.setUserEditableRectangle(null);
     });
 }
-function endWigleRequest() {
-    $("#wigleRequestInfo").html(null);
-    $('#beginWigleRequest').show();
+
+/**
+ * zrusi pozadavek stahovani a infodiv vyprazdni a begin button zobrazi
+ * @param infodiv
+ * @param beginbutton
+ */
+function cancelDownloadRequest(infodiv,beginbutton) {
+    if(uer.getUserEditableRectangle()) {
+        uer.getUserEditableRectangle().setMap(null);
+        uer.setUserEditableRectangle(null);
+    }
+    $(infodiv).html(null);
+    $(beginbutton).show();
 }
-function cancelWigleRequest() {
-    uer.getUserEditableRectangle().setMap(null);
-    uer.setUserEditableRectangle(null);
-    $("#wigleRequestInfo").html(null);
-    $('#beginWigleRequest').show();
+
+/**
+ * ukonceni pozadavku stahovani (po pridani)
+ * @param infodiv
+ * @param beginbutton
+ */
+function endDownloadRequest(infodiv,beginbutton) {
+    $(infodiv).html(null);
+    $(beginbutton).show();
 }
+
+
+
 
 
 
@@ -373,9 +394,11 @@ $(document).ready(function(){
         redrawOverlay();
 
     });
-
-
 });
+
+
+
+
 
 /**
  * create google request by wifi id
@@ -389,11 +412,7 @@ function googleDownloadRequest1(wid) {
             wid: wid
         }
     }).done(function() {
-        console.log("hotovo");
     });
-
-    console.log(wid);
     return false;
-
 }
 

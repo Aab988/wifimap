@@ -3,8 +3,9 @@ function UER() {
     var userEditableRectangle =  null;
     var userEditableRectangleBounds =  null;
 
-    const USER_EDITABLE_RECTANGLE_LAT_MAX = 0.08;
-    const USER_EDITABLE_RECTANGLE_LON_MAX = 0.16;
+
+    var USER_EDITABLE_RECTANGLE_LAT_MAX = 0.08;
+    var USER_EDITABLE_RECTANGLE_LON_MAX = 0.16;
 
     this.createUserEditableRectangle = function() {
         if(!map) {
@@ -29,6 +30,12 @@ function UER() {
             new google.maps.LatLng(center.lat() - deltaLat/6, center.lng() - deltaLon/6),
             new google.maps.LatLng(center.lat() + deltaLat/6, center.lng() + deltaLon/6)
         );
+
+        // remove old rectangle
+        if(userEditableRectangle) {
+            userEditableRectangle.setMap(null);
+            userEditableRectangle = null;
+        }
 
         userEditableRectangle = new google.maps.Rectangle({
             map: map,
@@ -98,10 +105,18 @@ function UER() {
 
     this.getUserEditableRectangle = function() {
         return userEditableRectangle;
-    }
+    };
 
     this.setUserEditableRectangle = function(uer) {
         userEditableRectangle = uer;
+    };
+
+    this.setLatMax = function(latmax) {
+        USER_EDITABLE_RECTANGLE_LAT_MAX = latmax;
+    }
+
+    this.setLngMax = function(lngmax) {
+        USER_EDITABLE_RECTANGLE_LON_MAX = lngmax;
     }
 
 

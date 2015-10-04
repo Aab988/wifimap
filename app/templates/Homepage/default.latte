@@ -25,11 +25,10 @@
 
         <button onclick="return resetAllFilters()">Zrušit všechny filtry</button>
 
-        <button id="beginWigleRequest">Požádat o stažení z Wigle</button>
+        <button id="beginWigleRequest" data-url="{link Download:addwiglerequest}?show=HELP" >Požádat o stažení z Wigle</button>
+        <button id="beginGoogleRequest" data-url="{link Download:addgooglerequest}?show=HELP">Požádat o stažení z Google</button>
 
-        <div id="wigleRequestInfo">
-
-        </div>
+        <div id="requestInfo"></div>
         <div class="loader"></div>
     </div>
 
