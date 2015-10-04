@@ -58,6 +58,19 @@ class Wifi extends Nette\Object {
         return self::createWifiFromAssociativeArray($row);
     }
 
+    /**
+     * creates array of Wifi objects from array with DBresults
+     * @param \Nette\Database\Table\IRow[] $array
+     * @return Wifi[]
+     */
+    public static function createWifiArrayFromDBRowArray($array) {
+        $wifi = array();
+        foreach($array as $a) {
+            $wifi[] = self::createWifiFromDBRow($a);
+        }
+        return $wifi;
+    }
+
 
     /**
      * @param mixed $property

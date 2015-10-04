@@ -117,6 +117,18 @@ class GoogleDownload extends Download implements \IDownload {
 
     }
 
+
+    public function createRequestFromArea(Coords $coords) {
+        $rows = $this->wifiManager->getAllNetsInLatLngRange($coords);
+        $wfs = Wifi::createWifiArrayFromDBRowArray($rows);
+
+        foreach($wfs as $w) {
+            $this->createRequestFromWifi($w);
+        }
+    }
+
+
+
     private function getGoogleRequestByWifiIds($w1id,$w2id) {
         return $this->database->table("google_request")
             ->select("datediff(now(),created) AS diff")
@@ -129,9 +141,7 @@ class GoogleDownload extends Download implements \IDownload {
 
 
 
-    public function createRequestFromArea() {
 
-    }
 
 
     /**

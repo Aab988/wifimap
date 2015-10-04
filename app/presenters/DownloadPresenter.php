@@ -5,6 +5,8 @@ namespace App\Presenters;
 use \App\Model\Coords;
 use App\Model\Wifi;
 use \App\Service;
+use Nette\Http\Url;
+use Nette\Http\UrlScript;
 
 class DownloadPresenter extends BasePresenter {
 
@@ -170,10 +172,8 @@ class DownloadPresenter extends BasePresenter {
     /**
      * add wigle request guide
      * finaly create wigle request
-     *
      */
     public function renderAddWigleRequest() {
-
         if($this->getHttpRequest()->getQuery("show") == "HELP") {
             $this->template->setFile( __DIR__. "/../templates/Download/wigle_create_request_info.latte");
 			return;
@@ -189,6 +189,23 @@ class DownloadPresenter extends BasePresenter {
 
             $this->template->code = $state;
 		}
+    }
+
+
+    public function actionAddGoogleRequest() {
+        if($this->getHttpRequest()->getQuery("show") == "HELP") {
+            $this->view = 'addgooglerequesthelp';
+        }
+        else {
+            $this->view = 'addgooglerequest';
+        }
+    }
+
+    public function renderAddGoogleRequestHelp() {
+    }
+
+    public function renderAddGoogleRequest() {
+        dump($this->getHttpRequest());
     }
 
     /**
