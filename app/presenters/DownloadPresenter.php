@@ -17,7 +17,7 @@ class DownloadPresenter extends BasePresenter {
     public $wifileaksDownload;
     /** @var Service\GoogleDownload @inject */
     public $googleDownload;
-    /** @var \App\Service\WigleRequest @inject */
+    /** @var \App\Service\DownloadRequest @inject */
     public $wigleRequest;
     /** @var \App\Service\WigleDownloadQueue @inject */
     public $downloadQueue;
@@ -148,12 +148,12 @@ class DownloadPresenter extends BasePresenter {
 			return;
         }
 		else {
-			$state = $this->wigleRequest->processWigleRequestCreation(new Coords(
-                    $this->getHttpRequest()->getQuery("lat1"),
-                    $this->getHttpRequest()->getQuery("lat2"),
-                    $this->getHttpRequest()->getQuery("lon1"),
-                    $this->getHttpRequest()->getQuery("lon2")
-            ));
+			$state = $this->wigleRequest->processDownloadRequestCreation(new Coords(
+                $this->getHttpRequest()->getQuery("lat1"),
+                $this->getHttpRequest()->getQuery("lat2"),
+                $this->getHttpRequest()->getQuery("lon1"),
+                $this->getHttpRequest()->getQuery("lon2")
+            ),Service\WigleDownload::ID_SOURCE);
 			$this->template->setFile( __DIR__. "/../templates/Download/info_wigle_req.latte");
 
             $this->template->code = $state;
@@ -189,14 +189,14 @@ class DownloadPresenter extends BasePresenter {
     /**
      * CRON -> run every 1 HOUR (?)
      *
-     * get one use created WigleRequest, divide it by wifi density and add calculated records to wigle download queue
+     * get one use created DownloadRequest, divide it by wifi density and add calculated records to wigle download queue
      *
      * @throws \Nette\Application\AbortException
      */
     public function renderProcessWigleRequest() {
 
         self::setIni(1200, '256M');
-        $req = $this->wigleRequest->getEldestWigleRequest();
+        $req = $this->wigleRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords);
         $this->downloadQueue->save();
