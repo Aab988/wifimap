@@ -18,7 +18,7 @@ class WigleDownload extends Download implements \IDownload {
 
 
     /** name of cookie file */
-    const COOKIE_FILE = "../temp/cookie.txt";
+    const COOKIE_FILE = "cookie.txt";
 
     /** Wigle login URL */
     const WIGLE_LOGIN_URL = "https://wigle.net/api/v1/jsonLogin";
@@ -35,7 +35,9 @@ class WigleDownload extends Download implements \IDownload {
 
 
 
-    /** @var DownloadQueue */
+    /**
+     * @var WigleDownloadQueue
+     */
     public $downloadQueue;
 
     /**

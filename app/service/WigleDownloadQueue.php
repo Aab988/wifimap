@@ -11,7 +11,7 @@ use App\Model\ArrayUtil;
 
 
 
-class DownloadQueue extends BaseService {
+class WigleDownloadQueue extends BaseService {
 
     /** Wigle QOS grad color image URL */
     const WIGLE_QOS_GRAD_IMAGE_URL = "https://wigle.net/images/qos_grad.png";
@@ -35,7 +35,7 @@ class DownloadQueue extends BaseService {
      * @return bool|mixed|Nette\Database\Table\IRow
      */
     public function getRandomNotDownloadedRecord() {
-        return $this->database->table("download_queue")->select("id,lat_start,lat_end,lon_start,lon_end,from,to")
+        return $this->database->table("wigle_download_queue")->select("id,lat_start,lat_end,lon_start,lon_end,from,to")
             ->where("downloaded = ?", 0)
             ->order("rand()")
             ->limit(1)
@@ -66,7 +66,7 @@ class DownloadQueue extends BaseService {
             $data["from"] = $from;
             $data["to"] = $from + 99;
         }
-        $this->database->query("insert into download_queue",$data);
+        $this->database->query("insert into wigle_download_queue",$data);
     }
 
     /**

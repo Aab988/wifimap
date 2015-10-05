@@ -11,45 +11,18 @@ use Nette\Http\UrlScript;
 class DownloadPresenter extends BasePresenter {
 
     const FROM_TEMP_DIR_KEY = 'fromtempdir';
-
-    /**
-     *
-     * @var \App\Service\WigleDownload
-     * @inject
-     */
+    /** @var \App\Service\WigleDownload @inject */
     public $wigleDownload;
-    
-    /**
-     *
-     * @var \App\Service\WifileaksDownload
-     * @inject
-     */
+    /** @var \App\Service\WifileaksDownload @inject */
     public $wifileaksDownload;
-
-    /**
-     * @var Service\GoogleDownload
-     * @inject
-     */
+    /** @var Service\GoogleDownload @inject */
     public $googleDownload;
-
-    /**
-     * @var \App\Service\WigleRequest
-     * @inject
-     */
+    /** @var \App\Service\WigleRequest @inject */
     public $wigleRequest;
-
-    /**
-     * @var \App\Service\DownloadQueue
-     * @inject
-     */
+    /** @var \App\Service\WigleDownloadQueue @inject */
     public $downloadQueue;
-
-    /**
-     * @var \App\Service\WifiManager
-     * @inject
-     */
+    /** @var \App\Service\WifiManager @inject */
     public $wifiManager;
-
 
     /**
      * CRON - 50times a day
@@ -72,8 +45,9 @@ class DownloadPresenter extends BasePresenter {
         self::setIni(1800,'512M');
         $fromtempdir = $this->getHttpRequest()->getQuery(self::FROM_TEMP_DIR_KEY);
         if($fromtempdir) {
-            // najít soubory v tempu
-            // pokud nìjaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnovìjši)
+            //TODO:
+            // najï¿½t soubory v tempu
+            // pokud nï¿½jaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnovï¿½jï¿½i)
             $this->wifileaksDownload->download("../temp/wifileaks.tsv");
         }
         else {
@@ -87,18 +61,13 @@ class DownloadPresenter extends BasePresenter {
      */
     public function renderCreateGoogleRequest() {
         $this->googleDownload->setWifiManager($this->wifiManager);
-
         $req = $this->getHttpRequest();
         if($req->getQuery("wid")) {
             $wifi = $this->wifiManager->getWifiById($req->getQuery("wid"));
-            dump($wifi);
             $this->googleDownload->createRequestFromWifi($wifi);
         }
-
-
         $this->terminate();
     }
-
 
 
     public function renderGoogle() {
@@ -205,7 +174,16 @@ class DownloadPresenter extends BasePresenter {
     }
 
     public function renderAddGoogleRequest() {
-        dump($this->getHttpRequest());
+        $this->googleDownload->setWifiManager($this->wifiManager);
+        $req = $this->getHttpRequest();
+        $coords = new Coords(
+            $req->getQuery("lat1"),
+            $req->getQuery("lat2"),
+            $req->getQuery("lon1"),
+            $req->getQuery("lon2")
+        );
+        $state = $this->googleDownload->createRequestFromArea($coords);
+        $this->template->state = $state;
     }
 
     /**
