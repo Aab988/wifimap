@@ -18,7 +18,7 @@ class DownloadPresenter extends BasePresenter {
     /** @var Service\GoogleDownload @inject */
     public $googleDownload;
     /** @var \App\Service\DownloadRequest @inject */
-    public $wigleRequest;
+    public $downloadRequest;
     /** @var \App\Service\WigleDownloadQueue @inject */
     public $downloadQueue;
     /** @var \App\Service\WifiManager @inject */
@@ -137,54 +137,66 @@ class DownloadPresenter extends BasePresenter {
 		$this->terminate();
     }
 
-
     /**
-     * add wigle request guide
-     * finaly create wigle request
+     * determine render action
+     * @param $show
      */
+    public function actionAddWigleRequest($show) {
+        $this->determineView($show);
+    }
+
+    public function renderAddWigleRequestHelp() {}
+
     public function renderAddWigleRequest() {
-        if($this->getHttpRequest()->getQuery("show") == "HELP") {
-            $this->template->setFile( __DIR__. "/../templates/Download/wigle_create_request_info.latte");
-			return;
-        }
-		else {
-			$state = $this->wigleRequest->processDownloadRequestCreation(new Coords(
-                $this->getHttpRequest()->getQuery("lat1"),
-                $this->getHttpRequest()->getQuery("lat2"),
-                $this->getHttpRequest()->getQuery("lon1"),
-                $this->getHttpRequest()->getQuery("lon2")
-            ),Service\WigleDownload::ID_SOURCE);
-			$this->template->setFile( __DIR__. "/../templates/Download/info_wigle_req.latte");
-
-            $this->template->code = $state;
-		}
-    }
-
-
-    public function actionAddGoogleRequest() {
-        if($this->getHttpRequest()->getQuery("show") == "HELP") {
-            $this->view = 'addgooglerequesthelp';
-        }
-        else {
-            $this->view = 'addgooglerequest';
-        }
-    }
-
-    public function renderAddGoogleRequestHelp() {
-    }
-
-    public function renderAddGoogleRequest() {
-        $this->googleDownload->setWifiManager($this->wifiManager);
-        $req = $this->getHttpRequest();
-        $coords = new Coords(
-            $req->getQuery("lat1"),
-            $req->getQuery("lat2"),
-            $req->getQuery("lon1"),
-            $req->getQuery("lon2")
-        );
-        $state = $this->googleDownload->createRequestFromArea($coords);
+        $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
         $this->template->state = $state;
     }
+
+
+    /**
+     * determine render action
+     * @param string $show
+     */
+    public function actionAddGoogleRequest($show) {
+        $this->determineView($show);
+    }
+
+    /** show help for google request */
+    public function renderAddGoogleRequestHelp() {}
+
+    /** add download request */
+    public function renderAddGoogleRequest() {
+        $state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);
+        $this->template->state = $state;
+    }
+
+
+    /**
+     * add download request
+     *
+     * @param int $idSource
+     * @return bool|string
+     */
+    private function addRequest($idSource) {
+        return $this->downloadRequest->processDownloadRequestCreation(new Coords(
+            $this->getHttpRequest()->getQuery("lat1"),
+            $this->getHttpRequest()->getQuery("lat2"),
+            $this->getHttpRequest()->getQuery("lon1"),
+            $this->getHttpRequest()->getQuery("lon2")
+        ),$idSource);
+    }
+
+
+    /**
+     * determines what view show
+     */
+    private function determineView($show) {
+        if(strcasecmp($show,'help') == 0) {
+            $this->view = $this->getAction().'help';
+        }
+    }
+
+
 
     /**
      * CRON -> run every 1 HOUR (?)
@@ -196,13 +208,29 @@ class DownloadPresenter extends BasePresenter {
     public function renderProcessWigleRequest() {
 
         self::setIni(1200, '256M');
-        $req = $this->wigleRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
+        $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords);
         $this->downloadQueue->save();
-        $this->wigleRequest->setProcessed($req);
+        $this->downloadRequest->setProcessed($req);
         $this->terminate();
     }
 
+
+    /**
+     * CRON - every 30 minutes
+     *
+     * get one user created DownloadRequest for google, and process it
+     *
+     * @throws \Nette\Application\AbortException
+     */
+    public function renderProcessGoogleRequest() {
+        $this->googleDownload->setWifiManager($this->wifiManager);
+        $req = $this->downloadRequest->getEldestDownloadRequest(Service\GoogleDownload::ID_SOURCE);
+        $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
+        $this->googleDownload->createRequestFromArea($coords);
+        $this->downloadRequest->setProcessed($req);
+        $this->terminate();
+    }
 
 }

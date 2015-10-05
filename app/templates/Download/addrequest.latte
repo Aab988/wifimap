@@ -1,0 +1,13 @@
+{ifset $state}
+{if $state == App\Service\DownloadRequest::STATE_ERR_ALREADY_IN_QUEUE}
+<p>Tato plocha je již ve frontě (buď samostatně nebo obsažená v jiné ploše).</p>
+{elseif $code == App\Service\DownloadRequest::STATE_ERR_RECENTLY_DOWNLOADED}
+<p>Tato plocha byla stažena méně než před týdnem. Nelze požadovat aktualizaci dat dříve než týden po jejich stažení.</p>
+{elseif $code == App\Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE}
+<p>Váš požadavek byl přidán do fronty.</p>
+{else}
+<p>Nastala chyba při přidávání do fronty.</p>
+{/if}
+{/ifset}
+
+<button onclick="endDownloadRequest('#requestInfo','{block inputId}{/block}')">Zavřít</button>

@@ -13,6 +13,8 @@ use App\Model\Wifi;
 use Nette\Utils\DateTime;
 
 class GoogleDownload extends Download implements \IDownload {
+    /** google source id in DB */
+    const ID_SOURCE = 3;
 
     /** @var WifiManager */
     private $wifiManager;
@@ -125,6 +127,9 @@ class GoogleDownload extends Download implements \IDownload {
         foreach($wfs as $w) {
             $this->createRequestFromWifi($w);
         }
+
+        // vratit chybu/uspech
+
     }
 
 
@@ -138,9 +143,6 @@ class GoogleDownload extends Download implements \IDownload {
             ->order("diff ASC")
             ->fetch();
     }
-
-
-
 
 
 

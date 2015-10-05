@@ -46,15 +46,11 @@ class WigleDownloadQueue extends BaseService {
      * add one record to download queue
      *
      * @param Coords $coords
-     * @param int $calculated_nets_count
-     * @param int $id_source
-     * @uses WigleDownload::ID_SOURCE as default value for $id_source param
-     * @param int $from
-     *
+     * @param int    $calculated_nets_count
+     * @param int    $from
      */
-    public function addRecord($coords,$calculated_nets_count, $id_source = WigleDownload::ID_SOURCE, $from = 0) {
+    public function addRecord($coords, $calculated_nets_count, $from = 0) {
         $data = array(
-            "id_source" => $id_source,
             "lat_start" => $coords->getLatStart(),
             "lat_end" => $coords->getLatEnd(),
             "lon_start" => $coords->getLonStart(),
@@ -235,7 +231,7 @@ class WigleDownloadQueue extends BaseService {
      */
     private function saveAll2downloadQueue() {
         foreach($this->generatedCoords as $coord) {
-            $this->addRecord($coord['coords'],$coord['calculated_nets_count'],WigleDownload::ID_SOURCE);
+            $this->addRecord($coord['coords'], $coord['calculated_nets_count']);
         }
         $this->generatedCoords = array();
     }

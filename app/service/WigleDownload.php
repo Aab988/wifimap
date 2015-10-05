@@ -56,7 +56,7 @@ class WigleDownload extends Download implements \IDownload {
             $this->saveAll($ws);
             $query->update(array("downloaded"=>1,"downloaded_nets_count"=>count($ws)));
             if((int)$results_decoded["resultCount"] == 100) {
-                $this->downloadQueue->addRecord($coords,0,self::ID_SOURCE,(int)$results_decoded["last"]);
+                $this->downloadQueue->addRecord($coords, 0, (int)$results_decoded["last"]);
             }
         }
         else {

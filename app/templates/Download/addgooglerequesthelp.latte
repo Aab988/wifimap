@@ -1,5 +1,3 @@
-<p>Na mapě se Vám zobrazil obdélník, jenž si můžete libovolně upravovat. Jediné omezení je v jeho maximální možné velikosti.</p>
-<p>Po označení vámi vybrané plochy klikněte na tlačítko Požádat o stažení</p>
-
-<button onclick="createDownloadRequest({link Download:addgooglerequest},'#requestInfo')">Požádat o stažení</button>
-<button onclick="cancelDownloadRequest('#requestInfo','#beginGoogleRequest')">Zrušit</button>
+{layout 'addrequesthelp.latte'}
+{block askForDownloadURL}{link Download:addgooglerequest}{/block}
+{block showAfterCancel}#beginGoogleRequest{/block}

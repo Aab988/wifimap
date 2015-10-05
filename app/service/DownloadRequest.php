@@ -13,9 +13,11 @@ use App\Model\Coords;
 class DownloadRequest extends BaseService {
 
     /** ERROR/INFO returned CONSTANTS */
-    const ERR_ALREADY_IN_QUEUE = "ALREADY_IN_QUEUE";
-    const ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
-    const INFO_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
+
+    const STATE_ERR_ALREADY_IN_QUEUE = "ALREADY_IN_QUEUE";
+    const STATE_ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
+    const STATE_SUCCESS_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
+
 
     const DIVIDE_AREA_ONLY_NOT_IN_QUEUE = true;
 
@@ -80,17 +82,17 @@ class DownloadRequest extends BaseService {
             $er = $existingRequest->toArray();
             // pokud processed = N pak je ve fronte a neni stazeno
             if($er["processed"] == "N") {
-                return self::ERR_ALREADY_IN_QUEUE;
+                return self::STATE_ERR_ALREADY_IN_QUEUE;
             }
             else {
                 $today = new DateTime();
                 $diff = $today->diff($er["processed_date"]);
                 if($diff->days < 7) {
-                    return self::ERR_RECENTLY_DOWNLOADED;
+                    return self::STATE_ERR_RECENTLY_DOWNLOADED;
                 }
                 else {
                     $this->addDownloadRequest($coords,$idSource);
-                    return self::INFO_ADDED_TO_QUEUE;
+                    return self::STATE_SUCCESS_ADDED_TO_QUEUE;
                 }
             }
         }
@@ -101,15 +103,15 @@ class DownloadRequest extends BaseService {
                     $this->addDownloadRequest($rect,$idSource);
                 }
                 if(count($rects) > 0) {
-                    return self::INFO_ADDED_TO_QUEUE;
+                    return self::STATE_SUCCESS_ADDED_TO_QUEUE;
                 }
                 else {
-                    return self::ERR_ALREADY_IN_QUEUE;
+                    return self::STATE_ERR_ALREADY_IN_QUEUE;
                 }
             }
             else {
                 $this->addDownloadRequest($coords,$idSource);
-                return self::INFO_ADDED_TO_QUEUE;
+                return self::STATE_SUCCESS_ADDED_TO_QUEUE;
             }
         }
     }
