@@ -10,53 +10,106 @@ namespace App\Service;
 
 use App\Model\Coords;
 use App\Model\Wifi;
+use App\Model\WifiSecurity;
 use Nette\Utils\DateTime;
 
 class GoogleDownload extends Download implements \IDownload {
     /** google source id in DB */
     const ID_SOURCE = 3;
 
+    /** maximal accuracy in meters - accuracy >100 meters is bad */
+    const MAX_ALLOWED_ACCURACY = 300;
+
+    /** number of requests processed by one call of method download */
+    const REQUESTS_LIMIT = 10;
+
+
     /** @var WifiManager */
     private $wifiManager;
 
 
+    /**
+     * main method, processed by cron
+     */
     public function download()
     {
-        $click_lat = 50.19069300754107;
-        $click_lon = 15.804262161254883;
+        $f = $this->database
+            ->query("select gr.id,w.id as id1,w.mac as mac1,w.ssid as ssid1,w.altitude,w.sec,
+                     w.comment,w.name,w.type,w.freenet,w.paynet,w.flags,w.wep,w.channel,w.bcninterval,
+                     w.qos,w2.id as id2,w2.mac as mac2,w2.ssid as ssid2
+                     from google_request gr
+                     join wifi w ON (gr.id_wifi1 = w.id)
+                     join wifi w2 ON (gr.id_wifi2 = w2.id)
+                     where gr.downloaded='N'
+                     limit ".self::REQUESTS_LIMIT." for update")->fetchAll();
 
-        $mapCoords = new Coords(50.18899429884056,50.19191362607472,15.797227464556954,15.808954082370064);
+        $wifis = array();
 
-        $dlat = $mapCoords->getDeltaLat();
-        $dlon = $mapCoords->getDeltaLon();
+        foreach($f as $ws) {
+            $w1 = new Wifi();
+            $w1->setMac($ws->mac1);
+            $w1->setSsid($ws->ssid1);
+            $w1->setAltitude($ws->altitude);
+            $w1->setSec($ws->sec);
+            $w1->setComment($ws->comment);
+            $w1->setName($ws->name);
+            $w1->setType($ws->type);
+            $w1->setFreenet($ws->freenet);
+            $w1->setPaynet($ws->paynet);
+            $w1->setFlags($ws->flags);
+            $w1->setWep($ws->wep);
+            $w1->setChannel($ws->channel);
+            $w1->setBcninterval($ws->bcninterval);
+            $w1->setQos($ws->qos);
+            $w2 = new Wifi();
+            $w2->setMac($ws->mac2);
+            $w2->setSsid($ws->ssid2);
 
-        $coords = new Coords(
-            $click_lat-$dlat*0.03,
-            $click_lat+$dlat*0.03,
-            $click_lon-$dlon*0.03,
-            $click_lon+$dlon*0.03
-        );
-
-
-        //$database = $this->wifileaksDownload->getDatabase();
-        /*$nets = $this->wifiManager->getNetsRangeQuery($coords)->limit(2);
-        $q = "";
-        $ss = -80;
-        foreach($nets as $net) {
-            $mac = str_replace(":","-",$net->mac);
-            $q.='&wifi=mac:'.$mac.'|ssid:'.$net->ssid.'|ss:'.$ss;
-            $ss = -20;
+            $url = $this->generateGoogleRequestUrl($w1,$w2);
+            // vraci accuracy -> v metrech
+            // location -> lat,lng
+            // a status
+            $data = $this->getDataFromGoogle($url);
+            dump($data);
+            if($data->status == 'OK') {
+                if($data->accuracy < self::MAX_ALLOWED_ACCURACY) {
+                    $w = new Wifi();
+                    // naplnit hodnoty podle predchozi w1 kromě id,id_source,latitude,longitude a accuracy
+                    $w->setMac($w1->getMac());
+                    $w->setSsid($w1->getSsid());
+                    $w->setAltitude($w1->getAltitude());
+                    $w->setSec($w1->getSec());
+                    $w->setComment($w1->getComment());
+                    $w->setName($w1->getName());
+                    $w->setType($w1->getType());
+                    $w->setFreenet($w1->getFreenet());
+                    $w->setPaynet($w1->getPaynet());
+                    $w->setFlags($w1->getFlags());
+                    $w->setWep($w1->getWep());
+                    $w->setChannel($w1->getChannel());
+                    $w->setBcninterval($w1->getBcninterval());
+                    $w->setQos($w1->getQos());
+                    // naplnit id source,latitude,longitude,accuracy
+                    $w->setAccuracy($data->accuracy);
+                    $w->setLatitude($data->location->lat);
+                    $w->setLongitude($data->location->lng);
+                    $w->setSource(self::ID_SOURCE);
+                    $w->setDateAdded(new DateTime());
+                    // ulozit
+                    $wifis[] = $w;
+                }
+                else {
+                    // neukladat -> zalogovat
+                    $this->logger->addLog('google-download','URL='.$url);
+                }
+                $this->database->table("google_request")
+                    ->where("id",$ws->id)
+                    ->update(array("downloaded"=>'Y'));
+                // nastavit priznak staezno na download
+            }
         }
-        dump($nets->fetchAll());
-        $url = "https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true".$q;
-       */
-
-       /* echo $url;
-        dump(json_decode(file_get_contents($url)));
-
-            */
-
-        // TODO: Implement download() method.
+        $this->logger->save();
+        $this->saveMultiInsert($wifis,self::REQUESTS_LIMIT);
     }
 
 
@@ -77,8 +130,9 @@ class GoogleDownload extends Download implements \IDownload {
         $w1->setMac(str_replace(":","-",$w1->getMac()));
         $w2->setMac(str_replace(":","-",$w2->getMac()));
         // add to url
-        $url.='&wifi=mac:'.$w1->getMac().'|ssid:'.$w1->getSsid().'|ss:'.$ss1;
-        $url.='&wifi=mac:'.$w2->getMac().'|ssid:'.$w2->getSsid().'|ss:'.$ss2;
+        $url.='&wifi=mac:'.$w1->getMac().'|ssid:'.urlencode($w1->getSsid()).'|ss:'.$ss1;
+        $url.='&wifi=mac:'.$w2->getMac().'|ssid:'.urlencode($w2->getSsid()).'|ss:'.$ss2;
+
         return $url;
     }
 

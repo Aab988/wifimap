@@ -27,7 +27,7 @@ class Logger extends Nette\Object {
      * @param bool|false $saveImediately
      */
     public function addLog($operation,$description='',$saveImediately = false) {
-        $this->logs[] = array("operation"=>$operation,$description=>$description);
+        $this->logs[] = array("operation"=>$operation,"data"=>$description);
         if($saveImediately) $this->save();
     }
 

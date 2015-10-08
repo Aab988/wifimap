@@ -46,8 +46,8 @@ class DownloadPresenter extends BasePresenter {
         $fromtempdir = $this->getHttpRequest()->getQuery(self::FROM_TEMP_DIR_KEY);
         if($fromtempdir) {
             //TODO:
-            // naj�t soubory v tempu
-            // pokud n�jaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnov�j�i)
+            // najit soubory v tempu
+            // pokud nejaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnovejsi)
             $this->wifileaksDownload->download("../temp/wifileaks.tsv");
         }
         else {
@@ -72,29 +72,7 @@ class DownloadPresenter extends BasePresenter {
 
     public function renderGoogle() {
         if(!$this->googleDownload) return;
-
-        $this->googleDownload->setWifiManager($this->wifiManager);
-
-        // tohle by slo udelat jako bin soubor
-
-        // vzit z databaze z fronty zaznam (nahodny) - aby kdyz se nedari jeden stahnout tak aby mi to neskoncilo
-        // stahnout info z google
-        // pokud mam dobrou presnost tak ulozit a nastavit ze stazeno
-        // jinak neukladat -> zalogovat pokus o stazeni
-
-
-        // https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true&wifi=mac:00-0c-42-2b-44-ac|ssid:DivecAirNetZapadWPA|ss:80wifi=mac:00-0c-42-23-1a-0e|ssid:MedAirNet|ss:20
-        $click_lat = 50.19069300754107;
-        $click_lon = 15.804262161254883;
-
-        $wfs = $this->wifiManager->get2ClosestWifiToCoords(Coords::createCoordsRangeByLatLng($click_lat,$click_lon,0.03));
-        dump($wfs);
-
-        $wifi = Wifi::createWifiFromAssociativeArray($wfs[array_keys($wfs)[0]]);
-        dump($wifi);
-
-
-
+        $this->googleDownload->download();
         $this->terminate();
     }
 

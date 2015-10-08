@@ -49,6 +49,8 @@ class Wifi extends Nette\Object {
     private $source;
     /** @var Nette\Utils\DateTime */
     private $date_added;
+    /** @var int */
+    private $accuracy = 0;
 
     /**
      * @param \Nette\Database\Table\IRow $row
@@ -453,6 +455,24 @@ class Wifi extends Nette\Object {
     {
         $this->id = $id;
     }
+
+    /**
+     * @return int
+     */
+    public function getAccuracy()
+    {
+        return $this->accuracy;
+    }
+
+    /**
+     * @param int $accuracy
+     */
+    public function setAccuracy($accuracy)
+    {
+        $this->accuracy = $accuracy;
+    }
+
+
 
 
 }
