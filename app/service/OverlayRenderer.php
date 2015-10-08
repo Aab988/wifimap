@@ -5,6 +5,7 @@
  * Time: 10:13
  */
 namespace App\Service;
+use App\Model\Wifi;
 use Nette;
 use App\Model\Color;
 use App\Model\Coords;
@@ -30,9 +31,12 @@ class OverlayRenderer extends BaseService {
 	private function setColors() {
 		$this->colors["background"] = new Color(254,254,254);
 		$this->colors["text"] = new Color(0,0,0);
-		$this->colors["wigle"] = new Color(208,0,0);
-		$this->colors["wifileaks"] = new Color(255,0,0);
+		$this->colors[GoogleDownload::ID_SOURCE] = new Color(192,0,0);
+		$this->colors[WigleDownload::ID_SOURCE] = new Color(208,0,0);
+		$this->colors[WifileaksDownload::ID_SOURCE] = new Color(255,0,0);
 		$this->colors["highlighted"] = new Color(0,0,255);
+
+
 	}
 
 	/**
@@ -129,11 +133,16 @@ class OverlayRenderer extends BaseService {
 	 * @param int $y
 	 */
 	private function addPointLabel($img, $w, $x, $y) {
+
+
 		if(trim($w->ssid) == "") {
 			imagestring($img, 1, $x+7, $y, $w->mac, $this->imgcolors["text"]);
 		}
 		else {
-			imagestring($img, 1, $x+7, $y, $w->ssid, $this->imgcolors["text"]);
+			$text = $w->ssid; $dots = "...";
+			if(strlen($text) > 20) { $text = $text.$dots; }
+
+			imagestring($img, 1, $x+7, $y, $text, $this->imgcolors["text"]);
 		}
 	}
 
@@ -174,12 +183,7 @@ class OverlayRenderer extends BaseService {
 	 * @uses OverlayRenderer::SHOW_LABEL_ZOOM as zoom from which is shown text label
 	 */
 	private function drawOneNetModeAll($img,$w,$x,$y,$zoom) {
-		if($w->id_source == WigleDownload::ID_SOURCE) {
-			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wigle"]);
-		}
-		else {
-			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wifileaks"]);
-		}
+		imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors[$w->id_source]);
 		if($zoom > self::SHOW_LABEL_ZOOM) {
 			$this->addPointLabel($img,$w,$x,$y);
 		}
@@ -220,13 +224,7 @@ class OverlayRenderer extends BaseService {
 	 * @param int[] $highlightedIds
 	 */
 	private function drawOneNetModeHighlight($img,$w,$x,$y,$zoom,$highlightedIds) {
-		if($w->id_source == WigleDownload::ID_SOURCE) {
-			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wigle"]);
-		}
-		else {
-			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["wifileaks"]);
-		}
-
+		imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors[$w->id_source]);
 		if(in_array($w->id,$highlightedIds)) {
 			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["highlighted"]);
 		}
