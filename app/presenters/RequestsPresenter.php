@@ -16,7 +16,15 @@ class RequestsPresenter extends BasePresenter {
     public $downloadRequest;
 
     public function renderDefault() {
-        $this->template->wigleRequests = $this->downloadRequest->getAllRequestsByIdSource(WigleDownload::ID_SOURCE);
+        $wrs = $this->downloadRequest->getAllRequestsByIdSource(WigleDownload::ID_SOURCE);
+        $this->template->wigleRequests = $wrs;
+        $wrfm = array();
+        foreach($wrs as $wr) {
+            $wrfm[$wr->lat_start.$wr->lat_end.$wr->lon_start.$wr->lon_end] = $wr;
+        }
+
+
+        $this->template->wigleRequestsMap = $wrfm;
         $this->template->googleRequests = $this->downloadRequest->getAllRequestsByIdSource(GoogleDownload::ID_SOURCE);
 
     }

@@ -50,6 +50,8 @@ class DownloadRequest extends BaseService {
     }
 
 
+
+
     /**
      * finds request already existing in this area in wigle request queue
      * only request which is whole in passed area
