@@ -170,13 +170,12 @@ html.js .jshidden {
     
 }
 
-.top .chart {
+.chart {
     margin: 0;
     padding: 0;
     width: 50%;
     float: left;
     height: 400px;
-
 }
 
 .left {

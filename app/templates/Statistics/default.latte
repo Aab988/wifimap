@@ -1,5 +1,5 @@
 {block content}
-<div class="overflow-hiddenscroll">
+<div class="overflow-hiddenscroll col-md-12">
 <script type="text/javascript">
     	google.load('visualization', '1.0', {'packages':['corechart','bar']});
         google.setOnLoadCallback(draw);
@@ -7,10 +7,14 @@
 			drawChart();
 		}
         </script>
-    <h1>Statistiky ({($actualStatistics)?$actualStatistics->created|date:'j. n. Y':''})</h1>
-    <div class="top">
-        <h2>Celkové statistiky</h2>
-        {if $actualStatistics}
+
+ <h1>Statistiky <small>({($actualStatistics)?$actualStatistics->created|date:'j. n. Y':''})</small></h1>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3>Celkové statistiky</h3>
+        </div>
+        <div class="panel-body">
+ {if $actualStatistics}
         <table id="totalStatistics">
             <tr>
                 <td>Aktuální počet sítí:</td>
@@ -32,37 +36,46 @@
         {if $actualStatistics}
         <div id="total_pie" class="chart"></div>
         {/if}
-    </div>
 
-    <div class="left">
-        <h2>Zdroje</h2>
+
+         <div class="col-sm-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h4>Zdroje</h4>
+                </div>
+                <div class="panel-body">
         {if $actualStatistics->getStatisticsSource()}
-        <table>
-            <thead>
-                <tr>
-                    <th>Zdroj</th>
-                    <th>Celkem sítí</th>
-                    <th>Volných sítí</th>
-                </tr>
-            </thead>
-            <tbody>
-            {foreach $actualStatistics->getStatisticsSource() as $ssa}
-                <tr>
-                    <td>{$ssa->getSource()->getName()}</td>
-                    <td>{$ssa->getTotalNets()|number:0:',':' '}</td>
-                    <td>{$ssa->getFreeNets()|number:0:',':' '}</td>
-                </tr>
-            {/foreach}
-            </tbody>
-        </table>
-        <div id="sources_pie"></div>
-        {/if}
-        <div id="sources_history_chart"></div>
-    </div>
-
-    <div class="right">
-        <h2>Zabezpečení</h2>
-        {if $actualStatistics->getStatisticsSecurity()}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Zdroj</th>
+                            <th>Celkem sítí</th>
+                            <th>Volných sítí</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {foreach $actualStatistics->getStatisticsSource() as $ssa}
+                        <tr>
+                            <td>{$ssa->getSource()->getName()}</td>
+                            <td>{$ssa->getTotalNets()|number:0:',':' '}</td>
+                            <td>{$ssa->getFreeNets()|number:0:',':' '}</td>
+                        </tr>
+                    {/foreach}
+                    </tbody>
+                </table>
+                <div id="sources_pie"></div>
+                {/if}
+                <div id="sources_history_chart"></div>
+                </div>
+            </div>
+            </div>
+<div class="col-sm-6">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h4>Zabezpečení</h4>
+        </div>
+        <div class="panel-body">
+{if $actualStatistics->getStatisticsSecurity()}
         <table>
         <thead>
             <tr>
@@ -91,7 +104,16 @@
         <div id="security_pie"></div>
         {/if}
         <div id="security_history_chart"></div>
+
+        </div>
     </div>
+ </div>
+
+        </div>
+    </div>
+
+
+
 
     <script>
         function drawChart() {

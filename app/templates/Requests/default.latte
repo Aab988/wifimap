@@ -1,4 +1,3 @@
-{block right}{/block}
 {block scripts}
 <script>
 $(document).ready(function() {
@@ -8,59 +7,76 @@ $(document).ready(function() {
                 details: false
             }
     });
-
-} );
+});
 </script>
 {/block}
+
+{block right}
+    <a n:href="Homepage:default">Návrat na mapu</a>
+{/block}
+
 {block content}
-
-<div class="panel panel-primary">
-<div class="panel-body">
-
+<div class="col-sm-12">
     <h1>Požadavky ke stažení</h1>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h2>Wigle</h2>
+        </div>
+        <div class="panel-body">
+            <table id="wigle-requests" class="table table-striped table-bordered dt-responsive">
+                <thead>
+                    <tr>
+                        <th>Datum vytvoření požadavku</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Zpracováno</th>
+                        <th>Datum zpracování</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {foreach $wigleRequests as $wr}
+                    <tr>
+                        <td>{$wr->date|date:'j. n. Y H:i:s'}</td>
+                        <td>{$wr->lat_start} - {$wr->lat_end}</td>
+                        <td>{$wr->lon_start} - {$wr->lon_end}</td>
+                        <td>{$wr->processed}</td>
+                        <td>{$wr->processed_date|date:'j. n. Y H:i:s'}</td>
+                    </tr>
+                {/foreach}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <h2>Wigle</h2>
-    <table id="wigle-requests" class="table table-striped table-bordered dt-responsive">
-    <thead>
-    <tr>
-            <th>Datum vytvoření požadavku</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Zpracováno</th>
-            <th>Datum zpracování</th>
-        </tr>
-    </thead>
-    {foreach $wigleRequests as $wr}
-    <tr>
-        <td>{$wr->date|date:'j. n. Y H:i:s'}</td>
-        <td>{$wr->lat_start} - {$wr->lat_end}</td>
-        <td>{$wr->lon_start} - {$wr->lon_end}</td>
-        <td>{$wr->processed}</td>
-        <td>{$wr->processed_date|date:'j. n. Y H:i:s'}</td>
-    </tr>
-    {/foreach}
-    </table>
-    <h2>Google</h2>
-    <table id="google-requests" class="table table-striped table-bordered dt-responsive">
-        <thead>
-        <tr>
-                <th>Datum vytvoření požadavku</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Zpracováno</th>
-                <th>Datum zpracování</th>
-            </tr>
-        </thead>
-        {foreach $googleRequests as $gr}
-        <tr>
-            <td>{$gr->date|date:'j. n. Y H:i:s'}</td>
-            <td>{$gr->lat_start} - {$wr->lat_end}</td>
-            <td>{$gr->lon_start} - {$wr->lon_end}</td>
-            <td>{$gr->processed}</td>
-            <td>{$gr->processed_date|date:'j. n. Y H:i:s'}</td>
-        </tr>
-        {/foreach}
-        </table>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h2>Google</h2>
+        </div>
+        <div class="panel-body">
+            <table id="google-requests" class="table table-striped table-bordered dt-responsive">
+                <thead>
+                    <tr>
+                        <th>Datum vytvoření požadavku</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Zpracováno</th>
+                        <th>Datum zpracování</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {foreach $googleRequests as $gr}
+                    <tr>
+                        <td>{$gr->date|date:'j. n. Y H:i:s'}</td>
+                        <td>{$gr->lat_start} - {$wr->lat_end}</td>
+                        <td>{$gr->lon_start} - {$wr->lon_end}</td>
+                        <td>{$gr->processed}</td>
+                        <td>{$gr->processed_date|date:'j. n. Y H:i:s'}</td>
+                    </tr>
+                {/foreach}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-</div>
+
 {/block}
