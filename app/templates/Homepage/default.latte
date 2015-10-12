@@ -3,9 +3,9 @@
     <input id="pac-input" class="controls" type="text" placeholder="Vyhledat adresu..">
 {/block}
 {block right}
-<div class="padding-10">
-    <h2>Přepnout zobrazení</h2>
-    <ul>
+<div class="col-md-12">
+    <h4>Přepnout zobrazení</h4>
+    <ul class="nav nav-pills nav-stacked">
         <li>
             <a href="javascript:void(0)" id="mi-one-source">Pouze jeden zdroj</a>
             <ul id="ul-one-source">
@@ -15,18 +15,18 @@
             </ul>
         </li>
         <li><a href="">Vypočtené polohy sítí</a></li>
-        <li><a href="statistics">Statistiky</a></li>
+        <li><a n:href="Statistics:default">Statistiky</a></li>
+        <li><a n:href="Requests:default">Vytvořené požadavky</a></li>
     </ul>
 
-    <h2>Vyhledávání</h2>
+    <h4>Vyhledávání</h4>
     {control searchForm}
 
-    <h2>Funkce</h2>
+    <h4>Funkce</h4>
 
-        <button onclick="return resetAllFilters()">Zrušit všechny filtry</button>
-
-        <button id="beginWigleRequest" data-url="{link Download:addwiglerequest}?show=HELP" >Požádat o stažení z Wigle</button>
-        <button id="beginGoogleRequest" data-url="{link Download:addgooglerequest}?show=HELP">Požádat o stažení z Google</button>
+        <button onclick="return resetAllFilters()" class="btn btn-primary btn-sm col-md-12">Zrušit všechny filtry</button>
+        <button id="beginWigleRequest" class="btn btn-primary btn-sm col-md-12" data-url="{link Download:addwiglerequest}?show=HELP" >Požádat o stažení z Wigle</button>
+        <button id="beginGoogleRequest" class="btn btn-primary btn-sm col-md-12" data-url="{link Download:addgooglerequest}?show=HELP">Požádat o stažení z Google</button>
 
         <div id="requestInfo"></div>
         <div class="loader"></div>

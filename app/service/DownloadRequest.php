@@ -42,6 +42,15 @@ class DownloadRequest extends BaseService {
 
 
     /**
+     * @param int $idSource
+     * @return array|Nette\Database\Table\IRow[]
+     */
+    public function getAllRequestsByIdSource($idSource) {
+        return $this->database->table("download_request")->where("id_source", $idSource)->fetchAll();
+    }
+
+
+    /**
      * finds request already existing in this area in wigle request queue
      * only request which is whole in passed area
      *

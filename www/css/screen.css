@@ -124,9 +124,12 @@ html.js .jshidden {
 #right-panel {
     height: 100%;
     width: 20%;
-    background-color: #dddddd;
+    /*background-color: #dddddd;*/
+
+
     float: left;
     overflow: auto;
+   /* padding-bottom: 80px;*/
 }
 
 .padding-10 {
@@ -206,4 +209,8 @@ html.js .jshidden {
 
 #security_history_chart,#sources_history_chart {
     width: 80%;
+}
+
+.btn-primary {
+    margin-bottom: 5px;
 }
