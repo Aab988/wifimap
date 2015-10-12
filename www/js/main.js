@@ -374,16 +374,18 @@ $(document).ready(function () {
         delete hashParams.ssidmac;
         delete hashParams.channel;
         delete hashParams.security;
+        delete hashParams.source;
 
         ssidmac = $(this).find("#frm-searchForm-ssidmac").val();
         channel = $(this).find("#frm-searchForm-channel").val();
         security = $(this).find("#frm-searchForm-security").val();
+        source = $(this).find("#frm-searchForm-source").val();
         hashParams.mode = MODE_SEARCH;
 
         if (ssidmac) hashParams.ssidmac = ssidmac;
         if (channel) hashParams.channel = channel;
         if (security) hashParams.security = security;
-
+        if (source) hashParams.source = source;
         window.location.hash = $.param(hashParams);
         redrawOverlay();
 

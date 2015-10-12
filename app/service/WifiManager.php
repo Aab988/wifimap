@@ -176,6 +176,9 @@ class WifiManager extends BaseService {
 				if($request->getQuery("security")!=null && $request->getQuery("security") != "") {
 					$params['sec'] = intval($request->getQuery("security"));
 				}
+				if($request->getQuery("source")!=null && $request->getQuery("source") != "") {
+					$params['id_source'] = intval($request->getQuery("source"));
+				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
 				break;
 			case WifiPresenter::MODE_ONE_SOURCE:

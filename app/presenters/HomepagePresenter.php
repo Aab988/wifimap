@@ -47,7 +47,6 @@ class HomepagePresenter extends BasePresenter
 		$ssidmacTxt = $form->addText('ssidmac', 'SSID/MAC:');
 		$ssidmacTxt->getControlPrototype()->class='form-control';;
 		//$ssidmac->getControlPrototype()->id='ssidmac';
-		$ssidmaclbl = $ssidmacTxt->getLabel()->addAttributes(array('class'=>'control-label col-sm-2'));
 
 		$channelsQ = $this->wifiManager->getAllChannels();
 		$channels = array();
@@ -62,6 +61,18 @@ class HomepagePresenter extends BasePresenter
 		$securitySelect = $form->addSelect('security', 'Zabezpečení:', array('Otevřená', 'WEP', 'WPA1', 'WPA2', 'jiné'))
 			->setPrompt("Všechny typy")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
+
+
+		$sourcesfdb = $this->sourceManager->getAllSourcesAsKeyVal();
+		$sources = array();
+		foreach($sourcesfdb as $k=>$s) {
+			$sources[$k] = ucfirst($s);
+		}
+
+		$sourceSelect = $form->addSelect('source', 'Zdroj:', $sources)
+			->setPrompt("Všechny zdroje")
+			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
+
 
 		$form->addSubmit('search', 'Vyhledat')->getControlPrototype()->addAttributes(array('class'=>'form-control btn btn-info btn-sm'));;
 		//$form->getElementPrototype()->onsubmit = 'return searchFormSubmit()';

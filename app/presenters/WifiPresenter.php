@@ -231,6 +231,8 @@ class WifiPresenter extends BasePresenter
                 if ($channel != null && $channel != "") { $params['channel'] = intval($channel); }
                 $security = $request->getQuery('security');
                 if($security != null && $security != '') { $params['sec'] = intval($security); }
+                $source = $request->getQuery('source');
+                if($source != null && $source != "") {$params['id_source'] = intval($source);}
                 break;
             case self::MODE_HIGHLIGHT:
                 $by = $request->getQuery("by");

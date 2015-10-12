@@ -5,14 +5,7 @@
 {block right}
     <h4>Přepnout zobrazení</h4>
     <ul class="nav nav-pills nav-stacked">
-        <li>
-            <a href="javascript:void(0)" id="mi-one-source">Pouze jeden zdroj</a>
-            <ul id="ul-one-source">
-                {foreach $sources as $source}
-                    <li><a href="javascript:void(0)" class="mi-source" id="source-{$source->id}">{$source->name}</a></li>
-                {/foreach}
-            </ul>
-        </li>
+
         <li><a href="">Vypočtené polohy sítí</a></li>
         <li><a n:href="Statistics:default">Statistiky</a></li>
         <li><a n:href="Requests:default">Vytvořené požadavky</a></li>
