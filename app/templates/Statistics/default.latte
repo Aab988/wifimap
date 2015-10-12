@@ -25,7 +25,7 @@
                 <td>{$actualStatistics->getTotalNets()|number:0:',':' '}{ifset $totalNetsChange} (změna {if $totalNetsChange > 0}+{/if}{$totalNetsChange|number:0:',':' '}){/ifset}</td>
             </tr>
             <tr>
-                <td>Volných:</td>
+                <td>Nezabezpečených:</td>
                 <td>{$actualStatistics->getFreeNets()|number:0:',':' '}{ifset $freeNetsChange} (změna {if $freeNetsChange > 0}+{/if}{$freeNetsChange|number:0:',':' '}){/ifset}</td>
             </tr>
         </table>
@@ -50,7 +50,7 @@
                         <tr>
                             <th>Zdroj</th>
                             <th>Celkem sítí</th>
-                            <th>Volných sítí</th>
+                            <th>Otevřených sítí</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,7 +119,7 @@
         function drawChart() {
             {if count($allStatistics) > 1}
             var data = google.visualization.arrayToDataTable([
-                ['Datum', 'Celkový počet sítí','Počet volných sítí'],
+                ['Datum', 'Celkový počet sítí','Počet otevřených sítí'],
                 {foreach $allStatistics as $st}
                 [{$st->getCreated()|date:'j. n. Y'},{$st->getTotalNets()},{$st->getFreeNets()}],
                 {/foreach}]);
@@ -134,7 +134,7 @@
             {if $actualStatistics}
             data = google.visualization.arrayToDataTable([
                 ['Typ', 'Počet sítí'],
-                ['Volné(FreeWifi a otevřené)', {$actualStatistics->getFreeNets()}],
+                ['Otevřené (nezabezpečené)', {$actualStatistics->getFreeNets()}],
                 ['Soukromé (zabezpečené)', {($actualStatistics->getTotalNets() - $actualStatistics->getFreeNets())}]]);
             options = {
                 title: 'Podíl',
