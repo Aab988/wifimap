@@ -57,7 +57,13 @@ class Wifi extends Nette\Object {
      * @return Wifi
      */
     public static function createWifiFromDBRow($row) {
-        return self::createWifiFromAssociativeArray($row);
+        if($row != null) {
+            return self::createWifiFromAssociativeArray($row);
+        }
+        else {
+            return null;
+        }
+
     }
 
     /**

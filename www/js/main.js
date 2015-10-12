@@ -68,8 +68,10 @@ function changeIW(id) {
     delete params.gm;
 
     $.getJSON(PROCESS_CLICK_URL, params, function (data) {
-        mainInfoWindow.setContent(data.iw);
-        mainInfoWindow.setPosition(new google.maps.LatLng(data.latitude, data.longitude));
+        if(data.success) {
+            mainInfoWindow.setContent(data.iw);
+            mainInfoWindow.setPosition(new google.maps.LatLng(data.lat, data.lng));
+        }
     });
     return false;
 }
@@ -112,7 +114,7 @@ function initializeMap() {
             delete params.gm;
 
             $.getJSON(PROCESS_CLICK_URL, params, function (data) {
-                if (data) {
+                if (data.success) {
                     createInfoWindow(data.iw, new google.maps.LatLng(data.lat, data.lng));
                 }
             });

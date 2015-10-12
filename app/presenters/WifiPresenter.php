@@ -111,16 +111,23 @@ class WifiPresenter extends BasePresenter
         $json = array();
         $others = $r->fetchAll();
         $this->template->count = count($others);
-        unset($others[$detail->getId()]);
+
         if ($detail) {
-            $json['lat'] = $detail->latitude;
-            $json['lng'] = $detail->longitude;
+            unset($others[$detail->getId()]);
+            $json['lat'] = $detail->getLatitude();
+            $json['lng'] = $detail->getLongitude();
         }
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
         $this->template->detail = $detail;
         $this->template->others = $others;
         $temp = (string)$this->template;
         $json['iw'] = $temp;
+        if($detail == null) {
+            $json['success'] = false;
+        }
+        else {
+            $json['success'] = true;
+        }
         echo json_encode($json, JSON_UNESCAPED_UNICODE);
         $this->terminate();
     }
