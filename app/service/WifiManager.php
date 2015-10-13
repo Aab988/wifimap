@@ -5,6 +5,7 @@
  * Time: 10:10
  */
 namespace App\Service;
+use App\Model\MyUtils;
 use App\Model\Wifi;
 use App\Presenters\WifiPresenter;
 use App\Model\Coords;
@@ -163,7 +164,7 @@ class WifiManager extends BaseService {
 			case WifiPresenter::MODE_SEARCH:
 				$params = array();
 				if ($request->getQuery("ssidmac")) {
-					if(preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^",urldecode($request->getQuery("ssidmac")))) {
+					if(MyUtils::isMacAddress($request->getQuery("ssidmac"))) {
 						$params['mac'] = urldecode($request->getQuery("ssidmac"));
 					}
 					else {

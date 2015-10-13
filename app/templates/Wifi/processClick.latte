@@ -42,17 +42,18 @@
     </tr>
     {/if}
 </table>
-<form onsubmit="return highlightFormSubmit(this);">
-    <select name="highlight-by">
+<form onsubmit="return highlightFormSubmit(this);" id="highlightForm-{$detail->id}">
+    <select name="highlight-by" class="highlightBy">
         {if $detail->ssid}<option value="ssid">SSID</option>{/if}
         {if $detail->mac}<option value="mac">MAC</option>{/if}
         {if $detail->channel}<option value="channel">Kanál</option>{/if}
     </select>
-    {if $detail->ssid}<input type="hidden" name="ssid" value="{$detail->ssid}">{/if}
-    {if $detail->mac}<input type="hidden" name="mac" value="{$detail->mac}">{/if}
-    {if $detail->channel}<input type="hidden" name="channel" value="{$detail->channel}" />{/if}
-    <input type="submit" value="Označit" />
+    {if $detail->ssid}<input type="hidden" name="ssid" class="ssid" value="{$detail->ssid}">{/if}
+    {if $detail->mac}<input type="hidden" name="mac" class="mac" value="{$detail->mac}">{/if}
+    {if $detail->channel}<input type="hidden" name="channel" class="channel" value="{$detail->channel}" />{/if}
+    <input name="action" type="submit" value="Označit" />
 </form>
+<button onclick="useAsFilter('#highlightForm-{$detail->id}')">Použít jako filtr</button>
 <button onclick="googleDownloadRequest1({$detail->id})" title="Kliknutím vytvoříte požadavek pro stažení této sítě z google(nedojde k okamžitému stažení, pouze se přidá požadavek do fronty)">Stáhnout z Google</button>
 
 {if $count > 1}

@@ -10,7 +10,7 @@ use Nette;
 class MyUtils extends Nette\Object {
 
     public static function isMacAddress($string) {
-        return preg_match("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})^", urldecode($string));
+        return preg_match("^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})^", urldecode($string));
     }
 
 

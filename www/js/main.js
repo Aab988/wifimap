@@ -215,7 +215,7 @@ function searchFormSubmit() {
 }
 
 function highlightFormSubmit(form) {
-    console.log("asdf");
+
     var by = form["highlight-by"].value;
     var val = form[by].value;
     //var ssid = form["ssid"].value;
@@ -228,6 +228,32 @@ function highlightFormSubmit(form) {
     redrawOverlay();
 
     return false;
+}
+
+function useAsFilter(form) {
+    delete hashParams[hashParams.by];
+
+    delete hashParams.by;
+
+    var by = $(form).find('.highlightBy').val();
+    var val = $(form).find("."+by).val();
+
+    if(by == 'ssid' || by == 'mac') {
+        by = 'ssidmac';
+    }
+
+    //var ssid = form["ssid"].value;
+    hashParams.mode = MODE_SEARCH;
+    hashParams[by] = val;
+
+
+    //hashParams.ssid = ssid;
+    window.location.hash = $.param(hashParams);
+    redrawOverlay();
+
+    return false;
+
+
 }
 
 
