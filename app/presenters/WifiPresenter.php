@@ -25,8 +25,6 @@ class WifiPresenter extends BasePresenter
 * MODE_CALCULATED_POSITION - vypoctena pozice site
 *
 */
-    const EXPORT_CODE = "vX8@rW6Ga971Pj8";
-
 
     const MODE_ALL = "MODE_ALL";
     const MODE_SEARCH = "MODE_SEARCH";
@@ -44,9 +42,17 @@ class WifiPresenter extends BasePresenter
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
     /** use cache? */
-    const CACHE_ON = false;
-    /** cache expire time */
-    const CACHE_EXPIRE = "50 minutes";
+    const CACHE_ON = true;
+
+    /** @var array $cacheExpire expiration by zoom, index = zoom, value = seconds */
+    private static $cacheExpire = array(0,1,2,3,4,5,6,7,8,9=>86400, // 1 day
+                                        10=>57600, // 16 hours
+                                        11,12=>28800, // 8 hours
+                                        13=>14400, // 4 hours
+                                        14,15=>7200, // 2hours
+                                        16,17,18=>3600, // 1 hour
+                                        19,20,21 => 1800); // 30 minutes
+
     const IMG_CACHE_DIR = "../temp/img_cache";
 
 
@@ -183,15 +189,6 @@ class WifiPresenter extends BasePresenter
     }
 
 
-    public function renderExport() {
-        if($this->getHttpRequest()->getQuery('c') == self::EXPORT_CODE) {
-            echo 'export';
-        }
-        else {
-            echo 'zadejte spravny kod';
-        }
-        $this->terminate();
-    }
 
 
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
@@ -295,7 +292,7 @@ class WifiPresenter extends BasePresenter
 
         $image = MyUtils::image2string($img);
         if(self::CACHE_ON) {
-            $this->cache->save($key, $image, array(Cache::EXPIRE => self::CACHE_EXPIRE));
+            $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
         echo $image;
         return;
