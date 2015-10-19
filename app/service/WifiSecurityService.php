@@ -12,13 +12,17 @@ class WifiSecurityService extends BaseService {
 
 
     /**
+     * @param bool $asObject
      * @return WifiSecurity[]
      */
-    public function getAllWifiSecurityTypes() {
+    public function getAllWifiSecurityTypes($asObject = true) {
         $wstypes = array();
         $wss = $this->database->table("wifi_security")->fetchAll();
         foreach ($wss as $ws) {
-            $wstypes[] = new WifiSecurity($ws->id,$ws->label);
+            if($asObject) {
+                $wstypes[] = new WifiSecurity($ws->id,$ws->label);
+            }
+            else {$wstypes[$ws->id] = $ws->label;}
         }
         return $wstypes;
     }

@@ -25,6 +25,9 @@ class HomepagePresenter extends BasePresenter
 	 */
 	public $wifiManager;
 
+	/** @var Service\WifiSecurityService @inject */
+	public $wifiSecurityService;
+
 
 	public $database;
 	
@@ -58,7 +61,7 @@ class HomepagePresenter extends BasePresenter
 			->setPrompt('Všechny kanály')
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
-		$securitySelect = $form->addSelect('security', 'Zabezpečení:', array('Otevřená', 'WEP', 'WPA1', 'WPA2', 'jiné'))
+		$securitySelect = $form->addSelect('security', 'Zabezpečení:', $this->wifiSecurityService->getAllWifiSecurityTypes(false))
 			->setPrompt("Všechny typy")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
