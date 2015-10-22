@@ -46,7 +46,17 @@ class DownloadRequest extends BaseService {
      * @return array|Nette\Database\Table\IRow[]
      */
     public function getAllRequestsByIdSource($idSource) {
-        return $this->database->table("download_request")->where("id_source", $idSource)->fetchAll();
+        return $this->database->query("select dr.* from download_request dr
+INNER JOIN
+(select lat_start,lat_end,lon_start,lon_end,MAX(date) AS MaxDateTime FROM download_request GROUP BY lat_start,lat_end,lon_start,lon_end) groupeddr
+ON dr.lat_start = groupeddr.lat_start AND dr.lat_end = groupeddr.lat_end AND dr.lon_start = groupeddr.lon_start
+AND dr.lon_end = groupeddr.lon_end
+AND dr.date = groupeddr.MaxDateTime
+")->fetchAll();
+
+
+        /*return $this->database->table("download_request")->where("id_source", $idSource)
+            ->fetchAll();*/
     }
 
 
