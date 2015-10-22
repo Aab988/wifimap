@@ -6,6 +6,7 @@ use App\Model\Coords;
 use App\Model\MyUtils;
 use App\Model\Wifi;
 use App\Service\OverlayRenderer;
+use App\Service\WifiLocationService;
 use App\Service\WifiManager;
 use Nette;
 use Nette\Caching\Cache;
@@ -55,20 +56,16 @@ class WifiPresenter extends BasePresenter
 
     const IMG_CACHE_DIR = "../temp/img_cache";
 
-
     const MIN_OVERLAY_ZOOM = 10;
     const MIN_INFO_WINDOW_ZOOM = 10;
 
-    /**
-     * @var WifiManager
-     * @inject
-     */
+    /** @var WifiManager @inject */
     public $wifiManager;
 
-    /**
-     * @var OverlayRenderer
-     * @inject
-     */
+    /** @var WifiLocationService @inject */
+    public $wifiLocationService;
+
+    /** @var OverlayRenderer @inject */
     public $overlayRenderer;
 
     /** @var Cache */
@@ -299,6 +296,23 @@ class WifiPresenter extends BasePresenter
     }
 
 
+
+    public function renderCountPosition() {
+        DownloadPresenter::setIni(18000, '2048M');
+        $nets = array(1);
+        $from = 0;
+        while(count($nets)>0) {
+            $nets = $this->wifiManager->getAllNets(100,$from);
+            foreach($nets as $w) {
+                $this->wifiLocationService->getLocation($w);
+            }
+            $from+= 100;
+        }
+
+
+
+        $this->terminate();
+    }
 
 
     private function allowedMode($mode) {

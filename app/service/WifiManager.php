@@ -328,6 +328,17 @@ class WifiManager extends BaseService {
 	}
 
 
+	/**
+	 * @return \App\Model\Wifi[]
+	 */
+	public function getAllNets($limit=null,$from=null) {
+		$q = $this->database->table('wifi');
+		if($limit) $q->where('id > ?',$from)->limit(intval($limit));
+		$w = $q->fetchAll();
+		return Wifi::createWifiArrayFromDBRowArray($w);
+	}
+
+
 
 
 
