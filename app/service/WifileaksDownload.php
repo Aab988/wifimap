@@ -1,8 +1,14 @@
 <?php
 namespace App\Service;
 use App\Model\Wifi;
+use Nette\Utils\ArrayList;
+use Nette\Utils\DateTime;
+use Nette\Utils\Image;
 
 class WifileaksDownload extends Download implements \IDownload {
+
+    /** @var SourceManager */
+    private $sourceManager;
 
     /**
      * Wifileaks ID from DB
@@ -18,7 +24,10 @@ class WifileaksDownload extends Download implements \IDownload {
     const WIFILEAKS_DOWNLOAD_DIR = "http://download.wifileaks.cz/data/";
 
     /** wifileaks download file name regular expression */
-    const WIFILEAKS_DOWNLOAD_FILENAME_PATTERN = '$(wifileaks[^>]*\.tsv)$';
+    const WIFILEAKS_DOWNLOAD_FILENAME_PATTERN = '$(wifileaks_[\d]{6}.tsv)$';
+
+    /** wifileaks download file name date part regular expression */
+    const WIFILEAKS_DOWNLOAD_FILENAME_DATE_PATTERN = '$wifileaks_([\d]{6}).tsv$';
 
 
     /**
@@ -26,6 +35,8 @@ class WifileaksDownload extends Download implements \IDownload {
      * @param string $file_name
      */
     public function download($file_name = "") {
+        $this->sourceManager = new SourceManager($this->database);
+
         if($file_name != "") {
             try {
                 $insertedRows = $this->parseData($file_name);
@@ -37,12 +48,32 @@ class WifileaksDownload extends Download implements \IDownload {
         }
         else {
             $rh = file_get_contents(self::WIFILEAKS_DOWNLOAD_DIR);
-            preg_match(self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN,$rh,$matches);
+            preg_match_all(self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN,$rh,$matches);
 
-            if(count($matches)) {
-                $filePath = self::WIFILEAKS_DOWNLOAD_DIR . $matches[0];
+            $latest = array('date'=>0,'file'=>'');
+            foreach($matches as $match) {
+                preg_match(self::WIFILEAKS_DOWNLOAD_FILENAME_DATE_PATTERN,$match[0],$date);
+                $dates[] = $date;
+                if(intval($date[1])>$latest['date']) {
+                    $latest['date'] = intval($date[1]);
+                    $latest['file'] = $date[0];
+                }
+            }
+
+            if($latest['file']!='') {
+                $lddc = $this->sourceManager->getLatestDownloadDataByIdSource(self::ID_SOURCE);
+                if($lddc) {
+                    if($lddc == $latest['file']) {
+                        $this->logger->addLog("wifileaks-download","nenalezena zmena");
+                        $this->logger->save();
+                        return;
+                    }
+                }
+
+                $filePath = self::WIFILEAKS_DOWNLOAD_DIR . $latest['file'];
                 $insertedRows  = $this->parseData($filePath);
                 $this->logger->addLog("wifileaks-download","stazeno $insertedRows siti");
+                $this->sourceManager->saveLatestDownloadDataByIdSource(self::ID_SOURCE,$latest['file']);
             }
             else {
                 $this->logger->addLog("wifileaks-download","pokus o stazeni z wifileaks nebyl uspesny - zadny soubor nevyhovuje regularnimu vyrazu " . self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN);

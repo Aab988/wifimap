@@ -39,5 +39,27 @@ class SourceManager extends BaseService {
         return $this->database->table("source")->fetchAll();
     }
 
+    /**
+     * save latest_download_data column
+     *
+     * @param int $id_source
+     * @param string $data
+     */
+    public function saveLatestDownloadDataByIdSource($id_source,$data) {
+        $this->database->table('source')->where('id',$id_source)
+            ->update(array('latest_download_data'=>$data));
+    }
+
+
+    /**
+     * returns latest download data
+     * @param int $id_source
+     * @return bool|mixed|Nette\Database\Table\IRow
+     */
+    public function getLatestDownloadDataByIdSource($id_source) {
+        $data = $this->database->table('source')->where('id',$id_source)->fetch();
+        return $data->latest_download_data;
+    }
+
 
 }
