@@ -230,6 +230,14 @@ function highlightFormSubmit(form) {
     return false;
 }
 
+function showOnlyOneNet(ssid) {
+    hashParams.mode = MODE_ONE;
+    hashParams.ssid = ssid;
+    window.location.hash = $.param(hashParams);
+    redrawOverlay();
+    return false;
+}
+
 function useAsFilter(form) {
     delete hashParams[hashParams.by];
 

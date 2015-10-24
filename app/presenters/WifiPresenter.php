@@ -32,6 +32,7 @@ class WifiPresenter extends BasePresenter
     const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
     const MODE_ONE_SOURCE = "MODE_ONE_SOURCE";
     const MODE_FREE = "MODE_FREE";
+    const MODE_ONE = 'MODE_ONE';
 
     /** default mode if its not set */
     const DEFAULT_MODE = self::MODE_ALL;
@@ -43,7 +44,7 @@ class WifiPresenter extends BasePresenter
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
     /** use cache? */
-    const CACHE_ON = true;
+    const CACHE_ON = false;
 
     /** @var array $cacheExpire expiration by zoom, index = zoom, value = seconds */
     private static $cacheExpire = array(0,1,2,3,4,5,6,7,8,9=>86400, // 1 day
@@ -88,7 +89,8 @@ class WifiPresenter extends BasePresenter
             self::MODE_HIGHLIGHT,
             self::MODE_ALL,
             self::MODE_FREE,
-            self::MODE_ONE_SOURCE
+            self::MODE_ONE_SOURCE,
+            self::MODE_ONE
         );
     }
 
@@ -241,6 +243,9 @@ class WifiPresenter extends BasePresenter
                 $source = (isset($srca[1])) ? intval($srca[1]) : 0;
                 $params['source'] = $source;
                 break;
+            case self::MODE_ONE:
+                $params['ssid'] = $this->getHttpRequest()->getQuery('ssid');
+                break;
             case self::MODE_FREE:
                 break;
             default:
@@ -280,6 +285,10 @@ class WifiPresenter extends BasePresenter
             case self::MODE_FREE:
                 $nets = $this->wifiManager->getFreeNets($coords);
                 $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                break;
+            case self::MODE_ONE:
+                $nets = $this->wifiManager->getNetsModeSearch($coords,$params);
+                $img = $this->overlayRenderer->drawModeOne($coords,$zoom,$nets);
                 break;
             default:
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);

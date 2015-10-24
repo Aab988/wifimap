@@ -35,8 +35,7 @@ class OverlayRenderer extends BaseService {
 		$this->colors[WigleDownload::ID_SOURCE] = new Color(208,0,0);
 		$this->colors[WifileaksDownload::ID_SOURCE] = new Color(255,0,0);
 		$this->colors["highlighted"] = new Color(0,0,255);
-
-
+		$this->colors["one_net"] = new Color(4,160,212);
 	}
 
 	/**
@@ -164,6 +163,26 @@ class OverlayRenderer extends BaseService {
 			$this->drawOneNetModeAll($my_img,$w,$xy->x,$xy->y,$zoom);
 		}
 		return $this->cropImage($my_img);
+	}
+
+
+	public function drawModeOne($coords,$zoom,$nets) {
+		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRation($coords);
+
+		foreach($nets as $w) {
+			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNetModeOne($my_img,$w,$xy->x,$xy->y,$zoom);
+		}
+		return $this->cropImage($my_img);
+	}
+
+
+	private function drawOneNetModeOne($img,$w,$x,$y,$zoom) {
+		imagefilledellipse($img,$x,$y,16,16,$this->imgcolors['one_net']);
+		if($zoom > self::SHOW_LABEL_ZOOM) {
+			$this->addPointLabel($img,$w,$x+7,$y-1);
+		}
 	}
 
 
