@@ -260,8 +260,17 @@ function useAsFilter(form) {
     redrawOverlay();
 
     return false;
+}
 
+function calculate(id) {
 
+    //var ssid = form["ssid"].value;
+    hashParams.mode = MODE_CALCULATED;
+    hashParams.a = id;
+
+    window.location.hash = $.param(hashParams);
+    redrawOverlay();
+    return false;
 }
 
 

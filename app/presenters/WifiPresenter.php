@@ -34,6 +34,8 @@ class WifiPresenter extends BasePresenter
     const MODE_FREE = "MODE_FREE";
     const MODE_ONE = 'MODE_ONE';
 
+    const MODE_CALCULATED = 'MODE_CALCULATED';
+
     /** default mode if its not set */
     const DEFAULT_MODE = self::MODE_ALL;
 
@@ -90,7 +92,8 @@ class WifiPresenter extends BasePresenter
             self::MODE_ALL,
             self::MODE_FREE,
             self::MODE_ONE_SOURCE,
-            self::MODE_ONE
+            self::MODE_ONE,
+            self::MODE_CALCULATED
         );
     }
 
@@ -289,6 +292,26 @@ class WifiPresenter extends BasePresenter
             case self::MODE_ONE:
                 $nets = $this->wifiManager->getNetsModeSearch($coords,$params);
                 $img = $this->overlayRenderer->drawModeOne($coords,$zoom,$nets);
+                break;
+            case self::MODE_CALCULATED:
+                $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
+                $nets = $this->wifiLocationService->getLocation($net);
+                $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('ssid'=>$net->getSsid()));
+                $latt = 0; $lont = 0;
+                foreach($nets as $net) {
+                    $latt += $net->latitude;
+                    $lont += $net->longitude;
+                }
+                $lat_avg = $latt / ((double)count($nets));
+                $lon_avg = $lont / ((double)count($nets));
+                $net = new Wifi();
+                $net->setLatitude($lat_avg);
+                $net->setLongitude($lon_avg);
+
+
+
+                $img = $this->overlayRenderer->drawCalculated($coords,$zoom,$nets2,$net);
+
                 break;
             default:
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);

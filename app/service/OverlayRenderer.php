@@ -63,6 +63,9 @@ class OverlayRenderer extends BaseService {
 		return $img;
 	}
 
+
+
+
 	/**
 	 * crops bigger image to default size image
 	 * @uses OverlayRenderer::IMAGE_WIDTH as default width
@@ -184,6 +187,29 @@ class OverlayRenderer extends BaseService {
 			$this->addPointLabel($img,$w,$x+7,$y-1);
 		}
 	}
+
+
+	public function drawCalculated(Coords $coords,$zoom,$nets,Wifi $net) {
+		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRation($coords);
+
+		foreach($nets as $w) {
+			$xy = $this->latLngToPx($w->latitude, $w->longitude, $coords->getLatStart(), $coords->getLonStart(), $op->onepxlat, $op->onepxlon);
+			$this->drawOneNetModeOne($my_img, $w, $xy->x, $xy->y, $zoom);
+		}
+		if($net->getLatitude() < $coords->getLatEnd() && $net->getLatitude()>$coords->getLatStart()
+		&& $net->getLongitude() < $coords->getLonEnd() && $net->getLongitude() > $coords->getLonStart()) {
+			$xy = $this->latLngToPx($net->getLatitude(),$net->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNetCalculated($my_img,$xy->x,$xy->y);
+		}
+		return $this->cropImage($my_img);
+	}
+
+	private function drawOneNetCalculated($img,$x,$y) {
+		imagefilledellipse($img,$x,$y,16,16,$this->imgcolors[1]);
+	}
+
+
 
 
 	public function drawNone() {

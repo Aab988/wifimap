@@ -14,7 +14,7 @@ class WifiLocationService extends BaseService {
     /** @var WifiManager */
     private $wifiManager;
 
-    const RADIUS = 0.02;
+    const RADIUS = 0.003;
 
     public function getLocation(Wifi $wifi) {
 
@@ -26,21 +26,20 @@ class WifiLocationService extends BaseService {
 
         $lat1 = doubleval($lat) - self::RADIUS;
         $lat2 = doubleval($lat) + self::RADIUS;
-        $lon1 = doubleval($lon) - self::RADIUS;
-        $lon2 = doubleval($lon) + self::RADIUS;
+        $lon1 = doubleval($lon) - self::RADIUS/2;
+        $lon2 = doubleval($lon) + self::RADIUS/2;
 
         $coords = new Coords($lat1,$lat2,$lon1,$lon2);
 
 
-        $nets = $this->wifiManager->getNetsModeSearch($coords, array('mac'=>$wifi->getMac(),'ssid'=>$wifi->getSsid()));
-        if(count($nets)>1) {
-            dump($nets);
-        }
+        $nets = $this->wifiManager->getNetsModeSearch($coords, array('ssid'=>$wifi->getSsid()));
 
 
-
+        return $nets;
 
     }
+
+
 
 
 
