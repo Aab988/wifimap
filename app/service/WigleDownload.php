@@ -53,11 +53,28 @@ class WigleDownload extends Download implements \IDownload {
         $results_decoded = json_decode($results,true);
         if($results_decoded["success"] == true) {
             $ws = $this->parseData($results_decoded);
-            $this->saveAll($ws);
-            $query->update(array("downloaded"=>1,"downloaded_nets_count"=>count($ws)));
-            if((int)$results_decoded["resultCount"] == 100) {
-                $this->downloadQueue->addRecord($coords, 0, (int)$results_decoded["last"]);
+            //$this->saveAll($ws);
+            $query->update(array("downloaded"=>0,"downloaded_nets_count"=>count($ws)));
+
+            // upravit downlaod request
+            $id_download_request = $query->id_download_request;
+            $dr = $this->database->table('download_request')->where('id',$id_download_request)->fetch();
+            if($dr) {
+                $updateArr['downloaded_count'] = $dr->downloaded_count+1;
             }
+
+            // transakcne vlozime
+            $this->database->beginTransaction();
+            if((int)$results_decoded["resultCount"] == 100) {
+                $this->downloadQueue->addRecord($coords, 0, $id_download_request, (int)$results_decoded["last"]);
+                if($dr) {
+                    $updateArr['total_count'] = $dr->total_count+1;
+                }
+            }
+            if($dr) {
+                $dr->update($updateArr);
+            }
+            $this->database->commit();
         }
         else {
             echo "too many queries";

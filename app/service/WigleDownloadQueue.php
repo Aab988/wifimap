@@ -35,9 +35,9 @@ class WigleDownloadQueue extends BaseService {
      * @return bool|mixed|Nette\Database\Table\IRow
      */
     public function getRandomNotDownloadedRecord() {
-        return $this->database->table("wigle_download_queue")->select("id,lat_start,lat_end,lon_start,lon_end,from,to")
+        return $this->database->table("wigle_download_queue")->select("id,id_download_request,lat_start,lat_end,lon_start,lon_end,from,to")
             ->where("downloaded = ?", 0)
-            ->order("rand()")
+            //->order("rand()")
             ->limit(1)
             ->fetch();
     }
@@ -47,22 +47,25 @@ class WigleDownloadQueue extends BaseService {
      *
      * @param Coords $coords
      * @param int    $calculated_nets_count
+     * @param int $id_download_request
      * @param int    $from
      */
-    public function addRecord($coords, $calculated_nets_count, $from = 0) {
+    public function addRecord($coords, $calculated_nets_count,$id_download_request=null, $from = 0) {
+       // dump($id_download_request);
         $data = array(
             "lat_start" => $coords->getLatStart(),
             "lat_end" => $coords->getLatEnd(),
             "lon_start" => $coords->getLonStart(),
             "lon_end" => $coords->getLonEnd(),
             "calculated_nets_count" => $calculated_nets_count,
-            "downloaded" => 0
+            "downloaded" => 0,
+            "id_download_request"=>$id_download_request
         );
         if($from != 0) {
             $data["from"] = $from;
             $data["to"] = $from + 99;
         }
-        $this->database->query("insert into wigle_download_queue",$data);
+        $this->database->table('wigle_download_queue')->insert($data);
     }
 
     /**
@@ -70,7 +73,7 @@ class WigleDownloadQueue extends BaseService {
      *
      * @param Coords $coords
      */
-    public function generateLatLngDownloadArray($coords) {
+    public function generateLatLngDownloadArray($coords,$iddreq = null) {
         $this->fillWigleNetColors();
 
         $coords = $this->divideLatLngInitially($coords);
@@ -86,12 +89,12 @@ class WigleDownloadQueue extends BaseService {
             ));
         }
         $this->iterateArray($coords);
-        $this->saveAll2downloadQueue();
+        $this->saveAll2downloadQueue($iddreq);
     }
 
 
-    public function save() {
-        $this->saveAll2downloadQueue();
+    public function save($iddr = null) {
+        $this->saveAll2downloadQueue($iddr);
     }
 
 
@@ -228,14 +231,16 @@ class WigleDownloadQueue extends BaseService {
 
     /**
      * save all generated coords into DB
+     * @param int $id_download_request
      */
-    private function saveAll2downloadQueue() {
+    private function saveAll2downloadQueue($id_download_request = null) {
+        dump($id_download_request);
         foreach($this->generatedCoords as $coord) {
-            $this->addRecord($coord['coords'], $coord['calculated_nets_count']);
+            //dump($id_download_request);
+            $this->addRecord($coord['coords'], $coord['calculated_nets_count'], $id_download_request);
         }
         $this->generatedCoords = array();
     }
-
 
 
     /**
@@ -244,5 +249,16 @@ class WigleDownloadQueue extends BaseService {
     public function setDatabase($database) {
         $this->database = $database;
     }
+
+    /**
+     * @return array
+     */
+    public function getGeneratedCoords()
+    {
+        return $this->generatedCoords;
+    }
+
+
+
 
 }

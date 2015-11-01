@@ -187,10 +187,12 @@ class DownloadPresenter extends BasePresenter {
 
         self::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
+
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
-        $this->downloadQueue->generateLatLngDownloadArray($coords);
-        $this->downloadQueue->save();
-        $this->downloadRequest->setProcessed($req);
+        $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
+        $total_count = count($this->downloadQueue->getGeneratedCoords());
+        $this->downloadQueue->save($req->id);
+        $this->downloadRequest->setProcessed($req,$total_count);
         $this->terminate();
     }
 

@@ -205,10 +205,11 @@ AND dr.date = groupeddr.MaxDateTime
     /**
      * @param Nette\Database\Table\IRow $request
      */
-    public function setProcessed($request) {
+    public function setProcessed($request,$total_count=0) {
         $request->update(array(
             'processed' => 'Y',
-            'processed_date' => new DateTime()
+            'processed_date' => new DateTime(),
+            'total_count' => $total_count
         ));
     }
 
