@@ -175,7 +175,6 @@ class DownloadPresenter extends BasePresenter {
     }
 
 
-
     /**
      * CRON -> run every 1 HOUR (?)
      *
@@ -184,14 +183,13 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderProcessWigleRequest() {
-
         self::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
-
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
         $total_count = count($this->downloadQueue->getGeneratedCoords());
         $this->downloadQueue->save($req->id);
+        dump($total_count);
         $this->downloadRequest->setProcessed($req,$total_count);
         $this->terminate();
     }

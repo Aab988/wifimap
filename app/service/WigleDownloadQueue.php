@@ -82,14 +82,10 @@ class WigleDownloadQueue extends BaseService {
         foreach($coords as $key=>$ar) {
             $coords[$key] = $this->improveLatLngRange($ar);
             $i++;
-            $this->database->query("insert into log", array(
-                "operation" => "wiglecrongeneration",
-                "data" => $ar->toString(),
-                "procent" => ($i / (double)count($coords)) * 100
-            ));
+            $procent = ($i / (double)count($coords)) * 100;
+            $this->logger->addLog("wigle-generation","data => ".$ar->toString().",procent = ".$procent);
         }
         $this->iterateArray($coords);
-        $this->saveAll2downloadQueue($iddreq);
     }
 
 
@@ -234,9 +230,7 @@ class WigleDownloadQueue extends BaseService {
      * @param int $id_download_request
      */
     private function saveAll2downloadQueue($id_download_request = null) {
-        dump($id_download_request);
         foreach($this->generatedCoords as $coord) {
-            //dump($id_download_request);
             $this->addRecord($coord['coords'], $coord['calculated_nets_count'], $id_download_request);
         }
         $this->generatedCoords = array();

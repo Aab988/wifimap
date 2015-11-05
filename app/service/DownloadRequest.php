@@ -36,7 +36,9 @@ class DownloadRequest extends BaseService {
             "lat_end" => $coords->getLatEnd(),
             "lon_start" => $coords->getLonStart(),
             "lon_end" => $coords->getLonEnd(),
-            "processed" => 'N'
+            "processed" => 'N',
+            "total_count" => 0,
+            "downloaded_count" => 0
         ));
     }
 
@@ -204,12 +206,15 @@ AND dr.date = groupeddr.MaxDateTime
 
     /**
      * @param Nette\Database\Table\IRow $request
+     * @param int $total_count
      */
     public function setProcessed($request,$total_count=0) {
+        dump($total_count);
         $request->update(array(
             'processed' => 'Y',
             'processed_date' => new DateTime(),
-            'total_count' => $total_count
+            'total_count' => $total_count,
+            'downloaded_count' => 0
         ));
     }
 

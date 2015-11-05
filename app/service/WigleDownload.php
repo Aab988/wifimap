@@ -16,7 +16,6 @@ class WigleDownload extends Download implements \IDownload {
     /** Source ID from DB  */
     const ID_SOURCE = 2;
 
-
     /** name of cookie file */
     const COOKIE_FILE = "cookie.txt";
 
@@ -48,31 +47,29 @@ class WigleDownload extends Download implements \IDownload {
         //$this->loginToWigle();
         echo $this->loginToWigle();
         $query = $this->downloadQueue->getRandomNotDownloadedRecord();
+        if(!$query) {
+            // TODO: LOG chyby + konec
+            return;
+        }
+        $id_download_request = $query->id_download_request;
         $coords = new Coords($query['lat_start'],$query['lat_end'],$query['lon_start'],$query['lon_end']);
         $results = $this->getDataFromWigle($coords, (int) $query["from"]);
         $results_decoded = json_decode($results,true);
         if($results_decoded["success"] == true) {
             $ws = $this->parseData($results_decoded);
-            //$this->saveAll($ws);
+            $this->saveAll($ws);
             $query->update(array("downloaded"=>0,"downloaded_nets_count"=>count($ws)));
 
             // upravit downlaod request
-            $id_download_request = $query->id_download_request;
-            $dr = $this->database->table('download_request')->where('id',$id_download_request)->fetch();
-            if($dr) {
-                $updateArr['downloaded_count'] = $dr->downloaded_count+1;
-            }
+
+
+            $this->database->query('UPDATE download_request SET downloaded_count = downloaded_count + 1 WHERE id = %i',$id_download_request);
 
             // transakcne vlozime
             $this->database->beginTransaction();
             if((int)$results_decoded["resultCount"] == 100) {
                 $this->downloadQueue->addRecord($coords, 0, $id_download_request, (int)$results_decoded["last"]);
-                if($dr) {
-                    $updateArr['total_count'] = $dr->total_count+1;
-                }
-            }
-            if($dr) {
-                $dr->update($updateArr);
+                $this->database->query("UPDATE download_request SET total_count = total_count + 1 WHERE id = %i",$id_download_request);
             }
             $this->database->commit();
         }
