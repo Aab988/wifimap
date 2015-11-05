@@ -58,18 +58,18 @@ class WigleDownload extends Download implements \IDownload {
         if($results_decoded["success"] == true) {
             $ws = $this->parseData($results_decoded);
             $this->saveAll($ws);
-            $query->update(array("downloaded"=>0,"downloaded_nets_count"=>count($ws)));
-
-            // upravit downlaod request
-
-
-            $this->database->query('UPDATE download_request SET downloaded_count = downloaded_count + 1 WHERE id = %i',$id_download_request);
 
             // transakcne vlozime
             $this->database->beginTransaction();
+            $query->update(array("downloaded"=>1,"downloaded_nets_count"=>count($ws)));
+
+            // upravit downlaod request
+            $this->database->query('UPDATE download_request SET downloaded_count = downloaded_count + 1 WHERE id = ?',$id_download_request);
+
+
             if((int)$results_decoded["resultCount"] == 100) {
                 $this->downloadQueue->addRecord($coords, 0, $id_download_request, (int)$results_decoded["last"]);
-                $this->database->query("UPDATE download_request SET total_count = total_count + 1 WHERE id = %i",$id_download_request);
+                $this->database->query("UPDATE download_request SET total_count = total_count + 1 WHERE id = ?",$id_download_request);
             }
             $this->database->commit();
         }
