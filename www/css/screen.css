@@ -144,13 +144,20 @@ html.js .jshidden {
 
 
 .loader {
+    z-index: 999;
+    position: absolute;
+    top: 40%;
+    left: 38%;
+
+    width: 20px;height: 20px;
     display: none;
-    width: inherit;
-    height: 200px;
+    /*width: 100px;*/
+    /* height: 200px; */
     background: rgba( 255, 255, 255, 0 )
     url('../images/spinner.gif')
     50% 50%
     no-repeat;
+    overflow: hidden;
 }
 #ul-one-source {
     display: none;
@@ -257,6 +264,7 @@ html.js .jshidden {
     height: 120px;
     background-color: red;
     float: left;
+    cursor: pointer;
 }
 
 .actualModeInfoContent {

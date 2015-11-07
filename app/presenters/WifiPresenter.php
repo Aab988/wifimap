@@ -378,15 +378,15 @@ class WifiPresenter extends BasePresenter
                     echo "</h5>";
                     break;
                 case 'channel':
-                    echo 'Kanál: ' . $val . "<br />"; break;
+                    echo 'Kanál: ' . htmlspecialchars($val) . "<br />"; break;
                 case 'security':
-                    echo 'Zabezpečení: ' . $this->wifisecService->getById($val)->label . "<br />"; break;
+                    echo 'Zabezpečení: ' . $this->wifisecService->getById(intval($val))->label . "<br />"; break;
                 case 'source':
-                    echo 'Zdroj: ' . $this->sourceManager->getById($val)->name . "<br />"; break;
+                    echo 'Zdroj: ' . $this->sourceManager->getById(intval($val))->name . "<br />"; break;
                 case 'ssidmac':
-                    echo 'SSID/MAC: ' . $val . "<br />"; break;
+                    echo 'SSID/MAC: ' . htmlspecialchars($val) . "<br />"; break;
                 default:
-                    echo $key . ":" . $val . "<br />"; break;
+                    echo $key . ":" . htmlspecialchars($val) . "<br />"; break;
             }
         }
         $this->terminate();
