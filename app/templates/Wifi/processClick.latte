@@ -25,7 +25,7 @@
     </tr>
     <tr>
         <td>Zabezpečení</td>
-        <td>{$detail->sec}</td>
+        <td>{$detail->sec->label}</td>
     </tr>
     <tr>
         <td>MAC</td>
@@ -33,7 +33,7 @@
     </tr>
     <tr>
         <td>Zdroj</td>
-        <td>{$detail->source}</td>
+        <td>{$detail->source->name}</td>
     </tr>
     {if $detail->channel}
     <tr>

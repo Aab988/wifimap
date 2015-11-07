@@ -130,6 +130,7 @@ class WifiPresenter extends BasePresenter
             $f = $r->fetch();
             if ($f) {
                 $detail = Wifi::createWifiFromDBRow($f);
+                $detail->setSec($this->wifisecService->getById($f->sec));
             }
         }
         $json = array();
@@ -142,7 +143,10 @@ class WifiPresenter extends BasePresenter
             $json['lng'] = $detail->getLongitude();
         }
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
+        $detail->setSec($this->wifisecService->getById($detail->getSec()));
+        $detail->setSource($this->sourceManager->getById($detail->getSource()));
         $this->template->detail = $detail;
+
         $this->template->others = $others;
         $temp = (string)$this->template;
         $json['iw'] = $temp;

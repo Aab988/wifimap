@@ -1,5 +1,6 @@
 <?php
 namespace App\Model;
+use App\Service\SourceManager;
 use Nette;
 use App\Service\WifileaksDownload;
 use App\Service\WigleDownload;
@@ -11,7 +12,7 @@ class Wifi extends Nette\Object {
     private $mac = "";
     /** @var string  */
     private $ssid = "";
-    /** @var int  */
+    /** @var int | WifiSecurity */
     private $sec = 0;
     /** @var float  */
     private $latitude = .0;
@@ -45,12 +46,13 @@ class Wifi extends Nette\Object {
     private $bcninterval = "";
     /** @var string  */
     private $qos = "";
-    /** @var int */
+    /** @var int | Source */
     private $source;
     /** @var Nette\Utils\DateTime */
     private $date_added;
     /** @var int */
     private $accuracy = 0;
+
 
     /**
      * @param \Nette\Database\Table\IRow $row
@@ -118,7 +120,7 @@ class Wifi extends Nette\Object {
     }
 
     /**
-     * @return int
+     * @return int | WifiSecurity
      */
     public function getSec() {
         return $this->sec;
@@ -251,7 +253,7 @@ class Wifi extends Nette\Object {
     }
 
     /**
-     * @param int $sec
+     * @param int|WifiSecurity $sec
      */
     public function setSec($sec) {
         $this->sec = $sec;
@@ -370,14 +372,14 @@ class Wifi extends Nette\Object {
     }
 
     /**
-     * @return int
+     * @return int | Source
      */
     public function getSource() {
         return $this->source;
     }
 
     /**
-     * @param int $source
+     * @param int | Source $source
      */
     public function setSource($source) {
         $this->source = $source;
