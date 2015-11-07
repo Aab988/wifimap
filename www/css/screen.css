@@ -257,6 +257,7 @@ html.js .jshidden {
     min-width: 10px;
     overflow:hidden;
     z-index: 1;
+    margin-right: -200px;
 }
 
 .hide-btn {
@@ -290,4 +291,12 @@ html.js .jshidden {
     #actualModeInfo {
         display: none;
     }
+}
+
+
+.nopaddingright {
+    padding-right: 0px !important;
+}
+.nopaddingleft {
+    padding-left: 0px !important;
 }

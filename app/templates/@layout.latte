@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
 	<link rel="stylesheet" media="screen,projection,tv" href="{$basePath}/css/screen.css">
 	<link rel="stylesheet" media="print" href="{$basePath}/css/print.css">
-	<link rel="shortcut icon" href="{$basePath}/favicon.ico">
+	<link rel="shortcut icon" href="{$basePath}/favicon.png">
 	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> -->
     	<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
         <script src="{$basePath}/bootstrap/js/bootstrap.min.js"></script>
@@ -62,15 +62,14 @@
 			{if right}{include right}{/if}
 		</div>
     </div>
-
+	{if $isMapPage}
 	<div id="actualModeInfo">
 		<div class="hide-btn"></div>
 		<div class="actualModeInfoContent">
 			<h5>Aktuální zobrazení</h5>
 		</div>
-
 	</div>
-
+	{/if}
 	<div class="loader"></div>
 
   	<script src="{$basePath}/js/jquery.js"></script>

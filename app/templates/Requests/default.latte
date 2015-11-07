@@ -14,7 +14,8 @@ function initWigleMap() {
   // Create a map object and specify the DOM element for display.
   var map = new google.maps.Map(document.getElementById('wigle-map'), {
     center: { lat: 50.2, lng: 15.82 },
-    zoom: 12
+    zoom: 12,
+    scrollwheel: false,
   });
 
   rects = [];
@@ -44,6 +45,7 @@ function initWigleMap() {
 {/block}
 
 {block content}
+<div class="overflow-hiddenscroll col-md-12">
 <div class="col-sm-12">
     <h1>Požadavky ke stažení</h1>
     <div class="panel panel-primary">
@@ -107,5 +109,5 @@ function initWigleMap() {
         </div>
     </div>
 </div>
-
+</div>
 {/block}
