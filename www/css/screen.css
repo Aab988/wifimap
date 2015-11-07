@@ -128,10 +128,13 @@ html.js .jshidden {
     float: left;
     overflow: auto;
    /* padding-bottom: 80px;*/
+
+    position: relative;
+    z-index: 3;
 }
 
 .padding-10 {
-    padding: 10px 10px 100px 10px;
+    padding: 10px 10px 10px 10px;
 }
 
 
@@ -236,6 +239,47 @@ html.js .jshidden {
     padding-top: 10px;
 }
 
+#actualModeInfo {
+    width: 210px;
+    height: 120px;
+    background-color: #0066ff ;
+    position: absolute;
+    right: 20%;
+    top: 0;
+    border-radius: 20px 0px 0px 20px;
+    min-width: 10px;
+    overflow:hidden;
+    z-index: 1;
+}
 
+.hide-btn {
+    width: 10px;
+    height: 120px;
+    background-color: red;
+    float: left;
+}
 
+.actualModeInfoContent {
+    padding: 10px;
+    width: 200px;
+    float: right;
+    font-size: 11px;
+    color: white;
+}
 
+@media screen and (max-width: 320px) {
+    #right-panel {
+        position: absolute;
+        top: 0px;
+        height: 100px;
+        width: 100%;
+
+    }
+    #mapa,#content {
+        width: 100%;
+        
+    }
+    #actualModeInfo {
+        display: none;
+    }
+}

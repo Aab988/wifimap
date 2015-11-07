@@ -11,6 +11,10 @@ use App\Model\WifiSecurity;
 class WifiSecurityService extends BaseService {
 
 
+    public function getById($id) {
+        return $this->database->table("wifi_security")->where("id",$id)->fetch();
+    }
+
     /**
      * @param bool $asObject
      * @return WifiSecurity[]

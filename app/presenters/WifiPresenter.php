@@ -4,10 +4,13 @@ namespace App\Presenters;
 
 use App\Model\Coords;
 use App\Model\MyUtils;
+use App\Model\Source;
 use App\Model\Wifi;
 use App\Service\OverlayRenderer;
+use App\Service\SourceManager;
 use App\Service\WifiLocationService;
 use App\Service\WifiManager;
+use App\Service\WifiSecurityService;
 use Nette;
 use Nette\Caching\Cache;
 
@@ -71,10 +74,23 @@ class WifiPresenter extends BasePresenter
     /** @var OverlayRenderer @inject */
     public $overlayRenderer;
 
+    /** @var SourceManager @inject */
+    public $sourceManager;
+
+    /** @var WifiSecurityService @inject */
+    public $wifisecService;
+
     /** @var Cache */
     private $cache;
     /** @var array modes that can be used */
     private $allowedModes = array();
+
+
+    private static $modesLabels = array(
+        self::MODE_ALL => "Všechny sítě",
+        self::MODE_SEARCH => "Vyhledávání",
+    );
+
 
     public function __construct()
     {
@@ -349,6 +365,31 @@ class WifiPresenter extends BasePresenter
 
     private function allowedMode($mode) {
         return in_array($mode,$this->allowedModes);
+    }
+
+
+    public function renderActualMode() {
+        foreach($this->getHttpRequest()->getQuery() as $key => $val) {
+            switch($key) {
+                case 'gm': echo ""; break;
+                case 'mode':
+                    echo "<h5>Mód: ";
+                    echo (array_key_exists($val,self::$modesLabels))?self::$modesLabels[$val]:$val;
+                    echo "</h5>";
+                    break;
+                case 'channel':
+                    echo 'Kanál: ' . $val . "<br />"; break;
+                case 'security':
+                    echo 'Zabezpečení: ' . $this->wifisecService->getById($val)->label . "<br />"; break;
+                case 'source':
+                    echo 'Zdroj: ' . $this->sourceManager->getById($val)->name . "<br />"; break;
+                case 'ssidmac':
+                    echo 'SSID/MAC: ' . $val . "<br />"; break;
+                default:
+                    echo $key . ":" . $val . "<br />"; break;
+            }
+        }
+        $this->terminate();
     }
 
 }

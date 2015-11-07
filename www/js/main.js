@@ -14,6 +14,9 @@ var PROCESS_CLICK_URL = BASE_URL + "wifi/processClick";
 var IMAGE_URL = BASE_URL + "wifi/image";
 var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
 
+var ACTUAL_MODE_URL = BASE_URL + "wifi/actualmode";
+
+
 // google maps search markers
 var markers = [];
 
@@ -32,6 +35,12 @@ if (hashParams.gm) {
     INIT_CENTER = {lat: parseFloat(res[0]), lng: parseFloat(res[1])};
     INIT_ZOOM = parseInt(res[2]);
 }
+
+
+
+
+
+
 
 // set some params - share feature
 function init() {
@@ -205,12 +214,33 @@ function redrawOverlay() {
     map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 }
 
+function modeChanged() {
+    var mode = hashParams.mode;
+
+
+    var text = "<h5>" + mode + "</h5>";
+    for(var propertyName in hashParams) {
+        if(propertyName != 'mode' && propertyName != 'gm') {
+            text += propertyName + ":" + hashParams[propertyName] + "<br />";
+        }
+
+    }
+
+
+    sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
+    //$(".actualModeInfoContent").get(ACTUAL_MODE_URL);
+}
+
+
 function searchFormSubmit() {
     ssid = $("#form-ssid").val();
     hashParams.mode = MODE_SEARCH;
     hashParams.ssid = ssid;
     window.location.hash = $.param(hashParams);
     redrawOverlay();
+
+    modeChanged();
+
     return false;
 }
 
@@ -430,9 +460,29 @@ $(document).ready(function () {
         if (security) hashParams.security = security;
         if (source) hashParams.source = source;
         window.location.hash = $.param(hashParams);
+        modeChanged();
         redrawOverlay();
 
     });
+
+
+    $(".hide-btn").click(function() {
+        if($(this).parent("div").css("margin-right") == "-200px") {
+            $(this).parent("div").animate({
+                "margin-right": "0px"
+            },500);
+        }
+        else {
+            $(this).parent("div").animate({
+                "margin-right": "-200px"
+            },500);
+        }
+
+
+
+
+    });
+
 });
 
 

@@ -22,6 +22,12 @@ class SourceManager extends BaseService {
         return $sources;
     }
 
+    public function getById($id) {
+        return $this->database->table("source")->where("id",$id)->fetch();
+    }
+
+
+
     /**
      * return (id => name) array
      * @return array
