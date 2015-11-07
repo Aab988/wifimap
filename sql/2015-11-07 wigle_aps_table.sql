@@ -1,0 +1,11 @@
+CREATE TABLE `wigle_aps` (
+	`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`mac` VARCHAR(20) NOT NULL COLLATE 'utf8_czech_ci',
+	`created` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+	`downloaded` TINYINT(1) NOT NULL DEFAULT '0',
+	`downloaded_date` DATETIME NULL,
+	PRIMARY KEY (`id`)
+)
+	COLLATE='utf8_czech_ci'
+	ENGINE=InnoDB
+;
