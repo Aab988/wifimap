@@ -200,8 +200,6 @@ CoordMapType.prototype.getTile = function (coord, zoom, ownerDocument) {
         lon2: bod.ne.lng,
         zoom: zoom
     };
-
-
     params = $.extend(params, hashParams);
     delete params.gm;
     img.src = IMAGE_URL + "?" + $.param(params);
@@ -209,108 +207,71 @@ CoordMapType.prototype.getTile = function (coord, zoom, ownerDocument) {
     return img;
 };
 
+/** prekreslit prekryvnou vrstvu */
 function redrawOverlay() {
     map.overlayMapTypes.removeAt(0);
     map.overlayMapTypes.insertAt(0, new CoordMapType(new google.maps.Size(256, 256)));
 }
 
-function modeChanged() {
-    var mode = hashParams.mode;
 
-
-    var text = "<h5>" + mode + "</h5>";
+function removeAllParams() {
     for(var propertyName in hashParams) {
-        if(propertyName != 'mode' && propertyName != 'gm') {
-            text += propertyName + ":" + hashParams[propertyName] + "<br />";
+        if(propertyName != 'gm') {
+            delete hashParams[propertyName];
         }
-
     }
-
-
-    sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
-    //$(".actualModeInfoContent").get(ACTUAL_MODE_URL);
 }
 
-
-function searchFormSubmit() {
-    ssid = $("#form-ssid").val();
-    hashParams.mode = MODE_SEARCH;
-    hashParams.ssid = ssid;
+/** prenacist data */
+function modeChanged() {
     window.location.hash = $.param(hashParams);
+    sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
     redrawOverlay();
-
-    modeChanged();
-
     return false;
 }
 
 function highlightFormSubmit(form) {
-
+    removeAllParams();
     var by = form["highlight-by"].value;
     var val = form[by].value;
-    //var ssid = form["ssid"].value;
     hashParams.mode = MODE_HIGHLIGHT;
     hashParams.by = by;
     hashParams.val = val;
-
-    //hashParams.ssid = ssid;
-    window.location.hash = $.param(hashParams);
-    redrawOverlay();
-
-    return false;
+    modeChanged();
 }
 
 function showOnlyOneNet(ssid) {
+    removeAllParams();
     hashParams.mode = MODE_ONE;
     hashParams.ssid = ssid;
-    window.location.hash = $.param(hashParams);
-    redrawOverlay();
-    return false;
+    modeChanged();
 }
 
 function useAsFilter(form) {
-    delete hashParams[hashParams.by];
-
-    delete hashParams.by;
-
+    removeAllParams();
     var by = $(form).find('.highlightBy').val();
     var val = $(form).find("."+by).val();
-
     if(by == 'ssid' || by == 'mac') {
         by = 'ssidmac';
     }
-
-    //var ssid = form["ssid"].value;
     hashParams.mode = MODE_SEARCH;
     hashParams[by] = val;
-
-
-    //hashParams.ssid = ssid;
-    window.location.hash = $.param(hashParams);
-    redrawOverlay();
-
-    return false;
+    modeChanged();
 }
 
 function calculate(id) {
-
-    //var ssid = form["ssid"].value;
+    removeAllParams();
     hashParams.mode = MODE_CALCULATED;
     hashParams.a = id;
-
-    window.location.hash = $.param(hashParams);
-    redrawOverlay();
-    return false;
+    modeChanged();
 }
 
-
-$(document)
-    .ajaxStart(function () {
+    $(document).ajaxStart(function () {
         $(".loader").show();
-    })
-    .ajaxStop(function () {
+    }).ajaxStop(function () {
         $(".loader").hide();
     });
+
 
 /**
  * zruseni vsech nastaveni - modu a jeho parametru
@@ -319,16 +280,8 @@ function resetAllFilters() {
     $(".mi-source").removeClass("active");
     $("#ul-one-source").hide(100);
 
-    delete hashParams.ssidmac;
-    delete hashParams.channel;
-    delete hashParams.security;
-    delete hashParams.ssid;
-    delete hashParams.mode;
-    delete hashParams.source;
-    //console.log(hashParams);
-    window.location.hash = $.param(hashParams);
-
-    redrawOverlay();
+    removeAllParams();
+    modeChanged();
 }
 
 
@@ -444,25 +397,17 @@ $(document).ready(function () {
 
     $("#frm-searchForm").submit(function (e) {
         e.preventDefault();
-        delete hashParams.ssidmac;
-        delete hashParams.channel;
-        delete hashParams.security;
-        delete hashParams.source;
-
+        removeAllParams();
         ssidmac = $(this).find("#frm-searchForm-ssidmac").val();
         channel = $(this).find("#frm-searchForm-channel").val();
         security = $(this).find("#frm-searchForm-security").val();
         source = $(this).find("#frm-searchForm-source").val();
         hashParams.mode = MODE_SEARCH;
-
         if (ssidmac) hashParams.ssidmac = ssidmac;
         if (channel) hashParams.channel = channel;
         if (security) hashParams.security = security;
         if (source) hashParams.source = source;
-        window.location.hash = $.param(hashParams);
         modeChanged();
-        redrawOverlay();
-
     });
 
 
@@ -477,10 +422,6 @@ $(document).ready(function () {
                 "margin-right": "-200px"
             },500);
         }
-
-
-
-
     });
 
 });
