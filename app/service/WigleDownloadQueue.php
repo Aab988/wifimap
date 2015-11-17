@@ -63,7 +63,7 @@ class WigleDownloadQueue extends BaseService {
         );
         if($from != 0) {
             $data["from"] = $from;
-            $data["to"] = $from + 99;
+            $data["to"] = $from + WigleDownload::WIGLE_MAXIMUM_ROWS-1;
         }
         $this->database->table('wigle_download_queue')->insert($data);
     }
@@ -72,6 +72,7 @@ class WigleDownloadQueue extends BaseService {
      * divide big area into smaller ones by counted sites density
      *
      * @param Coords $coords
+     * @param int|null $iddreq
      */
     public function generateLatLngDownloadArray($coords,$iddreq = null) {
         $this->fillWigleNetColors();
@@ -142,18 +143,11 @@ class WigleDownloadQueue extends BaseService {
     private function improveLatLngRange($coords) {
         $nc = array();
         $count = $this->analyzeImage($coords);
-        $this->database->query("insert into log", array(
-            "operation" => "vypocetbarev",
-            "data" => $count,
-            "procent" => 0
-        ));
-        if($count > self::MAX_RESULTS_COUNT) {
+        $this->logger->addLog("count-colors","count: $count",true);
 
-            $this->database->query("insert into log", array(
-                "operation" => "zanoreni",
-                "data" => $count,
-                "procent" => 0
-            ));
+        if($count > self::MAX_RESULTS_COUNT) {
+            $this->logger->addLog("nesting","count: $count",true);
+
             for($lat = round($coords->getLatStart(),6); round($lat,6) < round($coords->getLatEnd(),6); $lat += ($coords->getLatEnd() - $coords->getLatStart())/2.0) {
                 for ($lon = round($coords->getLonStart(),6); round($lon,6) < round($coords->getLonEnd(),6); $lon += ($coords->getLonEnd() - $coords->getLonStart()) / 2.0) {
 

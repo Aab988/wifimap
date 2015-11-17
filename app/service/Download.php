@@ -22,8 +22,7 @@ class Download extends BaseService {
             $this->database->query("insert into wifi", $this->prepareArrayForDB($wifi));
         }
         catch(\PDOException $e) {
-            // TODO: LOG ERROR
-            //echo $e->getMessage();
+            $this->logger->addLog('wifi-save','nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage(),true);
         }
     }
 

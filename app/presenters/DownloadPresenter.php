@@ -89,13 +89,10 @@ class DownloadPresenter extends BasePresenter {
         }
         else {
             //echo "Safe mode is off";
-            $tl = set_time_limit($max_execution_time);
-            if(!$tl) {
-            //echo "<br />nepovedlo se zvysit timelimit";
-            }
+            set_time_limit($max_execution_time);
             $is = ini_set('memory_limit',$max_memory);
             if(!$is) {
-                            //echo "<br />nepovedlo se zvysit maximum memory";
+                //echo "<br />nepovedlo se zvysit maximum memory";
             }
         }
 
@@ -189,7 +186,6 @@ class DownloadPresenter extends BasePresenter {
         $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
         $total_count = count($this->downloadQueue->getGeneratedCoords());
         $this->downloadQueue->save($req->id);
-        dump($total_count);
         $this->downloadRequest->setProcessed($req,$total_count);
         $this->terminate();
     }

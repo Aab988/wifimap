@@ -1,5 +1,7 @@
 <?php
 namespace App\Service;
+use App\Model\MyUtils;
+use Nette\Database\SqlLiteral;
 use Nette\Utils;
 use Nette\Utils\DateTime;
 use App\Model\Coords;
@@ -26,6 +28,8 @@ class WigleDownload extends Download implements \IDownload {
 	const WIGLE_GETDATA_URL = "https://wigle.net/api/v1/jsonSearch";
 
 
+    const WIGLE_MAXIMUM_ROWS = 100;
+
     /** @var string Wigle login */
     private $user = "";
 
@@ -45,10 +49,10 @@ class WigleDownload extends Download implements \IDownload {
     public function download() {
 
         //$this->loginToWigle();
-        echo $this->loginToWigle();
+        $this->loginToWigle();
         $query = $this->downloadQueue->getRandomNotDownloadedRecord();
         if(!$query) {
-            // TODO: LOG chyby + konec
+            $this->logger->addLog('wigle-download','nebyl vracen zadny nestazeny zaznam z tabulky wigle_download_queue',true);
             return;
         }
         $id_download_request = $query->id_download_request;
@@ -56,25 +60,35 @@ class WigleDownload extends Download implements \IDownload {
         $results = $this->getDataFromWigle($coords, (int) $query["from"]);
         $results_decoded = json_decode($results,true);
         if($results_decoded["success"] == true) {
-            $ws = $this->parseData($results_decoded);
-            $this->saveAll($ws);
+            $mac_addresses = $this->parseData2MacAddresses($results_decoded);
+            $this->saveAll2WigleAps($query['id'],$mac_addresses);
 
             // transakcne vlozime
             $this->database->beginTransaction();
-            $query->update(array("downloaded"=>1,"downloaded_nets_count"=>count($ws)));
+            $query->update(array(
+                "downloaded"=>1,
+                "downloaded_nets_count"=>count($mac_addresses),
+                "count_downloaded_observations"=>0,
+            ));
 
+            // TODO: NEUPRAVOVAT -> ZMENA STAHOVANI
+            /**
             // upravit downlaod request
-            $this->database->query('UPDATE download_request SET downloaded_count = downloaded_count + 1 WHERE id = ?',$id_download_request);
+            $this->database->table('download_request')
+                ->where('id',$id_download_request)
+                ->update(array('downloaded_count'=>new SqlLiteral('downloaded_count + 1')));
+            */
 
-
-            if((int)$results_decoded["resultCount"] == 100) {
+            if((int)$results_decoded["resultCount"] >= self::WIGLE_MAXIMUM_ROWS) {
                 $this->downloadQueue->addRecord($coords, 0, $id_download_request, (int)$results_decoded["last"]);
-                $this->database->query("UPDATE download_request SET total_count = total_count + 1 WHERE id = ?",$id_download_request);
+                $this->database->table('download_request')
+                    ->where('id',$id_download_request)
+                    ->update(array('total_count'=>new SqlLiteral('total_count + 1')));
             }
             $this->database->commit();
         }
         else {
-            echo "too many queries";
+            $this->logger->addLog('wigle-download','too many queries',true);
         }
     }
 
@@ -147,6 +161,38 @@ class WigleDownload extends Download implements \IDownload {
         }
         return $ws;
     }
+
+    /**
+     * @param array $data decoded JSON
+     * @return array MAC addresses array
+     */
+    private function parseData2MacAddresses($data) {
+        $ws = array();
+        foreach($data["results"] as $net) {
+            $ws[] = MyUtils::macSeparator2Colon($net['netid']);
+        }
+        return $ws;
+    }
+
+    /**
+     * @param int $id_wigle_download_queue
+     * @param array $mac_addresses MAC addresses array
+     */
+    private function saveAll2WigleAps($id_wigle_download_queue,$mac_addresses) {
+        $this->database->beginTransaction();
+        foreach($mac_addresses as $ma) {
+            $array = array(
+                'id_wigle_download_queue'=>$id_wigle_download_queue,
+                'mac'=>$ma,
+                'created'=>new DateTime(),
+                'downloaded'=>0
+            );
+            $this->database->table('wigle_aps')->insert($array);
+        }
+        $this->database->commit();
+    }
+
+
 
     /**
      * @param array $line

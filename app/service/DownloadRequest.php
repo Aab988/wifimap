@@ -209,7 +209,6 @@ AND dr.date = groupeddr.MaxDateTime
      * @param int $total_count
      */
     public function setProcessed($request,$total_count=0) {
-        dump($total_count);
         $request->update(array(
             'processed' => 'Y',
             'processed_date' => new DateTime(),

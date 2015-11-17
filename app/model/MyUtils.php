@@ -14,6 +14,10 @@ class MyUtils extends Nette\Object {
     }
 
 
+    public static function macSeparator2Colon($mac) {
+        return str_replace("-",":",$mac);
+    }
+
 
     public static function image2string($img) {
         ob_start();
