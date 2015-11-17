@@ -37,6 +37,21 @@ class DownloadPresenter extends BasePresenter {
 		$this->terminate();
     }
 
+
+    /**
+     * DOWNLOAD OBSERVATIONS OF MAC ADDRESS FROM WIGLE
+     */
+    public function renderWigleObservations() {
+
+        if($this->wigleDownload) {
+            $this->wigleDownload->downloadObservations();
+
+        }
+
+        $this->terminate();
+    }
+
+
     /**
      * process Wifileaks file parse and save to DB
      * @throws \Nette\Application\AbortException

@@ -26,6 +26,8 @@ class WigleDownload extends Download implements \IDownload {
 
     /** Wigle download data URL */
 	const WIGLE_GETDATA_URL = "https://wigle.net/api/v1/jsonSearch";
+    /** Wigle get observations URL  */
+    const WIGLE_OBSERVATIONS_URL = "https://wigle.net/api/v1/jsonLocation";
 
 
     const WIGLE_MAXIMUM_ROWS = 100;
@@ -48,7 +50,6 @@ class WigleDownload extends Download implements \IDownload {
      */
     public function download() {
 
-        //$this->loginToWigle();
         $this->loginToWigle();
         $query = $this->downloadQueue->getRandomNotDownloadedRecord();
         if(!$query) {
@@ -91,6 +92,67 @@ class WigleDownload extends Download implements \IDownload {
             $this->logger->addLog('wigle-download','too many queries',true);
         }
     }
+
+
+    public function downloadObservations() {
+        $this->loginToWigle();
+
+        $ap = $this->database->table('wigle_aps')
+            ->where('downloaded',0)
+            ->limit(1)
+            ->fetch();
+
+        $observationsWigle = $this->sendCurlRequest(self::WIGLE_OBSERVATIONS_URL,array('netid'=>$ap['mac']));
+
+        $observationsDecoded = json_decode($observationsWigle,true);
+
+        dump($observationsDecoded);
+
+        $wifis = array();
+
+        foreach($observationsDecoded['result'] as $r) {
+            foreach($r['locationData'] as $o) {
+                $wifi = new Wifi();
+                $wifi->setAltitude($o['alt']);
+                $wifi->setAccuracy($o['accuracy']);
+                $wifi->setBcninterval($r['bcninterval']);
+                $wifi->setChannel($r['channel']);
+                $wifi->setComment($r['comment']);
+                $wifi->setDateAdded(new DateTime());
+                $wifi->setFirsttime($r['firsttime']);
+                $wifi->setFlags($r['flags']);
+                $wifi->setFreenet($r['freenet']);
+                $wifi->setLasttime($o['time']);
+                $wifi->setLastupdt($o['lastupdt']);
+                $wifi->setLatitude($o['latitude']);
+                $wifi->setLongitude($o['longitude']);
+                $wifi->setMac($o['netid']);
+                $wifi->setName($o['name']);
+                $wifi->setPaynet($r['paynet']);
+                $wifi->setQos($r['qos']);
+                $wifi->setSource(WigleDownload::ID_SOURCE);
+                $wifi->setSsid($o['ssid']);
+                $wifi->setType($r['type']);
+                $wifi->setWep($o['wep']);
+                $wifi->synchronizeSecurity();
+                $wifis[] = $wifi;
+            }
+        }
+
+        $this->saveAll($wifis);
+        $id_wigle_download_queue = $ap['id_wigle_download_queue'];
+        $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
+        $this->database->table('wigle_download_queue')
+            ->where('id',$id_wigle_download_queue)
+            ->update(array('count_downloaded_observations'=>new SqlLiteral('count_downloaded_observations + 1')));
+
+
+
+        dump($wifis);
+
+
+    }
+
 
 
     /**

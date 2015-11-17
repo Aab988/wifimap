@@ -62,7 +62,7 @@ class WifiPresenter extends BasePresenter
 
     const IMG_CACHE_DIR = "../temp/img_cache";
 
-    const MIN_OVERLAY_ZOOM = 10;
+    const MIN_OVERLAY_ZOOM = 0;
     const MIN_INFO_WINDOW_ZOOM = 10;
 
     /** @var WifiManager @inject */
