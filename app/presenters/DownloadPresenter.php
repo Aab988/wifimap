@@ -45,9 +45,7 @@ class DownloadPresenter extends BasePresenter {
 
         if($this->wigleDownload) {
             $this->wigleDownload->downloadObservations();
-
         }
-
         $this->terminate();
     }
 

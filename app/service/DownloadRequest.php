@@ -144,12 +144,17 @@ AND dr.date = groupeddr.MaxDateTime
      * @return bool|mixed|Nette\Database\Table\IRow
      */
     public function getEldestDownloadRequest($idSource) {
-        return $this->database->table("download_request")
+        /*return $this->database->table("download_request")
             ->select('id,lat_start,lat_end,lon_start,lon_end')
             ->where('processed', 'N')
             ->where('id_source',$idSource)
             ->order('date ASC')
-            ->fetch();
+            ->fetch();*/
+
+        $sql = "SELECT * FROM download_request WHERE processed = ? AND id_source = ? AND id NOT IN (SELECT id_download_request FROM download_request_waiting WHERE completed = ? GROUP BY id_download_request)";
+        $return = $this->database->query($sql,'N',$idSource,'N')->fetch();
+
+        return $return;
     }
 
 

@@ -146,8 +146,8 @@ class WigleDownload extends Download implements \IDownload {
             ->where('id',$id_wigle_download_queue)
             ->update(array('count_downloaded_observations'=>new SqlLiteral('count_downloaded_observations + 1')));
 
-
-
+        // PO UPDATE wigle_download_queue se pomoci DB triggeru zmeni hodnoty u download_requestu
+        // a pokud je ten reuqest jiz dokoncen tak i requesty ktere cekaly na ten dany request
         dump($wifis);
 
 
