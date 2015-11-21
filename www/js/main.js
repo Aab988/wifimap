@@ -238,6 +238,7 @@ function highlightFormSubmit(form) {
     hashParams.by = by;
     hashParams.val = val;
     modeChanged();
+    return false;
 }
 
 function showOnlyOneNet(ssid) {
