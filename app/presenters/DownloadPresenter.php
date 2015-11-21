@@ -154,8 +154,16 @@ class DownloadPresenter extends BasePresenter {
 
     /** add download request */
     public function renderAddGoogleRequest() {
-        $state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);
-        $this->template->state = $state;
+        /*$state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);*/
+
+        $this->downloadRequest->processDownloadRequestCreation(new Coords(
+            $this->getHttpRequest()->getQuery("lat1"),
+            $this->getHttpRequest()->getQuery("lat2"),
+            $this->getHttpRequest()->getQuery("lon1"),
+            $this->getHttpRequest()->getQuery("lon2")
+        ),Service\GoogleDownload::ID_SOURCE);
+
+        $this->template->state = Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
     }
 
 

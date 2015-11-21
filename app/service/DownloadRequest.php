@@ -18,6 +18,7 @@ class DownloadRequest extends BaseService {
     const STATE_ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
     const STATE_SUCCESS_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
 
+    const MIN_DAYS_BEFORE_UPDATE_AREA = 30;
 
     const DIVIDE_AREA_ONLY_NOT_IN_QUEUE = true;
 
@@ -27,19 +28,59 @@ class DownloadRequest extends BaseService {
      *
      * @param Coords $coords
      * @param int       $idSource
+     * @return bool|int|Nette\Database\IRow
      */
     public function addDownloadRequest($coords, $idSource) {
-        $this->database->query("insert into download_request", array(
-            "id_source" => $idSource,
-            "date"=> new DateTime(),
-            "lat_start" => $coords->getLatStart(),
-            "lat_end" => $coords->getLatEnd(),
-            "lon_start" => $coords->getLonStart(),
-            "lon_end" => $coords->getLonEnd(),
-            "processed" => 'N',
-            "total_count" => 0,
-            "downloaded_count" => 0
-        ));
+        // VYJIMKA PRO GOOGLE -> MUSIM PRIDAT I WIGLE POZADAVKY
+        if($idSource == GoogleDownload::ID_SOURCE) {
+            $this->database->beginTransaction();
+            $google_request = $this->addDownloadRequest2DB($coords,$idSource);
+            $this->processDownloadRequestCreation($coords,WigleDownload::ID_SOURCE);
+            $wigleRequests = $this->database->table('download_request')
+                ->where('id_source',WigleDownload::ID_SOURCE)
+                ->where('total_count > downloaded_count')
+                ->where("
+                ((lat_start BETWEEN ? AND ?) AND (lon_start BETWEEN ? AND ? OR lon_end BETWEEN ? AND ?))
+             OR ((lat_end BETWEEN ? AND ?) AND (lon_start BETWEEN ? AND ? OR lon_end BETWEEN ? AND ?))
+             OR ((lon_start BETWEEN ? AND ?) AND (lat_start BETWEEN ? AND ? OR lat_end BETWEEN ? AND ?))
+             OR ((lon_start BETWEEN ? AND ?) AND (lat_start BETWEEN ? AND ? OR lat_end BETWEEN ? AND ?))",
+    $coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd(),$coords->getLonStart(),$coords->getLonEnd(),
+    $coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd(),$coords->getLonStart(),$coords->getLonEnd(),
+    $coords->getLonStart(),$coords->getLonEnd(),$coords->getLatStart(),$coords->getLatEnd(),$coords->getLatStart(),$coords->getLatEnd(),
+    $coords->getLonStart(),$coords->getLonEnd(),$coords->getLatStart(),$coords->getLatEnd(),$coords->getLatStart(),$coords->getLatEnd()
+                )
+                ->fetchAll();
+            foreach($wigleRequests as $wr) {
+                $this->addWaiting($google_request['id'],$wr['id']);
+            }
+            $this->database->commit();
+            return $google_request;
+        }
+        else {
+            return $this->addDownloadRequest2DB($coords,$idSource);
+        }
+
+    }
+
+    /**
+     * @param Coords $coords
+     * @param int $idSource
+     * @return bool|int|Nette\Database\Table\IRow
+     */
+    private function addDownloadRequest2DB($coords,$idSource) {
+        $dr = $this->database->table('download_request')
+            ->insert(array(
+                "id_source" => $idSource,
+                "date"=> new DateTime(),
+                "lat_start" => $coords->getLatStart(),
+                "lat_end" => $coords->getLatEnd(),
+                "lon_start" => $coords->getLonStart(),
+                "lon_end" => $coords->getLonEnd(),
+                "processed" => 'N',
+                "total_count" => 0,
+                "downloaded_count" => 0
+            ));
+        return $dr;
     }
 
 
@@ -78,9 +119,26 @@ AND dr.date = groupeddr.MaxDateTime
             ->where("lat_start <= ?",$coords->getLatStart())
             ->where("lat_end >= ?", $coords->getLatEnd())
             ->where("lon_start <= ?",$coords->getLonStart())
-            ->where("lon_end >= ?", $coords->getLonEnd());
+            ->where("lon_end >= ?", $coords->getLonEnd())
+            ->order('processed_date DESC');
         return $query->fetch();
     }
+
+
+
+
+    public function addWaiting($download_request,$waitfor) {
+
+        $this->database->table('download_request_waiting')
+            ->insert(array(
+                'id_download_request' => $download_request,
+                'id_download_request_waitfor' => $waitfor,
+                'completed' => 'N'
+            ));
+
+    }
+
+
 
     /**
      * process wigle request and determine what to do
@@ -110,34 +168,45 @@ AND dr.date = groupeddr.MaxDateTime
             else {
                 $today = new DateTime();
                 $diff = $today->diff($er["processed_date"]);
-                if($diff->days < 7) {
+                if($diff->days < self::MIN_DAYS_BEFORE_UPDATE_AREA) {
                     return self::STATE_ERR_RECENTLY_DOWNLOADED;
                 }
                 else {
+                    /*
                     $this->addDownloadRequest($coords,$idSource);
                     return self::STATE_SUCCESS_ADDED_TO_QUEUE;
+                    */
+                    return $this->addAllNotDownloadedRequests($coords,$idSource);
                 }
             }
         }
         else {
-            if(self::DIVIDE_AREA_ONLY_NOT_IN_QUEUE) {
-                $rects = $this->findNotInQueueRectsInLatLngRange($coords,$idSource);
-                foreach($rects as $rect) {
-                    $this->addDownloadRequest($rect,$idSource);
-                }
-                if(count($rects) > 0) {
-                    return self::STATE_SUCCESS_ADDED_TO_QUEUE;
-                }
-                else {
-                    return self::STATE_ERR_ALREADY_IN_QUEUE;
-                }
-            }
-            else {
-                $this->addDownloadRequest($coords,$idSource);
-                return self::STATE_SUCCESS_ADDED_TO_QUEUE;
-            }
+            return $this->addAllNotDownloadedRequests($coords,$idSource);
         }
     }
+
+
+
+    private function addAllNotDownloadedRequests($coords,$idSource) {
+        if(self::DIVIDE_AREA_ONLY_NOT_IN_QUEUE) {
+            $rects = $this->findNotInQueueRectsInLatLngRange($coords,$idSource);
+            foreach($rects as $rect) {
+                $this->addDownloadRequest($rect,$idSource);
+            }
+            if(count($rects) > 0) {
+                return self::STATE_SUCCESS_ADDED_TO_QUEUE;
+            }
+            else {
+                return self::STATE_ERR_ALREADY_IN_QUEUE;
+            }
+        }
+        else {
+            $this->addDownloadRequest($coords,$idSource);
+            return self::STATE_SUCCESS_ADDED_TO_QUEUE;
+        }
+    }
+
+
 
     /**
      * @param int $idSource
