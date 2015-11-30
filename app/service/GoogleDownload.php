@@ -34,14 +34,15 @@ class GoogleDownload extends Download implements \IDownload {
     public function download()
     {
         $f = $this->database
-            ->query("select gr.id,w.id as id1,w.mac as mac1,w.ssid as ssid1,w.altitude,w.sec,
+            ->query("SELECT gr.id,w.id AS id1,w.mac AS mac1,w.ssid AS ssid1,w.altitude,w.sec,
                      w.comment,w.name,w.type,w.freenet,w.paynet,w.flags,w.wep,w.channel,w.bcninterval,
-                     w.qos,w2.id as id2,w2.mac as mac2,w2.ssid as ssid2
-                     from google_request gr
-                     join wifi w ON (gr.id_wifi1 = w.id)
-                     join wifi w2 ON (gr.id_wifi2 = w2.id)
-                     where gr.downloaded='N'
-                     limit ".self::REQUESTS_LIMIT." for update")->fetchAll();
+                     w.qos,w2.id AS id2,w2.mac AS mac2,w2.ssid AS ssid2
+                     FROM google_request gr
+                     JOIN wifi w ON (gr.id_wifi1 = w.id)
+                     JOIN wifi w2 ON (gr.id_wifi2 = w2.id)
+                     WHERE gr.downloaded='N'
+                     ORDER BY gr.priority DESC
+                     LIMIT ".self::REQUESTS_LIMIT." FOR UPDATE")->fetchAll();
 
         $wifis = array();
 

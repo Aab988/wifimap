@@ -99,6 +99,7 @@ class WigleDownload extends Download implements \IDownload {
 
         $ap = $this->database->table('wigle_aps')
             ->where('downloaded',0)
+            ->order('priority DESC')
             ->limit(1)
             ->fetch();
 
@@ -135,10 +136,12 @@ class WigleDownload extends Download implements \IDownload {
                 $wifi->setType($r['type']);
                 $wifi->setWep($o['wep']);
                 $wifi->synchronizeSecurity();
+                $wifi->setSec($wifi->getSec()+1);
                 $wifis[] = $wifi;
             }
         }
 
+        $this->database->beginTransaction();
         $this->saveAll($wifis);
         $id_wigle_download_queue = $ap['id_wigle_download_queue'];
         $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
@@ -146,6 +149,7 @@ class WigleDownload extends Download implements \IDownload {
             ->where('id',$id_wigle_download_queue)
             ->update(array('count_downloaded_observations'=>new SqlLiteral('count_downloaded_observations + 1')));
 
+        $this->database->commit();
         // PO UPDATE wigle_download_queue se pomoci DB triggeru zmeni hodnoty u download_requestu
         // a pokud je ten reuqest jiz dokoncen tak i requesty ktere cekaly na ten dany request
         dump($wifis);
