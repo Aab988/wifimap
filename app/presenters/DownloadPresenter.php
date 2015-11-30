@@ -3,6 +3,7 @@
 namespace App\Presenters;
 
 use \App\Model\Coords;
+use App\Model\MyUtils;
 use App\Model\Wifi;
 use \App\Service;
 use Nette\Http\Url;
@@ -227,5 +228,48 @@ class DownloadPresenter extends BasePresenter {
         $this->downloadRequest->setProcessed($req);
         $this->terminate();
     }
+
+
+
+
+    public function actionAddRequests($data = '../temp/data.mac',$priority = 2,$fromWigle = true,$fromGoogle = false) {
+        // TODO: rozparsovat data
+        //$data = "00:00:00:00:00:00\nff:ff:ff:ff:ff:ff";
+
+
+
+        $fh = fopen($data, 'r');
+
+        $macAddresses = array(); $count = 0;
+        while (!feof($fh)) {
+            $mac = fgets($fh);
+            if(MyUtils::isMacAddress($mac)) {
+                $mac = MyUtils::macSeparator2Colon($mac);
+                $macAddresses[] = $mac;
+                $count++;
+            }
+        }
+        fclose($fh);
+
+
+        if($fromWigle) {
+            $before = $this->wigleDownload->getWigleApsCount($priority);
+            $this->wigleDownload->saveAll2WigleAps(null,$macAddresses,$priority);
+
+            echo "bude trvat: " . ($count*30) . '+' . ($before*30) . 'minut';
+            // pridat do wigle
+        }
+        if($fromGoogle) {
+            // TODO: pridani k google stahovani
+            // pridat do google
+        }
+
+        $this->terminate();
+
+
+    }
+
+
+
 
 }

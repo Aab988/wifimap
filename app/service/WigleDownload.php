@@ -144,11 +144,13 @@ class WigleDownload extends Download implements \IDownload {
         $this->database->beginTransaction();
         $this->saveAll($wifis);
         $id_wigle_download_queue = $ap['id_wigle_download_queue'];
-        $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
-        $this->database->table('wigle_download_queue')
-            ->where('id',$id_wigle_download_queue)
-            ->update(array('count_downloaded_observations'=>new SqlLiteral('count_downloaded_observations + 1')));
 
+        $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
+        if($id_wigle_download_queue) {
+            $this->database->table('wigle_download_queue')
+                ->where('id',$id_wigle_download_queue)
+                ->update(array('count_downloaded_observations'=>new SqlLiteral('count_downloaded_observations + 1')));
+        }
         $this->database->commit();
         // PO UPDATE wigle_download_queue se pomoci DB triggeru zmeni hodnoty u download_requestu
         // a pokud je ten reuqest jiz dokoncen tak i requesty ktere cekaly na ten dany request
@@ -243,19 +245,34 @@ class WigleDownload extends Download implements \IDownload {
     /**
      * @param int $id_wigle_download_queue
      * @param array $mac_addresses MAC addresses array
+     * @param int $priority
      */
-    private function saveAll2WigleAps($id_wigle_download_queue,$mac_addresses) {
+    public function saveAll2WigleAps($id_wigle_download_queue,$mac_addresses,$priority = 1) {
         $this->database->beginTransaction();
         foreach($mac_addresses as $ma) {
             $array = array(
                 'id_wigle_download_queue'=>$id_wigle_download_queue,
                 'mac'=>$ma,
                 'created'=>new DateTime(),
-                'downloaded'=>0
+                'downloaded'=>0,
+                'priority'=>$priority
             );
             $this->database->table('wigle_aps')->insert($array);
         }
         $this->database->commit();
+    }
+
+    /**
+     * get count of not downloaded records in wigle_aps table where priority is >= $priority
+     *
+     * @param null|int $priority
+     * @return int
+     */
+    public function getWigleApsCount($priority = null) {
+        $count = $this->database->table('wigle_aps')
+            ->where('downloaded',0);
+        if($priority) $count->where('priority >= ?',$priority);
+        return $count->count();
     }
 
 
