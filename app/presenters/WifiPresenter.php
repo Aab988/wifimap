@@ -89,6 +89,11 @@ class WifiPresenter extends BasePresenter
     private static $modesLabels = array(
         self::MODE_ALL => "Všechny sítě",
         self::MODE_SEARCH => "Vyhledávání",
+        self::MODE_HIGHLIGHT => "Zvýraznění bodu v mapě",
+        self::MODE_FREE => "Nezabezpečené sítě",
+        self::MODE_ONE_SOURCE => "Pouze jeden zdroj",
+        self::MODE_ONE => "Jedna síť",
+        self::MODE_CALCULATED => "Vypočtené polohy sítí"
     );
 
 

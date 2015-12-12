@@ -16,7 +16,6 @@ var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
 
 var ACTUAL_MODE_URL = BASE_URL + "wifi/actualmode";
 
-
 // google maps search markers
 var markers = [];
 
@@ -369,6 +368,8 @@ function endDownloadRequest(infodiv, beginbutton) {
 
 
 $(document).ready(function () {
+    sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
+
     $("#mi-one-source").click(function () {
         $("#ul-one-source").toggle(100);
     });
@@ -434,13 +435,7 @@ $(document).ready(function () {
  * @param wid
  */
 function googleDownloadRequest1(wid) {
-
-    $.ajax(GOOGLE_DOWNLOAD_URL, {
-        data: {
-            wid: wid
-        }
-    }).done(function () {
-    });
+    $.ajax(GOOGLE_DOWNLOAD_URL, { data: { wid: wid } }).done(function () {});
     return false;
 }
 
