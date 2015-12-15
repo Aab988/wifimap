@@ -23,11 +23,12 @@ class WifiManager extends BaseService {
 	 *
 	 * @param array $params
 	 * @param int $limit
-	 * @param int|null $fromId
+	 * @param int|null $offset
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getNetsByParams($params,$limit = 10000,$offset = null) {
 		$q = $this->database->table('wifi');
+		$q->select('*');
 		foreach($params as $param => $val) {
 			switch($param) {
 				case 'ssid':

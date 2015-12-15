@@ -23,7 +23,6 @@ class ApiPresenter extends BasePresenter {
         $params = array();
 
         $parameters = $this->request->getParameters();
-        dump($parameters);
 
         foreach($parameters as $k=>$p) {
             switch ($k) {
@@ -42,27 +41,26 @@ class ApiPresenter extends BasePresenter {
                     break;
             }
         }
-        dump($params);
 
         $netsCount = $this->wifiManager->getNetsCountByParams($params);
-        dump($netsCount);
 
-        $file = fopen("contacts.csv","w");
+        // TODO: vygenerovat nazev podle parametru
+        $filename = "../temp/contacts.csv";
+
+        $file = fopen($filename,"w");
 
         for($i = 0; $i <= $netsCount; $i+=1000) {
             $nets = $this->wifiManager->getNetsByParams($params,1000,$i);
             foreach($nets as $net) {
-                dump($net);
-                //fputcsv($file,explode(',',$net));
+                fputcsv($file,$net->toArray(),';');
             }
         }
 
         fclose($file);
 
-
-
+        // stazeni souboru
+        $this->redirectUrl("../".$filename);
         $this->terminate();
-
     }
 
 
