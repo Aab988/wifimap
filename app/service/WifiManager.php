@@ -19,7 +19,54 @@ class WifiManager extends BaseService {
 
 
 	/**
-	 * create query with latitude and longitude range<br>
+	 * get all wifi sites by params
+	 *
+	 * @param array $params
+	 * @param int $limit
+	 * @param int|null $fromId
+	 * @return array|Nette\Database\Table\IRow[]
+	 */
+	public function getNetsByParams($params,$limit = 10000,$offset = null) {
+		$q = $this->database->table('wifi');
+		foreach($params as $param => $val) {
+			switch($param) {
+				case 'ssid':
+					$q->where("$param LIKE ?","%$val%"); break;
+				case 'mac':
+					$mac = str_replace("-",":",$val);
+					$q->where("$param LIKE ?","%$mac%"); break;
+				default:
+					$q->where($param,$val); break;
+			}
+		}
+		if($limit) $q->limit($limit, $offset);
+		return $q->fetchAll();
+	}
+
+	/**
+	 * @param $params
+	 * @return int
+	 */
+	public function getNetsCountByParams($params) {
+		$q = $this->database->table('wifi');
+		foreach($params as $param => $val) {
+			switch($param) {
+				case 'ssid':
+					$q->where("$param LIKE ?","%$val%"); break;
+				case 'mac':
+					$mac = str_replace("-",":",$val);
+					$q->where("$param LIKE ?","%$mac%"); break;
+				default:
+					$q->where($param,$val); break;
+			}
+		}
+		return $q->count('id');
+	}
+
+
+
+	/**
+	 * create query with latitude and longitude range
 	 *
 	 * @param Coords $coords
 	 * @return Nette\Database\Table\Selection
@@ -44,7 +91,6 @@ class WifiManager extends BaseService {
 	private function getSearchQuery($coords,$params) {
 
 		$q = $this->getNetsRangeQuery($coords);
-		$q->select("id,latitude,longitude,ssid,mac,id_source");
 		foreach($params as $param => $val) {
 			switch($param) {
 				case 'ssid':
