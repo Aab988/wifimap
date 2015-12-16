@@ -18,7 +18,6 @@ class ApiPresenter extends BasePresenter {
     public $wifiManager;
 
 
-
     public function actionDownload() {
         $params = array();
 
@@ -44,8 +43,12 @@ class ApiPresenter extends BasePresenter {
 
         $netsCount = $this->wifiManager->getNetsCountByParams($params);
 
-        // TODO: vygenerovat nazev podle parametru
-        $filename = "../temp/contacts.csv";
+        // FILENAME = DATETIME_SSID|MAC_CHANNEL_SECURITY_SOURCE
+        // vygenerovat nazev podle parametru
+        $filename = date('YmdHis');
+        foreach($params as $k=>$v) $filename.='_' . $v;
+        $filename = '../temp/' . $filename .'.csv';
+
 
         $file = fopen($filename,"w");
 
