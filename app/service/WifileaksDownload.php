@@ -5,7 +5,7 @@ use Nette\Utils\ArrayList;
 use Nette\Utils\DateTime;
 use Nette\Utils\Image;
 
-class WifileaksDownload extends Download implements \IDownload {
+class WifileaksDownload extends Download implements IDownload {
 
     /** @var SourceManager */
     private $sourceManager;

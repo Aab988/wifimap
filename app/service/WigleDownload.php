@@ -1,5 +1,6 @@
 <?php
 namespace App\Service;
+use App\Model\DownloadImport;
 use App\Model\MyUtils;
 use Nette\Database\SqlLiteral;
 use Nette\Utils;
@@ -13,7 +14,7 @@ use App\Model\Wifi;
  * @package App\Model
  *
  */
-class WigleDownload extends Download implements \IDownload {
+class WigleDownload extends Download implements IDownload {
 
     /** Source ID from DB  */
     const ID_SOURCE = 2;
@@ -142,8 +143,25 @@ class WigleDownload extends Download implements \IDownload {
         }
 
         $this->database->beginTransaction();
-        $this->saveAll($wifis);
+        $rows = $this->saveAll($wifis);
         $id_wigle_download_queue = $ap['id_wigle_download_queue'];
+
+
+        // stazeno z wigle -> v najdem pokud je v donwload importu tak pridame do google
+        $this->database->table(DownloadImportService::TABLE)
+            ->where('id_wigle_aps',$ap['id'])
+            ->where('state',1)
+            ->update(array('state'=>DownloadImport::DOWNLOADED_WIGLE));
+
+        $googleDownloadService = new GoogleDownload($this->database);
+        foreach($rows as $row) {
+            $googleDownloadService->createRequestFromWifi(Wifi::createWifiFromDBRow($row));
+        }
+
+        $this->database->table(DownloadImportService::TABLE)
+            ->where('id_wigle_aps',$ap['id'])
+            ->where('state',1)
+            ->update(array('state'=>DownloadImport::ADDED_GOOGLE));
 
         $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
         if($id_wigle_download_queue) {
@@ -250,17 +268,30 @@ class WigleDownload extends Download implements \IDownload {
     public function saveAll2WigleAps($id_wigle_download_queue,$mac_addresses,$priority = 1) {
         $this->database->beginTransaction();
         foreach($mac_addresses as $ma) {
-            $array = array(
-                'id_wigle_download_queue'=>$id_wigle_download_queue,
-                'mac'=>$ma,
-                'created'=>new DateTime(),
-                'downloaded'=>0,
-                'priority'=>$priority
-            );
-            $this->database->table('wigle_aps')->insert($array);
+           $this->save2WigleAps($id_wigle_download_queue,$ma,$priority);
         }
         $this->database->commit();
     }
+
+    /**
+     * @param int $id_wigle_download_queue
+     * @param string $mac_address
+     * @param int $priority
+     * @return bool|int|\Nette\Database\Table\IRow
+     */
+    public function save2WigleAps($id_wigle_download_queue,$mac_address,$priority = 1) {
+        $array = array(
+            'id_wigle_download_queue'=>$id_wigle_download_queue,
+            'mac'=>$mac_address,
+            'created'=>new DateTime(),
+            'downloaded'=>0,
+            'priority'=>$priority
+        );
+        $row = $this->database->table('wigle_aps')->insert($array);
+        return $row;
+    }
+
+
 
     /**
      * get count of not downloaded records in wigle_aps table where priority is >= $priority

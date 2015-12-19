@@ -16,10 +16,12 @@ class Download extends BaseService {
     /**
      * save one Wi-fi network into DB
      * @param Wifi $wifi
+     * @return Nette\Database\IRow
      */
     protected function saveSimpleInsert(Wifi $wifi) {
         try {
-            $this->database->query("insert into wifi", $this->prepareArrayForDB($wifi));
+            $row = $this->database->table('wifi')->insert($this->prepareArrayForDB($wifi));
+            return $row;
         }
         catch(\PDOException $e) {
             $this->logger->addLog('wifi-save','nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage(),true);
@@ -29,11 +31,14 @@ class Download extends BaseService {
     /**
      * save whole array of Wi-Fi networks
      * @param Wifi[] $wifis
+     * @return Nette\Database\Table\IRow[]
      */
     protected function saveAll(array $wifis) {
+        $insertedRows = array();
         foreach($wifis as $wifi) {
-            $this->saveSimpleInsert($wifi);
+            $insertedRows[] = $this->saveSimpleInsert($wifi);
         }
+        return $insertedRows;
     }
 
     /**

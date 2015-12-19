@@ -6,6 +6,8 @@
  * Time: 22:15
  */
 namespace App\Presenters;
+use App\Model\DownloadImport;
+use App\Service\DownloadImportService;
 use App\Service\WifiManager;
 use App\Service\WigleDownload;
 use App\Model\MyUtils;
@@ -16,6 +18,8 @@ class ApiPresenter extends BasePresenter {
     public $wigleDownload;
     /** @var WifiManager @inject */
     public $wifiManager;
+    /** @var DownloadImportService @inject */
+    public $downloadImportService;
 
 
     public function actionDownload() {
@@ -68,32 +72,55 @@ class ApiPresenter extends BasePresenter {
 
 
 
-    public function actionAddRequests($data = '../temp/data.mac',$priority = 2,$fromWigle = true,$fromGoogle = false) {
-        // TODO: rozparsovat data
-        //$data = "00:00:00:00:00:00\nff:ff:ff:ff:ff:ff";
+    public function actionAddRequests($data = '../temp/data.mac',$priority = 2) {
+        // rozparsovat data
         $fh = fopen($data, 'r');
         $macAddresses = array(); $count = 0;
         while (!feof($fh)) {
             $mac = fgets($fh);
             if(MyUtils::isMacAddress($mac)) {
                 $mac = MyUtils::macSeparator2Colon($mac);
-                $macAddresses[] = $mac;
+                $macAddresses[] = trim($mac);
                 $count++;
             }
         }
         fclose($fh);
-        if($fromWigle) {
-            $before = $this->wigleDownload->getWigleApsCount($priority);
-            $this->wigleDownload->saveAll2WigleAps(null,$macAddresses,$priority);
-            echo "bude trvat: " . ($count*30) . '+' . ($before*30) . 'minut';
-            // pridat do wigle
+
+        $before = $this->wigleDownload->getWigleApsCount($priority);
+        foreach($macAddresses as $macaddr) {
+            // vytvoreni importu
+            $downloadImport = new DownloadImport();
+            $downloadImport->setMac($macaddr);
+
+            // pridani do wigle fronty
+            $row = $this->wigleDownload->save2WigleAps(null,$macaddr,$priority);
+
+            // nastaveni importu
+            $downloadImport->setIdWigleAps($row->getPrimary());
+            $downloadImport->setState(DownloadImport::ADDED_WIGLE);
+
+            // ulozeni importu
+            dump($downloadImport);
+            $this->downloadImportService->addImport($downloadImport);
         }
-        if($fromGoogle) {
-            // TODO: pridani k google stahovani
-            // pridat do google
-        }
+        echo "bude trvat: " . ($count*30) . '+' . ($before*30) . 'minut';
+
         $this->terminate();
     }
+
+
+    public function actionAdd2GoogleRequests() {
+        $dis = $this->downloadImportService->getDownloadImportsByState(DownloadImport::DOWNLOADED_WIGLE);
+        foreach($dis as $di) {
+            $nets = $this->wifiManager->getNetsByParams(array('mac'=>$di->getMac()));
+            dump($nets);
+
+        }
+
+        $this->terminate();
+    }
+
+
 
 
 }

@@ -49,7 +49,7 @@ class WifiPresenter extends BasePresenter
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
     /** use cache? */
-    const CACHE_ON = false;
+    const CACHE_ON = true;
 
     /** @var array $cacheExpire expiration by zoom, index = zoom, value = seconds */
     private static $cacheExpire = array(0,1,2,3,4,5,6,7,8,9=>86400, // 1 day

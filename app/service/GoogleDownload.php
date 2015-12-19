@@ -13,7 +13,7 @@ use App\Model\Wifi;
 use App\Model\WifiSecurity;
 use Nette\Utils\DateTime;
 
-class GoogleDownload extends Download implements \IDownload {
+class GoogleDownload extends Download implements IDownload {
     /** google source id in DB */
     const ID_SOURCE = 3;
 
