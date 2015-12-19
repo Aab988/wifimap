@@ -133,7 +133,6 @@ class GoogleDownload extends Download implements IDownload {
         // add to url
         $url.='&wifi=mac:'.$w1->getMac().'|ssid:'.urlencode($w1->getSsid()).'|ss:'.$ss1;
         $url.='&wifi=mac:'.$w2->getMac().'|ssid:'.urlencode($w2->getSsid()).'|ss:'.$ss2;
-
         return $url;
     }
 

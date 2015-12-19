@@ -364,6 +364,7 @@ class WifiManager extends BaseService {
 		$coords = Coords::createCoordsRangeByLatLng($wifi->getLatitude(),$wifi->getLongitude(),0.03);
 		return Wifi::createWifiFromDBRow($this->getNetsRangeQuery($coords)
 			->where("id != ?", $wifi->getId())
+			->where('mac != ?',$wifi->getMac())
 			->order("SQRT(POW(latitude-?,2)+POW(longitude-?,2))",$wifi->getLatitude(),$wifi->getLongitude())
 			->limit(1)->fetch());
 	}
@@ -380,6 +381,8 @@ class WifiManager extends BaseService {
 
 
 	/**
+	 * @param int $limit
+	 * @param int $from
 	 * @return \App\Model\Wifi[]
 	 */
 	public function getAllNets($limit=null,$from=null) {
