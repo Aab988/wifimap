@@ -66,7 +66,10 @@ class ApiPresenter extends BasePresenter {
         fclose($file);
 
         // stazeni souboru
-        $this->redirectUrl("../".$filename);
+        $this->payload->file= $filename;
+        $this->sendPayload();
+
+        //$this->redirectUrl("../".$filename);
         $this->terminate();
     }
 

@@ -16,6 +16,8 @@ var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
 
 var ACTUAL_MODE_URL = BASE_URL + "wifi/actualmode";
 
+var API_DOWNLOAD_URL = BASE_URL + "api/download";
+
 // google maps search markers
 var markers = [];
 
@@ -413,6 +415,29 @@ $(document).ready(function () {
     });
 
 
+    $("#exportBtn").click(function(e) {
+        e.preventDefault();
+        ssidmac = $("#frm-searchForm-ssidmac").val();
+        channel = $("#frm-searchForm-channel").val();
+        security = $("#frm-searchForm-security").val();
+        source = $("#frm-searchForm-source").val();
+
+        hashParams.mode = MODE_SEARCH;
+        if (ssidmac) hashParams.ssidmac = ssidmac;
+        if (channel) hashParams.channel = channel;
+        if (security) hashParams.security = security;
+        if (source) hashParams.source = source;
+
+        $.ajax(API_DOWNLOAD_URL, {
+            data: hashParams
+        }).done(function(data) {
+            $("#downloadFile").attr('href',data.file);
+            document.getElementById("downloadFile").click();
+        });
+
+    });
+
+
     $(".hide-btn").click(function() {
         if($(this).parent("div").css("margin-right") == "-200px") {
             $(this).parent("div").animate({
@@ -425,6 +450,9 @@ $(document).ready(function () {
             },500);
         }
     });
+
+
+
 
 });
 
