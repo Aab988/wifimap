@@ -77,6 +77,11 @@ class ApiPresenter extends BasePresenter {
 
     public function actionAddRequests($data = '../temp/data.mac',$priority = 2) {
         // rozparsovat data
+        if(!file_exists($data)) {
+            echo "soubor nenalezen";
+            $this->terminate();
+        }
+
         $fh = fopen($data, 'r');
         $macAddresses = array(); $count = 0;
         while (!feof($fh)) {
