@@ -154,6 +154,8 @@ class GoogleDownload extends Download implements IDownload {
      * @param Wifi $wifi
      */
     public function createRequestFromWifi(Wifi $wifi) {
+        $this->wifiManager = new WifiManager($this->database);
+
         // zjistim jestli dana plocha je jiz stazena z wigle
 
         // ziskam druhou nejblizsi sit

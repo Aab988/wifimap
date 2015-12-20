@@ -279,11 +279,11 @@ AND dr.date = groupeddr.MaxDateTime
 
 
     /**
-     * @param Nette\Database\Table\IRow $request
+     * @param Nette\Database\Table\Selection $request
      * @param int $total_count
      */
     public function setProcessed($request,$total_count=0) {
-        $request->update(array(
+        $this->database->table('download_request')->where('id',$request->id)->update(array(
             'processed' => 'Y',
             'processed_date' => new DateTime(),
             'total_count' => $total_count,
