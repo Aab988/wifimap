@@ -8,7 +8,9 @@
 namespace App\Presenters;
 use App\Model\DownloadImport;
 use App\Service\DownloadImportService;
+use App\Service\SourceManager;
 use App\Service\WifiManager;
+use App\Service\WifiSecurityService;
 use App\Service\WigleDownload;
 use App\Model\MyUtils;
 
@@ -20,6 +22,10 @@ class ApiPresenter extends BasePresenter {
     public $wifiManager;
     /** @var DownloadImportService @inject */
     public $downloadImportService;
+    /** @var SourceManager @inject */
+    public $sourceManager;
+    /** @var WifiSecurityService @inject */
+    public $wifiSecurityService;
 
 
     public function actionDownload() {
@@ -56,10 +62,39 @@ class ApiPresenter extends BasePresenter {
 
         $file = fopen($filename,"w");
 
+        $array = array('Zdroj','Datum pridani', 'MAC', 'SSID', 'latitude', 'longitude', 'altitude',
+            'zabezpeceni', 'kanal', 'presnost', 'wigle komentar', 'wigle nazev', 'typ', 'wigle poprve',
+            'wigle naposledy', 'flags', 'bcninterval');
+
+        fputcsv($file,$array,';');
+
+        $sources = $this->sourceManager->getAllSourcesAsKeyVal();
+        $securities = $this->wifiSecurityService->getAllWifiSecurityTypes(false);
+
         for($i = 0; $i <= $netsCount; $i+=1000) {
             $nets = $this->wifiManager->getNetsByParams($params,1000,$i);
+
             foreach($nets as $net) {
-                fputcsv($file,$net->toArray(),';');
+                $array = array(
+                    'zdroj' => $sources[$net->id_source],
+                    'pridano' => $net->date_added,
+                    'mac' => $net->mac,
+                    'ssid' => $net->ssid,
+                    'latitude' => $net->latitude,
+                    'longitude' => $net->longitude,
+                    'altitude' => $net->altitude,
+                    'zabezpeceni' => $securities[$net->sec],
+                    'kanal' => $net->channel,
+                    'presnost' => $net->accuracy,
+                    'comment' => $net->comment,
+                    'name' => $net->name,
+                    'type' => $net->type,
+                    'firsttime' => $net->firsttime,
+                    'lasttime' => $net->lasttime,
+                    'flags' => $net->flags,
+                    'bcninterval' => $net->bcninterval
+                );
+                fputcsv($file,$array,';');
             }
         }
 
