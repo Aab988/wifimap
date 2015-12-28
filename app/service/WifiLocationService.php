@@ -16,6 +16,10 @@ class WifiLocationService extends BaseService {
 
     const RADIUS = 0.003;
 
+    /**
+     * @param Wifi $wifi
+     * @return array|\Nette\Database\Table\IRow[]
+     */
     public function getLocation(Wifi $wifi) {
 
         $this->wifiManager = new WifiManager($this->database);
@@ -31,9 +35,7 @@ class WifiLocationService extends BaseService {
 
         $coords = new Coords($lat1,$lat2,$lon1,$lon2);
 
-
-        $nets = $this->wifiManager->getNetsModeSearch($coords, array('ssid'=>$wifi->getSsid()));
-
+        $nets = $this->wifiManager->getNetsModeSearch($coords, array('mac'=>$wifi->getMac()));
 
         return $nets;
 

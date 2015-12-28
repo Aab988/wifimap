@@ -49,7 +49,7 @@ class WifiPresenter extends BasePresenter
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
     /** use cache? */
-    const CACHE_ON = true;
+    const CACHE_ON = false;
 
     /** @var array $cacheExpire expiration by zoom, index = zoom, value = seconds */
     private static $cacheExpire = array(0,1,2,3,4,5,6,7,8,9=>86400, // 1 day
@@ -320,8 +320,10 @@ class WifiPresenter extends BasePresenter
                 break;
             case self::MODE_CALCULATED:
                 $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
+                //dump($net);
                 $nets = $this->wifiLocationService->getLocation($net);
-                $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('ssid'=>$net->getSsid()));
+                //dump($nets);
+                $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('mac'=>$net->getMac()));
                 $latt = 0; $lont = 0;
                 foreach($nets as $net) {
                     $latt += $net->latitude;
