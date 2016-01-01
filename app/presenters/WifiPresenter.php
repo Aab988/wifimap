@@ -13,6 +13,7 @@ use App\Service\WifiManager;
 use App\Service\WifiSecurityService;
 use Nette;
 use Nette\Caching\Cache;
+use Tracy\Debugger;
 
 class WifiPresenter extends BasePresenter
 {
@@ -221,7 +222,7 @@ class WifiPresenter extends BasePresenter
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
         header("Content-type: image/png");
-        DownloadPresenter::setIni(180, '1024M');
+        MyUtils::setIni(180, '1024M');
         $request = $this->getHttpRequest();
 
         // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod
@@ -357,7 +358,7 @@ class WifiPresenter extends BasePresenter
 
 
     public function renderCountPosition() {
-        DownloadPresenter::setIni(18000, '2048M');
+        MyUtils::setIni(18000, '2048M');
         $nets = array(1);
         $from = 0;
         while(count($nets)>0) {
@@ -380,27 +381,13 @@ class WifiPresenter extends BasePresenter
 
 
     public function renderActualMode() {
-        foreach($this->getHttpRequest()->getQuery() as $key => $val) {
-            switch($key) {
-                case 'gm': echo ""; break;
-                case 'mode':
-                    echo "<h5>Mód: ";
-                    echo (array_key_exists($val,self::$modesLabels))?self::$modesLabels[$val]:$val;
-                    echo "</h5>";
-                    break;
-                case 'channel':
-                    echo 'Kanál: ' . htmlspecialchars($val) . "<br />"; break;
-                case 'security':
-                    echo 'Zabezpečení: ' . $this->wifisecService->getById(intval($val))->label . "<br />"; break;
-                case 'source':
-                    echo 'Zdroj: ' . $this->sourceManager->getById(intval($val))->name . "<br />"; break;
-                case 'ssidmac':
-                    echo 'SSID/MAC: ' . htmlspecialchars($val) . "<br />"; break;
-                default:
-                    echo $key . ":" . htmlspecialchars($val) . "<br />"; break;
-            }
-        }
-        $this->terminate();
+        Debugger::$productionMode = true;
+        $params = $this->request->getParameters();
+        if(isset($params['security'])) $params['security'] = $this->wifisecService->getById(intval($params['security']))->label;
+        if(isset($params['mode'])) $params['mode'] = (array_key_exists($params['mode'],self::$modesLabels))?self::$modesLabels[$params['mode']]:$params['mode'];
+        if(isset($params['source'])) $params['source'] = ($this->sourceManager->getById(intval($params['source'])))?$this->sourceManager->getById(intval($params['source']))->name:$params['source'];
+        unset($params['id']); unset($params['gm']);unset($params['action']);
+        $this->template->parameters = $params;
     }
 
 }

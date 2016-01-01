@@ -9,16 +9,32 @@ use App\Presenters\WifiPresenter;
 use Nette;
 class MyUtils extends Nette\Object {
 
+    /**
+     * return if string is mac address
+     *
+     * @param string $string
+     * @return int
+     */
     public static function isMacAddress($string) {
         return preg_match("^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})^", urldecode($string));
     }
 
-
+    /**
+     * replace - to : in mac address
+     *
+     * @param string $mac
+     * @return mixed
+     */
     public static function macSeparator2Colon($mac) {
         return str_replace("-",":",$mac);
     }
 
-
+    /**
+     * returns image as string
+     *
+     * @param $img
+     * @return string
+     */
     public static function image2string($img) {
         ob_start();
         imagepng($img);
@@ -27,8 +43,9 @@ class MyUtils extends Nette\Object {
         return $image;
     }
 
-
     /**
+     * generate key for cache save
+     *
      * @param string $mode
      * @param Coords $coords
      * @param array[] $params
@@ -47,5 +64,21 @@ class MyUtils extends Nette\Object {
         }
         return $key;
     }
+
+
+    /**
+     * set script variables if server is not in safe_mode
+     *
+     * @param int $max_execution_time number of seconds
+     * @param string $max_memory fe: '256M'
+     *
+     */
+    public static function setIni($max_execution_time,$max_memory) {
+        if(!ini_get('safe_mode')) {
+            set_time_limit($max_execution_time);
+            ini_set('memory_limit',$max_memory);
+        }
+    }
+
 
 }

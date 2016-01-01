@@ -12,6 +12,7 @@ use Nette\Http\UrlScript;
 class DownloadPresenter extends BasePresenter {
 
     const FROM_TEMP_DIR_KEY = 'fromtempdir';
+
     /** @var \App\Service\WigleDownload @inject */
     public $wigleDownload;
     /** @var \App\Service\WifileaksDownload @inject */
@@ -38,12 +39,10 @@ class DownloadPresenter extends BasePresenter {
 		$this->terminate();
     }
 
-
     /**
      * DOWNLOAD OBSERVATIONS OF MAC ADDRESS FROM WIGLE
      */
     public function renderWigleObservations() {
-
         if($this->wigleDownload) {
             $this->wigleDownload->downloadObservations();
         }
@@ -56,7 +55,7 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderWifileaks() {
-        self::setIni(1800,'512M');
+        MyUtils::setIni(1800,'512M');
         $fromtempdir = $this->getHttpRequest()->getQuery(self::FROM_TEMP_DIR_KEY);
         if($fromtempdir) {
             //TODO:
@@ -92,27 +91,7 @@ class DownloadPresenter extends BasePresenter {
         $this->terminate();
     }
 
-    /**
-     * set script variables
-     *
-     * @param int $max_execution_time number of seconds
-     * @param string $max_memory fe: '256M'
-     *
-     */
-    public static function setIni($max_execution_time,$max_memory) {
-        if(ini_get('safe_mode')) {
-            //echo "safe mode is on";
-        }
-        else {
-            //echo "Safe mode is off";
-            set_time_limit($max_execution_time);
-            $is = ini_set('memory_limit',$max_memory);
-            if(!$is) {
-                //echo "<br />nepovedlo se zvysit maximum memory";
-            }
-        }
 
-    }
 
 
     public function renderPrepareWigleDownload($lat_start,$lat_end,$lon_start,$lon_end) {
@@ -204,7 +183,7 @@ class DownloadPresenter extends BasePresenter {
      * @throws \Nette\Application\AbortException
      */
     public function renderProcessWigleRequest() {
-        self::setIni(1200, '256M');
+        MyUtils::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);

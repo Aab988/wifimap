@@ -26,6 +26,7 @@ class Download extends BaseService {
         catch(\PDOException $e) {
             $this->logger->addLog('wifi-save','nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage(),true);
         }
+        return;
     }
 
     /**

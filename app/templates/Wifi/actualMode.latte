@@ -1,0 +1,17 @@
+{foreach $parameters as $k=>$p}
+{switch $k}
+{case 'mode'}
+<h5>Mód: {$p}</h5>
+{case 'channel'}
+Kanál: {$p}<br />
+{case 'security'}
+Zabezpečení: {$p}<br />
+{case 'source'}
+Zdroj: {$p}<br />
+{case 'ssidmac'}
+SSID/MAC: {$p}<br />
+{default}
+{$k}: {$p}<br />
+{/switch}
+{/foreach}
+
