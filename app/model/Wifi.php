@@ -446,11 +446,6 @@ class Wifi extends Nette\Object {
                     $this->sec = 4;break;
             }
         }
-
-
-
-
-
     }
 
     /**
@@ -484,8 +479,6 @@ class Wifi extends Nette\Object {
     {
         $this->accuracy = $accuracy;
     }
-
-
 
 
 }

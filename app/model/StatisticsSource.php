@@ -83,8 +83,4 @@ class StatisticsSource extends  Nette\Object {
     }
 
 
-
-
-
-
 }

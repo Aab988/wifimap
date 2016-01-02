@@ -12,7 +12,6 @@ class Source extends Nette\Object  {
     /** @var  string $name */
     private $name;
 
-
     /**
      * @param int $id
      * @param string $name
@@ -53,10 +52,5 @@ class Source extends Nette\Object  {
     {
         $this->name = $name;
     }
-
-
-
-
-
 
 }

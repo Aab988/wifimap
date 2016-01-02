@@ -5,8 +5,8 @@
  * Time: 15:18
  */
 namespace App\Model;
-use App\Presenters\WifiPresenter;
 use Nette;
+
 class MyUtils extends Nette\Object {
 
     /**
@@ -65,7 +65,6 @@ class MyUtils extends Nette\Object {
         return $key;
     }
 
-
     /**
      * set script variables if server is not in safe_mode
      *
@@ -79,6 +78,5 @@ class MyUtils extends Nette\Object {
             ini_set('memory_limit',$max_memory);
         }
     }
-
 
 }

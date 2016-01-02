@@ -158,13 +158,4 @@ class Statistics extends Nette\Object {
         $this->statisticsSource = $statisticsSource;
     }
 
-
-
-
-
-
-
-
-
-
 }

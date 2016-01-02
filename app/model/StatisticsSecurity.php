@@ -63,8 +63,4 @@ class StatisticsSecurity extends Nette\Object {
         $this->total_nets = $total_nets;
     }
 
-
-
-
-
 }

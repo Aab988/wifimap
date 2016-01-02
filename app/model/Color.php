@@ -6,6 +6,7 @@
  */
 namespace App\Model;
 class Color {
+
     public $r, $g, $b;
 
     public function __construct($r = 0,$g = 0,$b = 0) {

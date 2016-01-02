@@ -7,12 +7,14 @@
 namespace App\Model;
 class Coords {
 
-
-    private $lat_start; /** @var  float */
-    private $lat_end; /** @var  float */
-    private $lon_start; /** @var  float */
-    private $lon_end; /** @var float */
-
+    /** @var float $lat_start */
+    private $lat_start;
+    /** @var float $lat_end */
+    private $lat_end;
+    /** @var float $lon_start */
+    private $lon_start;
+    /** @var float $lon_end */
+    private $lon_end;
 
     /**
      * @param string|float $lat1
@@ -25,8 +27,7 @@ class Coords {
     }
 
     /**
-     * gets doubleval of all values and sort them by size
-     *  and set as object values
+     * gets doubleval of all values and sort them by size and set as object values
      *
      * @param string|float $lat1
      * @param string|float $lat2
@@ -35,26 +36,10 @@ class Coords {
      * @return array
      */
     public function sortCoordsLatLngBySize($lat1,$lat2,$lon1,$lon2) {
-        $lat1 = doubleval($lat1);
-        $lat2 = doubleval($lat2);
-        $lon1 = doubleval($lon1);
-        $lon2 = doubleval($lon2);
-
-        if($lat1 > $lat2) {
-            $tmp = $lat2;
-            $lat2 = $lat1;
-            $lat1 = $tmp;
-        }
-        if($lon1 > $lon2) {
-            $tmp = $lon2;
-            $lon2 = $lon1;
-            $lon1 = $tmp;
-        }
-
-        $this->lat_start = $lat1;
-        $this->lat_end = $lat2;
-        $this->lon_start = $lon1;
-        $this->lon_end = $lon2;
+        $this->lat_start = (doubleval($lat1) < doubleval($lat2)) ? doubleval($lat1) : doubleval($lat2);
+        $this->lat_end = (doubleval($lat2) > doubleval($lat1)) ? doubleval($lat2) : doubleval($lat1);
+        $this->lon_start = (doubleval($lon1) < doubleval($lon2)) ? doubleval($lon1) : doubleval($lon2);
+        $this->lon_end = (doubleval($lon2) > doubleval($lon1)) ? doubleval($lon2) : doubleval($lon1);
     }
 
     /**
@@ -80,7 +65,6 @@ class Coords {
         return abs($this->lon_end - $this->lon_start);
     }
 
-
     /**
      * enlarge latitude range by $k * deltaLatitude
      * @param float $k
@@ -100,7 +84,6 @@ class Coords {
         $this->lon_start = $this->lon_start - ($k * $deltaLon);
         $this->lon_end = $this->lon_end + ($k * $deltaLon);
     }
-
 
     /**
      * @param float $lat
@@ -133,14 +116,12 @@ class Coords {
         return ($this->lon_start + $this->lon_end) / 2.0;
     }
 
-
     /**
      * @return string
      */
     public function toString() {
         return 'latitude: from:' . $this->getLatStart() . ',to:' . $this->getLatEnd() . ', longitude: from: ' . $this->getLonStart() . ',to:' . $this->getLonEnd();
     }
-
 
     /**
      * @return mixed
@@ -205,11 +186,5 @@ class Coords {
     {
         $this->lon_end = $lon_end;
     }
-
-
-
-
-
-
 
 }
