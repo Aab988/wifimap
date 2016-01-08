@@ -136,7 +136,7 @@ class WifiPresenter extends BasePresenter
             $f = $r->fetch();
             if ($f) {
                 $detail = Wifi::createWifiFromDBRow($f);
-                $detail->setSec($this->wifisecService->getById($f->sec));
+                $detail->setSec($this->wifisecService->getById($f->sec)->getId());
             }
         }
         $json = array();
@@ -149,7 +149,9 @@ class WifiPresenter extends BasePresenter
             $json['lng'] = $detail->getLongitude();
         }
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
-        $detail->setSec($this->wifisecService->getById($detail->getSec()));
+
+        // TODO: pokud detail je null osetrit
+        $detail->setSec($this->wifisecService->getById($detail->getSec())->getId());
         $detail->setSource($this->sourceManager->getById($detail->getSource()));
         $this->template->detail = $detail;
 
@@ -383,7 +385,7 @@ class WifiPresenter extends BasePresenter
     public function renderActualMode() {
         Debugger::$productionMode = true;
         $params = $this->request->getParameters();
-        if(isset($params['security'])) $params['security'] = $this->wifisecService->getById(intval($params['security']))->label;
+        if(isset($params['security'])) $params['security'] = $this->wifisecService->getById(intval($params['security']))->getLabel();
         if(isset($params['mode'])) $params['mode'] = (array_key_exists($params['mode'],self::$modesLabels))?self::$modesLabels[$params['mode']]:$params['mode'];
         if(isset($params['source'])) $params['source'] = ($this->sourceManager->getById(intval($params['source'])))?$this->sourceManager->getById(intval($params['source']))->name:$params['source'];
         unset($params['id']); unset($params['gm']);unset($params['action']);

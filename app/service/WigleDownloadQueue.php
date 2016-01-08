@@ -232,13 +232,6 @@ class WigleDownloadQueue extends BaseService {
 
 
     /**
-     * @param Nette\Database\Context $database
-     */
-    public function setDatabase($database) {
-        $this->database = $database;
-    }
-
-    /**
      * @return array
      */
     public function getGeneratedCoords()

@@ -10,9 +10,19 @@ use App\Model\WifiSecurity;
 
 class WifiSecurityService extends BaseService {
 
+    const TABLE = "wifi_security";
 
+    /**
+     * @param int $id
+     * @return WifiSecurity
+     */
     public function getById($id) {
-        return $this->database->table("wifi_security")->where("id",$id)->fetch();
+        $ws = new WifiSecurity();
+        $row = $this->database->table(self::TABLE)->where("id",$id)->fetch();
+        if($row) {
+            $ws = new WifiSecurity($row->id,$row->label);
+        }
+        return $ws;
     }
 
     /**
@@ -21,12 +31,12 @@ class WifiSecurityService extends BaseService {
      */
     public function getAllWifiSecurityTypes($asObject = true) {
         $wstypes = array();
-        $wss = $this->database->table("wifi_security")->fetchAll();
+        $wss = $this->database->table(self::TABLE)->fetchAll();
         foreach ($wss as $ws) {
             if($asObject) {
                 $wstypes[] = new WifiSecurity($ws->id,$ws->label);
             }
-            else {$wstypes[$ws->id] = $ws->label;}
+            else { $wstypes[$ws->id] = $ws->label; }
         }
         return $wstypes;
     }

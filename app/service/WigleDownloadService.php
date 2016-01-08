@@ -85,13 +85,4 @@ class WigleDownloadService extends BaseService {
     }
 
 
-
-
-
-
-
-
-
-
-
 }

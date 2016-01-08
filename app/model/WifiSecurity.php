@@ -8,20 +8,19 @@ use Nette;
  */
 class WifiSecurity extends Nette\Object {
 
+    /** @var int id */
+    private $id;
+    /** @var string $label */
+    private $label;
 
     /**
      * @param int $id
      * @param string $label
      */
-    public function __construct($id=0,$label="") {
+    public function __construct($id=0,$label="N/A") {
         $this->id = $id;
         $this->label = $label;
     }
-
-    /** @var int id */
-    private $id;
-    /** @var string $label */
-    private $label;
 
     /**
      * @return int
@@ -54,6 +53,5 @@ class WifiSecurity extends Nette\Object {
     {
         $this->label = $label;
     }
-
 
 }

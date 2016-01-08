@@ -25,8 +25,8 @@ class Download extends BaseService {
         }
         catch(\PDOException $e) {
             $this->logger->addLog('wifi-save','nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage(),true);
+            return null;
         }
-        return;
     }
 
     /**
@@ -63,6 +63,7 @@ class Download extends BaseService {
             }
         }
         if(count($data)) {
+            // TODO: osetrit ze uz existuje (DUPLIKATNI KLIC)
             $this->database->query("insert into wifi", $data);
         }
     }
@@ -100,12 +101,5 @@ class Download extends BaseService {
             "accuracy"=>$wifi->getAccuracy()
         );
         return $array;
-    }
-
-    /**
-     * @return Nette\Database\Context
-     */
-    public function getDatabase() {
-        return $this->database;
     }
 }
