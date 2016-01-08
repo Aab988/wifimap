@@ -154,8 +154,10 @@ class WigleDownload extends Download implements IDownload {
             ->update(array('state'=>DownloadImport::DOWNLOADED_WIGLE));
 
         $googleDownloadService = new GoogleDownload($this->database);
-        foreach($rows as $row) {
-            $googleDownloadService->createRequestFromWifi(Wifi::createWifiFromDBRow($row));
+        if ($rows) foreach($rows as $row) {
+            $w = Wifi::createWifiFromDBRow($row);
+            if($w) $googleDownloadService->createRequestFromWifi($w);
+            // TODO: pokud neni - co udelat
         }
 
         $this->database->table(DownloadImportService::TABLE)
