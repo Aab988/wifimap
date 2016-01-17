@@ -143,9 +143,18 @@ class WigleDownloadQueue extends BaseService {
     private function improveLatLngRange($coords) {
         $nc = array();
         $count = $this->analyzeImage($coords);
-        $this->logger->addLog("count-colors","count: $count",true);
+        //$this->logger->addLog("count-colors","count: $count",true);
 
-        if($count > self::MAX_RESULTS_COUNT) {
+        $strLonEnd = (string)$coords->getLonEnd();
+        $strLonEnd = explode('.',$strLonEnd);
+        $strLonEndLen = strlen($strLonEnd[1]);
+
+        $strLatEnd = (string)$coords->getLatEnd();
+        $strLatEnd = explode('.',$strLatEnd);
+        $strLatEndLen = strlen($strLatEnd[1]);
+
+        if($count > self::MAX_RESULTS_COUNT && ($strLatEndLen <= 6 || $strLonEndLen <= 6)) {
+
             $this->logger->addLog("nesting","count: $count",true);
 
             for($lat = round($coords->getLatStart(),6); round($lat,6) < round($coords->getLatEnd(),6); $lat += ($coords->getLatEnd() - $coords->getLatStart())/2.0) {
@@ -174,7 +183,7 @@ class WigleDownloadQueue extends BaseService {
      * @return int
      */
     private function analyzeImage($coords) {
-
+        // TODO: ziskavat i jinak celky obrazek nez ctverec pokud mam jiny rozsah souradnic nez ctverec?
         $params = array(
             "lat1"=>$coords->getLatStart(),
             "long1"=>$coords->getLonStart(),

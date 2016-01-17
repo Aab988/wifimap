@@ -131,12 +131,13 @@ class WifiPresenter extends BasePresenter
         if ($httpr->getQuery("net")) {
             $net = intval($httpr->getQuery("net"));
             $detail = $this->wifiManager->getWifiById($net);
+            $detail->setSec($this->wifisecService->getById($detail->getSec()));
             $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->latitude, $detail->longitude);
         } else {
             $f = $r->fetch();
             if ($f) {
                 $detail = Wifi::createWifiFromDBRow($f);
-                $detail->setSec($this->wifisecService->getById($f->sec)->getId());
+                $detail->setSec($this->wifisecService->getById($f->sec));
             }
         }
         $json = array();
@@ -151,13 +152,17 @@ class WifiPresenter extends BasePresenter
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
 
         // TODO: pokud detail je null osetrit
-        $detail->setSec($this->wifisecService->getById($detail->getSec())->getId());
+
+        //$detail->setSec($this->wifisecService->getById($detail->getSec()));
         $detail->setSource($this->sourceManager->getById($detail->getSource()));
         $this->template->detail = $detail;
 
         $this->template->others = $others;
         $temp = (string)$this->template;
         $json['iw'] = $temp;
+
+
+
         if($detail == null) {
             $json['success'] = false;
         }

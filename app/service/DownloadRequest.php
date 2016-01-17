@@ -261,14 +261,17 @@ AND dr.date = groupeddr.MaxDateTime
         // get all requests in this range
         $data = $this->getAllRequestsInLatLngRange($coords,$idSource);
 
-
         // create latitude, longitude XY mapping
         $mapping = $this->createMappingXY($data,$coords);
+
+
         $mappingX = $mapping['xMap'];
         $mappingY = $mapping['yMap'];
 
+
         // create mapepd array
         $array = $this->createMappedArray($data,$mappingX,$mappingY);
+
         // find rectangles
         $rects = $this->findRectanglesIn01Array($array);
         // unmap rectangles back to latitude and longitude

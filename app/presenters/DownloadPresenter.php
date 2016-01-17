@@ -185,11 +185,13 @@ class DownloadPresenter extends BasePresenter {
     public function renderProcessWigleRequest() {
         MyUtils::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
-        $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
-        $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
-        $total_count = count($this->downloadQueue->getGeneratedCoords());
-        $this->downloadQueue->save($req->id);
-        $this->downloadRequest->setProcessed($req,$total_count);
+        if($req) {
+            $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
+            $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
+            $total_count = count($this->downloadQueue->getGeneratedCoords());
+            $this->downloadQueue->save($req->id);
+            $this->downloadRequest->setProcessed($req,$total_count);
+        }
         $this->terminate();
     }
 
@@ -206,6 +208,7 @@ class DownloadPresenter extends BasePresenter {
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\GoogleDownload::ID_SOURCE);
         $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
         $this->googleDownload->createRequestFromArea($coords);
+        // TODO: nastavovat total_count na pocet zaznamu pridanych do google_request?
         $this->downloadRequest->setProcessed($req);
         $this->terminate();
     }
