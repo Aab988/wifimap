@@ -1,5 +1,6 @@
 <?php
 namespace App\Service;
+use App\Model\Log;
 use App\Model\Wifi;
 use Nette\Utils\ArrayList;
 use Nette\Utils\DateTime;
@@ -40,10 +41,10 @@ class WifileaksDownload extends Download implements IDownload {
         if($file_name != "") {
             try {
                 $insertedRows = $this->parseData($file_name);
-                $this->logger->addLog("wifileaks-download","stazeno $insertedRows siti");
+                $this->logger->addLog(new Log(Log::TYPE_INFO,'WIFILEAKS DOWNLOAD','ulozeno ' . $insertedRows . ' siti'));
             }
             catch(\Exception $e) {
-                $this->logger->addLog("error","wifileaks download error" . $e->getMessage());
+                $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFILEAKS DOWNLOAD','Nepodarilo se ulozit. Zprava: ' . $e->getMessage().'/n'));
             }
         }
         else {
@@ -64,22 +65,22 @@ class WifileaksDownload extends Download implements IDownload {
                 $lddc = $this->sourceManager->getLatestDownloadDataByIdSource(self::ID_SOURCE);
                 if($lddc) {
                     if($lddc == $latest['file']) {
-                        $this->logger->addLog("wifileaks-download","nenalezena zmena");
-                        $this->logger->save();
+                        $this->logger->addLog(new Log(Log::TYPE_INFO,'WIFILEAKS DOWNLOAD','NENALEZENA ZMENA - NEJAKTUALNEJSI SOUBOR JIZ BYL ZPRACOVAN'));
+                        echo 'NENALEZENA ZMENA - NEJAKTUALNEJSI SOUBOR JIZ BYL ZPRACOVAN';
                         return;
                     }
                 }
 
                 $filePath = self::WIFILEAKS_DOWNLOAD_DIR . $latest['file'];
                 $insertedRows  = $this->parseData($filePath);
-                $this->logger->addLog("wifileaks-download","stazeno $insertedRows siti");
+                $this->logger->addLog(new Log(Log::TYPE_INFO,'WIFILEAKS DOWNLOAD','ulozeno ' . $insertedRows . ' siti'));
                 $this->sourceManager->saveLatestDownloadDataByIdSource(self::ID_SOURCE,$latest['file']);
             }
             else {
-                $this->logger->addLog("wifileaks-download","pokus o stazeni z wifileaks nebyl uspesny - zadny soubor nevyhovuje regularnimu vyrazu " . self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN);
+                echo 'POKUS O STAZENI Z WIFILEAKS NEBYL USPESNY - ZADNY SOUBOR NEVYHOVUJE REGULARNIMU VYRAZU: ' . self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN;
+                $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFILEAKS DOWNLOAD','POKUS O STAZENI Z WIFILEAKS NEBYL USPESNY - ZADNY SOUBOR NEVYHOVUJE REGULARNIMU VYRAZU: ' . self::WIFILEAKS_DOWNLOAD_FILENAME_PATTERN));
             }
         }
-        $this->logger->save();
     }
 
     /**

@@ -5,10 +5,15 @@
  * Time: 17:10
  */
 namespace App\Service;
+use App\Model\Log;
 use Nette;
 class Logger extends Nette\Object {
+
+    const TABLE = 'log';
+
     /** @var Nette\Database\Context */
     private $database;
+
     /** @var array */
     private $logs = array();
 
@@ -22,30 +27,10 @@ class Logger extends Nette\Object {
     /**
      * add log message
      *
-     * @param string $operation
-     * @param string $description
-     * @param bool|false $saveImediately
+     * @param Log $log
      */
-    public function addLog($operation,$description='',$saveImediately = false) {
-        $this->logs[] = array("operation"=>$operation,"data"=>$description);
-        if($saveImediately) $this->save();
-    }
-
-
-    /**
-     * save all logs
-     */
-    public function save() {
-        if(count($this->logs)) {
-            $this->database->table("log")->insert($this->logs);
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public function getLogs() {
-        return $this->logs;
+    public function addLog(Log $log) {
+        $this->database->table(self::TABLE)->insert($log->toArray());
     }
 
 }

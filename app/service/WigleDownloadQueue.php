@@ -83,8 +83,6 @@ class WigleDownloadQueue extends BaseService {
         foreach($coords as $key=>$ar) {
             $coords[$key] = $this->improveLatLngRange($ar);
             $i++;
-            $procent = ($i / (double)count($coords)) * 100;
-            $this->logger->addLog("wigle-generation","data => ".$ar->toString().",procent = ".$procent);
         }
         $this->iterateArray($coords);
     }
@@ -154,8 +152,6 @@ class WigleDownloadQueue extends BaseService {
         $strLatEndLen = strlen($strLatEnd[1]);
 
         if($count > self::MAX_RESULTS_COUNT && ($strLatEndLen <= 6 || $strLonEndLen <= 6)) {
-
-            $this->logger->addLog("nesting","count: $count",true);
 
             for($lat = round($coords->getLatStart(),6); round($lat,6) < round($coords->getLatEnd(),6); $lat += ($coords->getLatEnd() - $coords->getLatStart())/2.0) {
                 for ($lon = round($coords->getLonStart(),6); round($lon,6) < round($coords->getLonEnd(),6); $lon += ($coords->getLonEnd() - $coords->getLonStart()) / 2.0) {

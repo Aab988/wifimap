@@ -9,6 +9,7 @@ namespace App\Service;
 
 
 use App\Model\Coords;
+use App\Model\Log;
 use App\Model\Wifi;
 use App\Model\WifiSecurity;
 use Nette\Utils\DateTime;
@@ -101,7 +102,7 @@ class GoogleDownload extends Download implements IDownload {
                 }
                 else {
                     // neukladat -> zalogovat
-                    $this->logger->addLog('google-download','URL='.$url);
+                    $this->logger->addLog(new Log(Log::TYPE_WARNING,'GOOGLE DOWNLOAD','Moc mala presnost: ' . $data->accuracy.'/nURL='.$url));
                 }
                 $this->database->table("google_request")
                     ->where("id",$ws->id)
@@ -109,7 +110,6 @@ class GoogleDownload extends Download implements IDownload {
                 // nastavit priznak staezno na download
             }
         }
-        $this->logger->save();
         $this->saveMultiInsert($wifis,self::REQUESTS_LIMIT);
     }
 

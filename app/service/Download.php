@@ -1,5 +1,6 @@
 <?php
 namespace App\Service;
+use App\Model\Log;
 use App\Model\Wifi;
 use Nette;
 
@@ -24,7 +25,7 @@ class Download extends BaseService {
             return $row;
         }
         catch(\PDOException $e) {
-            $this->logger->addLog('wifi-save','nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage(),true);
+            $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFI INSERT', 'nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage()));
             return null;
         }
     }

@@ -22,7 +22,6 @@ class BaseService extends Nette\Object {
     const CRON_TIME_PROCESS_GOOGLE_REQUEST = 30;
 
 
-
     /** @var Nette\Database\Context */
     protected $database;
     /** @var Logger */

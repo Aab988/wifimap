@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 use App\Model\DownloadImport;
+use App\Model\Log;
 use App\Model\MyUtils;
 use Nette\Database\SqlLiteral;
 use Nette\Utils;
@@ -54,7 +55,6 @@ class WigleDownload extends Download implements IDownload {
         $this->loginToWigle();
         $query = $this->downloadQueue->getRandomNotDownloadedRecord();
         if(!$query) {
-            $this->logger->addLog('wigle-download','nebyl vracen zadny nestazeny zaznam z tabulky wigle_download_queue',true);
             return;
         }
         $id_download_request = $query->id_download_request;
@@ -102,7 +102,7 @@ class WigleDownload extends Download implements IDownload {
             $this->database->commit();
         }
         else {
-            $this->logger->addLog('wigle-download','too many queries',true);
+            $this->logger->addLog(new Log(Log::TYPE_WARNING,'WIGLE DOWNLOAD','moc pozadavku'));
         }
     }
 
