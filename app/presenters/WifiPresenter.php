@@ -144,6 +144,7 @@ class WifiPresenter extends BasePresenter
         $others = $r->fetchAll();
         $this->template->count = count($others);
 
+
         if ($detail) {
             unset($others[$detail->getId()]);
             $json['lat'] = $detail->getLatitude();

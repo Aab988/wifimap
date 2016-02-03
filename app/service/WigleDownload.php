@@ -62,8 +62,20 @@ class WigleDownload extends Download implements IDownload {
         $results = $this->getDataFromWigle($coords, (int) $query["from"]);
         $results_decoded = json_decode($results,true);
         if($results_decoded["success"] == true) {
-            $mac_addresses = $this->parseData2MacAddresses($results_decoded);
+
+            // rozparsovat data
+            $data = $this->parseData($results_decoded);
+            $mac_addresses = array();
+            // vybrat vsechny mac adresy a body nastavit jako hrube
+            foreach($data as $w) {
+                $mac_addresses[] = $w->getMac();
+                $w->setCalculated(1);
+            }
+
+            // ulozit mac adresy k dalsimu zpracovani
             $this->saveAll2WigleAps($query['id'],$mac_addresses);
+            // ulozit vypoctene body
+            $this->saveAll($data);
 
             // transakcne vlozime
             $this->database->beginTransaction();
@@ -73,7 +85,7 @@ class WigleDownload extends Download implements IDownload {
                 "count_downloaded_observations"=>0,
             ));
 
-            // TODO: NEUPRAVOVAT -> ZMENA STAHOVANI
+            // NEUPRAVOVAT -> ZMENA STAHOVANI
             /**
             // upravit downlaod request
             $this->database->table('download_request')
@@ -178,8 +190,6 @@ class WigleDownload extends Download implements IDownload {
 
 
     }
-
-
 
     /**
      * create and exec CURL request
@@ -317,7 +327,7 @@ class WigleDownload extends Download implements IDownload {
     public function parseLine($line) {
         $wifi = new Wifi();
 
-        $wifi->setMac($line['netid']);
+        $wifi->setMac(MyUtils::macSeparator2Colon($line['netid']));
         $wifi->setSsid(($line['ssid']) ? $line['ssid'] : "");
         $wifi->setComment(trim($line['comment']));
         $wifi->setName(trim($line['name']));

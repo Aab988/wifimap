@@ -244,7 +244,7 @@ class WifiManager extends BaseService {
 			default:
 				$sql = $this->getNetsRangeQuery($requestCoords);
 		}
-		$sql->select("id,id_source,mac,date_added,sec,channel,freenet,paynet,latitude,longitude,ssid,channel,altitude,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
+		$sql->select("*,SQRT(POW(latitude-?,2)+POW(longitude-?,2)) AS distance ",doubleval($click_lat),doubleval($click_lon));
 		$sql->order("distance");
 		return $sql;
 	}

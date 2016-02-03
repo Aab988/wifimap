@@ -98,7 +98,8 @@ class Download extends BaseService {
             "channel" => $wifi->getChannel(),
             "bcninterval" => $wifi->getBcninterval(),
             "qos" => $wifi->getQos(),
-            "accuracy"=>$wifi->getAccuracy()
+            "accuracy"=>$wifi->getAccuracy(),
+            "calculated"=>$wifi->getCalculated()
         );
         return $array;
     }

@@ -50,8 +50,10 @@ class Wifi extends Nette\Object {
     private $source;
     /** @var Nette\Utils\DateTime */
     private $date_added;
-    /** @var int */
+    /** @var int $accuracy */
     private $accuracy = 0;
+    /** @var int $calculated */
+    private $calculated = 0;
 
 
     /**
@@ -480,5 +482,20 @@ class Wifi extends Nette\Object {
         $this->accuracy = $accuracy;
     }
 
+    /**
+     * @return int
+     */
+    public function getCalculated()
+    {
+        return $this->calculated;
+    }
+
+    /**
+     * @param int $calculated
+     */
+    public function setCalculated($calculated)
+    {
+        $this->calculated = $calculated;
+    }
 
 }
