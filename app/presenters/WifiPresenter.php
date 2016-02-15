@@ -231,14 +231,15 @@ class WifiPresenter extends BasePresenter
     {
         header("Content-type: image/png");
         MyUtils::setIni(180, '1024M');
+
         $request = $this->getHttpRequest();
 
         // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod
         // kontrola kvuli cache key -> aby mi nemohl ulozit na server nejaky skodlivy kod
         if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
 
-        $zoom = intval($request->getQuery("zoom"));
 
+        $zoom = intval($request->getQuery("zoom"));
         if($zoom < self::MIN_OVERLAY_ZOOM) {
             $img = $this->overlayRenderer->drawNone();
             echo MyUtils::image2string($img);

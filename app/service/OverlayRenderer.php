@@ -135,15 +135,12 @@ class OverlayRenderer extends BaseService {
 	 * @param int $y
 	 */
 	private function addPointLabel($img, $w, $x, $y) {
-
-
 		if(trim($w->ssid) == "") {
 			imagestring($img, 1, $x+7, $y, $w->mac, $this->imgcolors["text"]);
 		}
 		else {
 			$text = $w->ssid; $dots = "...";
-			if(strlen($text) > 20) { $text = $text.$dots; }
-
+			if(strlen($text) > 20) { $text = substr($text,0,20).$dots; }
 			imagestring($img, 1, $x+7, $y, $text, $this->imgcolors["text"]);
 		}
 	}
