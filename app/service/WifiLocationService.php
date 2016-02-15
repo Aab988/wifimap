@@ -18,7 +18,7 @@ class WifiLocationService extends BaseService {
 
     /**
      * @param Wifi $wifi
-     * @return array|\Nette\Database\Table\IRow[]
+     * @return Wifi[]
      */
     public function getLocation(Wifi $wifi) {
 

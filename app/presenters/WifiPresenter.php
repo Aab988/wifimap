@@ -4,7 +4,6 @@ namespace App\Presenters;
 
 use App\Model\Coords;
 use App\Model\MyUtils;
-use App\Model\Source;
 use App\Model\Wifi;
 use App\Service\OverlayRenderer;
 use App\Service\SourceManager;
@@ -63,7 +62,7 @@ class WifiPresenter extends BasePresenter
 
     const IMG_CACHE_DIR = "../temp/img_cache";
 
-    const MIN_OVERLAY_ZOOM = 0;
+    const MIN_OVERLAY_ZOOM = 10;
     const MIN_INFO_WINDOW_ZOOM = 10;
 
     /** @var WifiManager @inject */
@@ -72,7 +71,7 @@ class WifiPresenter extends BasePresenter
     /** @var WifiLocationService @inject */
     public $wifiLocationService;
 
-    /** @var OverlayRenderer @inject */
+    /** @var OverlayRenderer */
     public $overlayRenderer;
 
     /** @var SourceManager @inject */
@@ -100,6 +99,7 @@ class WifiPresenter extends BasePresenter
 
     public function __construct()
     {
+        parent::__construct();
         if (self::CACHE_ON) {
             if(!file_exists(self::IMG_CACHE_DIR)) {
                 mkdir(self::IMG_CACHE_DIR);
@@ -132,7 +132,7 @@ class WifiPresenter extends BasePresenter
             $net = intval($httpr->getQuery("net"));
             $detail = $this->wifiManager->getWifiById($net);
             $detail->setSec($this->wifisecService->getById($detail->getSec()));
-            $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->latitude, $detail->longitude);
+            $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->getLatitude(), $detail->getLongitude());
         } else {
             $f = $r->fetch();
             if ($f) {
@@ -174,86 +174,31 @@ class WifiPresenter extends BasePresenter
         $this->terminate();
     }
 
-    /**
-     * @param $lat1
-     * @param $lat2
-     * @param $lon1
-     * @param $lon2
-     * @param $zoom
-     *
-     * @deprecated
-     */
-    public function renderJson($lat1, $lat2, $lon1, $lon2, $zoom)
-    {
-
-        // spocitam rozdil latitud a longtitud
-        $dlat = doubleval($lat2) - doubleval($lat1);
-        $dlon = doubleval($lon2) - doubleval($lon1);
-        if ($dlat < 0) $dlat = -$dlat;
-        if ($dlon < 0) $dlon = -$dlon;
-
-        // zvetsim nacitanou plochu
-        $lat1c = $lat1 - (0 * $dlat);
-        $lat2c = $lat2 + (0 * $dlat);
-
-        $lon1c = $lon1 - (0 * $dlon);
-        $lon2c = $lon2 + (0 * $dlon);
-
-        $sql = "select latitude,longitude,ssid,mac from wifi where latitude > $lat1c and latitude < $lat2c and longitude > $lon1c and longitude < $lon2c";
-
-        if ($zoom < 19) {
-            $sql .= " limit 500";
-        }
-
-        // key pro cache
-        /*$key = round($lat1c, 3) . round($lat2c,3) . round($lon1c,3) . round($lon2c,3) . $zoom;
-
-        $value = $this->cache->load($key);
-        if ($value === NULL) {*/
-        $wf = $this->database->query($sql);
-        $array = array();
-        foreach ($wf as $w) {
-            $a = array("ssid" => $w->ssid, "latitude" => $w->latitude, "longitude" => $w->longitude, "mac" => $w->mac);
-            $array[] = $a;
-        }
-
-        //$this->cache->save($key, $array, array(Cache::EXPIRE => '10 minutes'));
-        /*  }
-          else { $array = $value; }*/
-        echo json_encode($array);
-
-    }
-
-
-
-
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
         header("Content-type: image/png");
         MyUtils::setIni(180, '1024M');
 
         $request = $this->getHttpRequest();
+        $zoom = $request->getQuery("zoom");
+
+        $this->overlayRenderer = new OverlayRenderer($zoom);
 
         // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod
         // kontrola kvuli cache key -> aby mi nemohl ulozit na server nejaky skodlivy kod
         if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
 
-
-        $zoom = intval($request->getQuery("zoom"));
         if($zoom < self::MIN_OVERLAY_ZOOM) {
-            $img = $this->overlayRenderer->drawNone();
-            echo MyUtils::image2string($img);
-            return;
+            echo $this->overlayRenderer->drawNone()->toString(Nette\Utils\Image::PNG);
+            exit;
         }
 
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
+        $coords->increaseLatLngRange(self::INCREASE_LATLNG_RANGE_ABOUT);
 
-        $coords->increaseLatRange(self::INCREASE_LATLNG_RANGE_ABOUT);
-        $coords->increaseLonRange(self::INCREASE_LATLNG_RANGE_ABOUT);
 
         // params for image creation
         $params = array();
-
         switch($mode) {
             case self::MODE_SEARCH:
                 $ssidmac = $request->getQuery("ssidmac");
@@ -287,7 +232,6 @@ class WifiPresenter extends BasePresenter
             case self::MODE_FREE:
                 break;
             default:
-
                 break;
         }
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
@@ -303,30 +247,30 @@ class WifiPresenter extends BasePresenter
         switch($mode) {
             case self::MODE_SEARCH:
                 $nets = $this->wifiManager->getNetsModeSearch($coords, $params);
-                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
             case self::MODE_HIGHLIGHT:
                 if(!empty($params)) {
                     $highlitedNets = $this->wifiManager->getNetsBySt($coords, $params['by'], $params['val']);
                     $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-                    $img = $this->overlayRenderer->drawModeHighlight($coords, $zoom, $allNets, $highlitedNets);
+                    $img = $this->overlayRenderer->drawModeHighlight($coords, $allNets, $highlitedNets);
                 }
                 else {
                     $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-                    $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                    $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 }
                 break;
             case self::MODE_ONE_SOURCE:
                 $nets = $this->wifiManager->getNetsModeOneSource($coords, $params['source']);
-                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
             case self::MODE_FREE:
                 $nets = $this->wifiManager->getFreeNets($coords);
-                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
             case self::MODE_ONE:
                 $nets = $this->wifiManager->getNetsModeSearch($coords,$params);
-                $img = $this->overlayRenderer->drawModeOne($coords,$zoom,$nets);
+                $img = $this->overlayRenderer->drawModeOne($coords,$nets);
                 break;
             case self::MODE_CALCULATED:
                 $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
@@ -336,27 +280,23 @@ class WifiPresenter extends BasePresenter
                 $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('mac'=>$net->getMac()));
                 $latt = 0; $lont = 0;
                 foreach($nets as $net) {
-                    $latt += $net->latitude;
-                    $lont += $net->longitude;
+                    $latt += $net->getLatitude();
+                    $lont += $net->getLongitude();
                 }
                 $lat_avg = $latt / ((double)count($nets));
                 $lon_avg = $lont / ((double)count($nets));
                 $net = new Wifi();
                 $net->setLatitude($lat_avg);
                 $net->setLongitude($lon_avg);
-
-
-
-                $img = $this->overlayRenderer->drawCalculated($coords,$zoom,$nets2,$net);
-
+                $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-                $img = $this->overlayRenderer->drawModeAll($coords, $zoom, $nets);
+                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
         }
 
-        $image = MyUtils::image2string($img);
+        $image = $img->toString(Nette\Utils\Image::PNG);
         if(self::CACHE_ON) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }

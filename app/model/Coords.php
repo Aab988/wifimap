@@ -86,6 +86,16 @@ class Coords {
     }
 
     /**
+     * enlarge latitude and longitude by $k * delta
+     * @param $k
+     */
+    public function increaseLatLngRange($k) {
+        $this->increaseLatRange($k);
+        $this->increaseLonRange($k);
+    }
+
+
+    /**
      * @param float $lat
      * @param float $lng
      * @param float $range

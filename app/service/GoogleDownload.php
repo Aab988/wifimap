@@ -177,8 +177,7 @@ class GoogleDownload extends Download implements IDownload {
 
 
     public function createRequestFromArea(Coords $coords) {
-        $rows = $this->wifiManager->getAllNetsInLatLngRange($coords);
-        $wfs = Wifi::createWifiArrayFromDBRowArray($rows);
+        $wfs = $this->wifiManager->getAllNetsInLatLngRange($coords);
 
         foreach($wfs as $w) {
             $this->createRequestFromWifi($w);

@@ -119,11 +119,15 @@ class WifiManager extends BaseService {
 	 * return nets data in passed lat lng range
 	 *
 	 * @param Coords $coords
-	 * @return array|Nette\Database\Table\IRow[]
+	 * @return Wifi[]
 	 */
 	public function getAllNetsInLatLngRange($coords) {
 		$q = $this->getNetsRangeQuery($coords);
-		return $q->fetchAll();
+		$wifi = array();
+		foreach($q->fetchAll() as $w) {
+			$wifi[] = Wifi::createWifiFromDBRow($w);
+		}
+		return $wifi;
 	}
 
 	/**
@@ -131,11 +135,11 @@ class WifiManager extends BaseService {
 	 *
 	 * @param Coords $coords
 	 * @param array $params associative array with params
-	 * @return array|Nette\Database\Table\IRow[]
+	 * @return Wifi[]
 	 */
 	public function getNetsModeSearch($coords,$params) {
 		$q = $this->getSearchQuery($coords,$params);
-		return $q->fetchAll();
+		return Wifi::createWifiArrayFromDBRowArray($q->fetchAll());
 	}
 
 
@@ -143,7 +147,7 @@ class WifiManager extends BaseService {
 	public function getNetsBySt($coords,$param, $value) {
 		$q = $this->getNetsRangeQuery($coords);
 		$q->where($param,$value);
-		return $q->fetchAll();
+		return Wifi::createWifiArrayFromDBRowArray($q->fetchAll());
 	}
 
 	/**
@@ -189,7 +193,7 @@ class WifiManager extends BaseService {
 
 
 
-	public function getClickQueryByMode(Nette\Http\Request $request, $click_lat = null, $click_lon = null) {
+	public function getClickQueryByMode(Nette\Http\IRequest $request, $click_lat = null, $click_lon = null) {
 		if(!$click_lat && !$click_lon) {
 			$click_lat = doubleval($request->getQuery("click_lat"));
 			$click_lon = doubleval($request->getQuery("click_lon"));

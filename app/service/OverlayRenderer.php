@@ -5,86 +5,89 @@
  * Time: 10:13
  */
 namespace App\Service;
+use App\Model\Mat2;
 use App\Model\Wifi;
 use Nette;
 use App\Model\Color;
 use App\Model\Coords;
 
-class OverlayRenderer extends BaseService {
+class OverlayRenderer {
 
+	const IMG_TYPE_RECTANGLE = 'rectangle';
+	const IMG_TYPE_ELLIPSE = 'ellipse';
+
+	/** image size cropped */
 	const IMAGE_HEIGHT = 256;
 	const IMAGE_WIDTH = 256;
 
+	/** image size before crop */
 	const IMAGE_BIGGER = 320;
 
+	/** show net name from zoom */
 	const SHOW_LABEL_ZOOM = 18;
 
-
+	/** @var array alocated colors to IMG */
 	private $imgcolors = array();
+	/** @var array items colors */
 	private $colors = array();
-	// vygeneruju 320*320 = 1,25 * 256 -> pak ořežu na 256*256
 
-	/**
-	 * sets color shades for each element
-	 *
-	 */
-	private function setColors() {
-		$this->colors["background"] = new Color(254,254,254);
-		$this->colors["text"] = new Color(0,0,0);
-		$this->colors[GoogleDownload::ID_SOURCE] = new Color(192,0,0);
-		$this->colors[WigleDownload::ID_SOURCE] = new Color(208,0,0);
-		$this->colors[WifileaksDownload::ID_SOURCE] = new Color(255,0,0);
-		$this->colors["highlighted"] = new Color(0,0,255);
-		$this->colors["one_net"] = new Color(4,160,212);
+	/** @var int $zoom */
+	private $zoom;
+	/** @var Nette\Utils\Image $img */
+	private $img;
+
+	public function __construct($zoom) {
+		$this->zoom = (int) $zoom;
+		$this->setColors();
 	}
 
-	/**
-	 * adds colors to image
-	 *
-	 * @param resource $img
-	 */
-	private function allocateColors2Img($img) {
+
+	/** sets color shades for each element */
+	private function setColors() {
+		$this->colors = array(
+			'background' => new Color(254,254,254),
+			'text' => new Color(0,0,0),
+			'highlighted' => new Color(0,0,255),
+			'one_net' => new Color(4,160,212),
+			GoogleDownload::ID_SOURCE => new Color(192,0,0),
+			WigleDownload::ID_SOURCE => new Color(208,0,0),
+			WifileaksDownload::ID_SOURCE => new Color(255,0,0)
+		);
+	}
+
+	/** adds colors to image */
+	private function allocateColors2Img() {
 		foreach($this->colors as $key=>$color) {
-			$this->imgcolors[$key] = imagecolorallocate($img,$color->r,$color->g,$color->b);
+			$this->imgcolors[$key] = $this->img->colorAllocate($color->r,$color->g,$color->b);
 		}
 	}
 
 	/**
+	 * create image with alocated colors
 	 *
 	 * @param int $width
 	 * @param int $height
-	 * @return resource
 	 */
 	private function createImage($width,$height) {
-		$this->setColors();
-		$img = imagecreate($width,$height);
-		$this->allocateColors2Img($img);
-		imagecolortransparent($img,$this->imgcolors["background"]);
-		return $img;
+		$this->img = new Nette\Utils\Image(imagecreate($width,$height));
+		$this->allocateColors2Img();
+		$this->img->colorTransparent($this->imgcolors['background']);
 	}
-
-
 
 
 	/**
 	 * crops bigger image to default size image
+	 *
 	 * @uses OverlayRenderer::IMAGE_WIDTH as default width
 	 * @uses OverlayRenderer::IMAGE_HEIGHT as default height
-	 * @param resource $img
-	 * @return resource
 	 */
-	private function cropImage($img) {
-		$newImg = $this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-		$width = imagesx($img);
-		$height = imagesy($img);
-		imagecopy($newImg, $img, 0,0,($width - self::IMAGE_WIDTH)/	2,($height - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-		// return imagecrop($img,array("x"=>32,"y"=>32,"width"=>256,"height"=>256));
-		return $newImg;
+	private function cropImage() {
+		$this->img->crop(($this->img->getWidth() - self::IMAGE_WIDTH)/2,($this->img->getHeight() - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
 	}
+
 
 	/**
 	 * counts lat lng range shown in one pixel
-	 *
 	 * onepxlat -> latitude range in one pixel
 	 * onepxlon -> longitude range in one pixel
 	 *
@@ -92,13 +95,11 @@ class OverlayRenderer extends BaseService {
 	 * @uses OverlayRenderer::IMAGE_BIGGER as size of image
 	 * @return object
 	 */
-	private function getConversionRation($coords) {
+	private function getConversionRatio($coords) {
 		$one_pixel_lat = abs($coords->getLatEnd() - $coords->getLatStart()) / self::IMAGE_BIGGER;
 		$one_pixel_lon = abs($coords->getLonEnd() - $coords->getLonStart()) /  self::IMAGE_BIGGER;
 		return (object) array("onepxlat" => $one_pixel_lat, "onepxlon" => $one_pixel_lon);
 	}
-
-
 
 	/**
 	 * convert latitude/longitude to pixels
@@ -110,169 +111,198 @@ class OverlayRenderer extends BaseService {
 	 * @param float $one_pixel_lat latitude range in one pixel
 	 * @param float $one_pixel_lon longitude range in one pixel
 	 * @uses OverlayRenderer::IMAGE_BIGGER as height of image
-	 * @return object coords in pixels
+	 * @return Mat2 coords in pixels
 	 */
 	private function latLngToPx($latitude, $longitude,$lat1,$lon1, $one_pixel_lat,$one_pixel_lon)
 	{
 		$y = round(self::IMAGE_BIGGER - (($latitude - $lat1) / (double)$one_pixel_lat));
 		$x = round(($longitude - $lon1) / (double)$one_pixel_lon);
 
-		if ($x < 0) {
-			$x = -$x;
-		}
-		if ($y < 0) {
-			$y = -$y;
-		}
-		return (object) array("x"=>$x, "y"=>$y);
+		if ($x < 0) { $x = -$x; }
+		if ($y < 0) { $y = -$y;	}
+		return new Mat2($x,$y);
 	}
-
 
 	/**
 	 * add one point label text
-	 * @param resource $img
-	 * @param object $w
+	 * @param Wifi $w
 	 * @param int $x
 	 * @param int $y
 	 */
-	private function addPointLabel($img, $w, $x, $y) {
-		if(trim($w->ssid) == "") {
-			imagestring($img, 1, $x+7, $y, $w->mac, $this->imgcolors["text"]);
+	private function addPointLabel($w, $x, $y) {
+		if(trim($w->getSsid()) == "") {
+			$this->img->string(1, $x+7, $y, $w->getMac(), $this->imgcolors["text"]);
 		}
 		else {
-			$text = $w->ssid; $dots = "...";
-			if(strlen($text) > 20) { $text = substr($text,0,20).$dots; }
-			imagestring($img, 1, $x+7, $y, $text, $this->imgcolors["text"]);
+			$text = $w->getSsid();
+			if(strlen($text) > 20) { $text = substr($text,0,20)."..."; }
+			$this->img->string(1, $x+7, $y, $text, $this->imgcolors["text"]);
 		}
 	}
+
+	/**
+	 * @param int $x
+	 * @param int $y
+	 * @param int $width
+	 * @param int $height
+	 * @param Wifi $wifi
+	 * @param int $color
+	 * @param mixed $type
+	 * @param bool $withLabel
+	 */
+	public function drawOneNet($x, $y, $width, $height, $wifi, $color, $type, $withLabel = true) {
+		switch ($type) {
+			case self::IMG_TYPE_RECTANGLE:
+				$this->img->filledRectangle($x - $width/2, $y - $height/2, $x + $width/2, $y + $height/2, $color);
+				break;
+			case self::IMG_TYPE_ELLIPSE:
+				$this->img->filledEllipse($x,$y,$width,$height,$color);
+				break;
+		}
+		if($this->zoom > self::SHOW_LABEL_ZOOM && $withLabel) {
+			$this->addPointLabel($wifi,$x,$y);
+		}
+	}
+
 
 
 	/**
 	 * create image for MODE_ALL overlay
 	 * @param Coords $coords
-	 * @param int $zoom
-	 * @param array $nets
+	 * @param Wifi[] $nets
 	 * @return resource image
 	 */
-	public function drawModeAll($coords,$zoom,$nets) {
-
-		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords);
-
-		foreach($nets as $w) {
-			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			$this->drawOneNetModeAll($my_img,$w,$xy->x,$xy->y,$zoom);
-		}
-		return $this->cropImage($my_img);
-	}
-
-
-	public function drawModeOne($coords,$zoom,$nets) {
-		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords);
+	public function drawModeAll($coords,$nets) {
+		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRatio($coords);
 
 		foreach($nets as $w) {
-			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			$this->drawOneNetModeOne($my_img,$w,$xy->x,$xy->y,$zoom);
+			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
 		}
-		return $this->cropImage($my_img);
+		$this->cropImage();
+		return $this->img;
 	}
 
 
-	private function drawOneNetModeOne($img,$w,$x,$y,$zoom) {
-		imagefilledellipse($img,$x,$y,16,16,$this->imgcolors['one_net']);
-		if($zoom > self::SHOW_LABEL_ZOOM) {
-			$this->addPointLabel($img,$w,$x+7,$y-1);
+	/**
+	 * @param Coords $coords
+	 * @param Wifi[] $nets
+	 * @return Nette\Utils\Image
+	 */
+	public function drawModeOne($coords,$nets) {
+		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRatio($coords);
+
+		foreach($nets as $w) {
+			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNet($xy->getX(),$xy->getY(),16,16,$w,$this->imgcolors['one_net'],self::IMG_TYPE_ELLIPSE);
 		}
+		$this->cropImage();
+		return $this->img;
 	}
 
 
-	public function drawCalculated(Coords $coords,$zoom,$nets,Wifi $net) {
-		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords);
+	public function drawCalculated(Coords $coords,$nets,Wifi $net) {
+		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRatio($coords);
 
 		foreach($nets as $w) {
 			$xy = $this->latLngToPx($w->latitude, $w->longitude, $coords->getLatStart(), $coords->getLonStart(), $op->onepxlat, $op->onepxlon);
-			$this->drawOneNetModeOne($my_img, $w, $xy->x, $xy->y, $zoom);
+			$this->drawOneNet($xy->getX(),$xy->getY(),16,16,$w,$this->imgcolors['one_net'],self::IMG_TYPE_ELLIPSE);
 		}
 		if($net->getLatitude() < $coords->getLatEnd() && $net->getLatitude()>$coords->getLatStart()
 		&& $net->getLongitude() < $coords->getLonEnd() && $net->getLongitude() > $coords->getLonStart()) {
 			$xy = $this->latLngToPx($net->getLatitude(),$net->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			$this->drawOneNetCalculated($my_img,$xy->x,$xy->y);
+
+			$this->drawOneNet($xy->getX(),$xy->getY(),16,16,$net,$this->imgcolors[1],self::IMG_TYPE_ELLIPSE, false);
 		}
-		return $this->cropImage($my_img);
+		$this->cropImage();
+		return $this->img;
 	}
-
-	private function drawOneNetCalculated($img,$x,$y) {
-		imagefilledellipse($img,$x,$y,16,16,$this->imgcolors[1]);
-	}
-
-
-
 
 	public function drawNone() {
-		$my_img = $this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-		imagestring($my_img,4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
-		return $my_img;
-	}
-
-	/**
-	 * draw one net to MODE_ALL overlay
-	 * @param resource $img
-	 * @param object $w
-	 * @param int $x
-	 * @param int $y
-	 * @param int $zoom
-	 * @uses OverlayRenderer::SHOW_LABEL_ZOOM as zoom from which is shown text label
-	 */
-	private function drawOneNetModeAll($img,$w,$x,$y,$zoom) {
-		imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors[$w->id_source]);
-		if($zoom > self::SHOW_LABEL_ZOOM) {
-			$this->addPointLabel($img,$w,$x,$y);
-		}
+		$this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		$this->img->string(4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
+		return $this->img;
 	}
 
 	/**
 	 * create image for MODE_HIGHLIGHT overlay
 	 * @param Coords $coords
-	 * @param int $zoom
-	 * @param array $allNets
-	 * @param array $highlightedNets
+	 * @param Wifi[] $allNets
+	 * @param Wifi[] $highlightedNets
 	 * @return resource
 	 */
-	public function drawModeHighlight($coords,$zoom,$allNets,$highlightedNets) {
-		$my_img = $this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
-		$op = $this->getConversionRation($coords);
+	public function drawModeHighlight($coords,$allNets,$highlightedNets) {
+		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
+		$op = $this->getConversionRatio($coords);
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
-			$highlightedIds[] = $hn->toArray()["id"];
+			$highlightedIds[] = $hn->getId();
 		}
 
 		foreach($allNets as $w) {
-			$xy = $this->latLngToPx($w->latitude,$w->longitude,$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			$this->drawOneNetModeHighlight($my_img,$w,$xy->x,$xy->y,$zoom,$highlightedIds);
+			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			if(in_array($w->getId(),$highlightedIds)) {
+				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors["highlighted"],self::IMG_TYPE_RECTANGLE);
+			}
+			else {
+				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
+			}
 		}
-		return $this->cropImage($my_img);
+		$this->cropImage();
+		return $this->img;
 	}
 
 	/**
-	 * draw one net to MODE_HIGHLIGHT overlay
-	 *
-	 * @param resource $img
-	 * @param object $w
-	 * @param int $x
-	 * @param int $y
-	 * @param int $zoom
-	 * @param int[] $highlightedIds
+	 * @return array
 	 */
-	private function drawOneNetModeHighlight($img,$w,$x,$y,$zoom,$highlightedIds) {
-		imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors[$w->id_source]);
-		if(in_array($w->id,$highlightedIds)) {
-			imagefilledrectangle($img, $x - 2, $y - 2, $x + 2, $y + 2, $this->imgcolors["highlighted"]);
-		}
-		if($zoom > self::SHOW_LABEL_ZOOM) {
-			$this->addPointLabel($img,$w,$x,$y);
-		}
+	public function getImgcolors()
+	{
+		return $this->imgcolors;
 	}
+
+	/**
+	 * @return array
+	 */
+	public function getColors()
+	{
+		return $this->colors;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getZoom()
+	{
+		return $this->zoom;
+	}
+
+	/**
+	 * @param int $zoom
+	 */
+	public function setZoom($zoom)
+	{
+		$this->zoom = $zoom;
+	}
+
+	/**
+	 * @return Nette\Utils\Image
+	 */
+	public function getImg()
+	{
+		return $this->img;
+	}
+
+	/**
+	 * @param Nette\Utils\Image $img
+	 */
+	public function setImg($img)
+	{
+		$this->img = $img;
+	}
+
 
 }
