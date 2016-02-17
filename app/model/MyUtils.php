@@ -30,20 +30,6 @@ class MyUtils extends Nette\Object {
     }
 
     /**
-     * returns image as string
-     *
-     * @param $img
-     * @return string
-     */
-    public static function image2string($img) {
-        ob_start();
-        imagepng($img);
-        $image = ob_get_contents();
-        ob_end_clean();
-        return $image;
-    }
-
-    /**
      * generate key for cache save
      *
      * @param string $mode
