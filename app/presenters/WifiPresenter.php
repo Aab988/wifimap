@@ -176,6 +176,7 @@ class WifiPresenter extends BasePresenter
 
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
+        $time1 = microtime(true);
         header("Content-type: image/png");
         MyUtils::setIni(180, '1024M');
 
@@ -196,6 +197,7 @@ class WifiPresenter extends BasePresenter
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $coords->increaseLatLngRange(self::INCREASE_LATLNG_RANGE_ABOUT);
 
+       // echo "čas 1: " . (microtime(true) - $time1);
 
         // params for image creation
         $params = array();
@@ -234,7 +236,11 @@ class WifiPresenter extends BasePresenter
             default:
                 break;
         }
+
+       // echo "<br />čas 2:" . (microtime(true) - $time1);
+
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
+        //echo "<br />čas 3:" . (microtime(true) - $time1);
 
         if(self::CACHE_ON) {
             $img = $this->cache->load($key);
@@ -243,6 +249,7 @@ class WifiPresenter extends BasePresenter
                 return;
             }
         }
+       // echo "<br />čas 4:" . (microtime(true) - $time1);
 
         switch($mode) {
             case self::MODE_SEARCH:
@@ -291,38 +298,24 @@ class WifiPresenter extends BasePresenter
                 $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
+                //echo "<br />čas 4.1:" . (microtime(true) - $time1);
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
+               // echo "<br />čas 4.2:" . (microtime(true) - $time1);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
+                //echo "<br />čas 4.3:" . (microtime(true) - $time1);
                 break;
         }
-
+        //echo "<br />čas 5:" . (microtime(true) - $time1);
+        //$img = $this->overlayRenderer->drawNone();
         $image = $img->toString(Nette\Utils\Image::PNG);
+       // echo "<br />čas 6:" . (microtime(true) - $time1);
         if(self::CACHE_ON) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
+       // echo "<br />čas 7:" . (microtime(true) - $time1);
         echo $image;
         return;
     }
-
-
-
-    public function renderCountPosition() {
-        MyUtils::setIni(18000, '2048M');
-        $nets = array(1);
-        $from = 0;
-        while(count($nets)>0) {
-            $nets = $this->wifiManager->getAllNets(100,$from);
-            foreach($nets as $w) {
-                $this->wifiLocationService->getLocation($w);
-            }
-            $from+= 100;
-        }
-
-
-
-        $this->terminate();
-    }
-
 
     private function allowedMode($mode) {
         return in_array($mode,$this->allowedModes);
