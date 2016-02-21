@@ -177,8 +177,8 @@ class WifiPresenter extends BasePresenter
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
         $time1 = microtime(true);
-        header("Content-type: image/png");
-        MyUtils::setIni(180, '1024M');
+        //header("Content-type: image/png");
+        //MyUtils::setIni(180, '2048M');
 
         $request = $this->getHttpRequest();
         $zoom = $request->getQuery("zoom");
@@ -196,8 +196,6 @@ class WifiPresenter extends BasePresenter
 
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $coords->increaseLatLngRange(self::INCREASE_LATLNG_RANGE_ABOUT);
-
-       // echo "čas 1: " . (microtime(true) - $time1);
 
         // params for image creation
         $params = array();
@@ -237,10 +235,7 @@ class WifiPresenter extends BasePresenter
                 break;
         }
 
-       // echo "<br />čas 2:" . (microtime(true) - $time1);
-
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
-        //echo "<br />čas 3:" . (microtime(true) - $time1);
 
         if(self::CACHE_ON) {
             $img = $this->cache->load($key);
@@ -249,8 +244,9 @@ class WifiPresenter extends BasePresenter
                 return;
             }
         }
-       // echo "<br />čas 4:" . (microtime(true) - $time1);
 
+        //echo "cas 1:" . ((microtime(true) - $time1) * 1000);
+        $time1 = microtime(true);
         switch($mode) {
             case self::MODE_SEARCH:
                 $nets = $this->wifiManager->getNetsModeSearch($coords, $params);
@@ -281,9 +277,7 @@ class WifiPresenter extends BasePresenter
                 break;
             case self::MODE_CALCULATED:
                 $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
-                //dump($net);
                 $nets = $this->wifiLocationService->getLocation($net);
-                //dump($nets);
                 $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('mac'=>$net->getMac()));
                 $latt = 0; $lont = 0;
                 foreach($nets as $net) {
@@ -298,22 +292,27 @@ class WifiPresenter extends BasePresenter
                 $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
-                //echo "<br />čas 4.1:" . (microtime(true) - $time1);
+
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-               // echo "<br />čas 4.2:" . (microtime(true) - $time1);
+                //echo "cas 2:" . ((microtime(true) - $time1) * 1000);
+                $time1 = microtime(true);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                //echo "<br />čas 4.3:" . (microtime(true) - $time1);
+                //echo "cas 3:" . ((microtime(true) - $time1) * 1000);
+                $time1 = microtime(true);
                 break;
+
         }
-        //echo "<br />čas 5:" . (microtime(true) - $time1);
+        $time = microtime(true);
         //$img = $this->overlayRenderer->drawNone();
         $image = $img->toString(Nette\Utils\Image::PNG);
-       // echo "<br />čas 6:" . (microtime(true) - $time1);
+       // $image = MyUtils::image2string($img);
+        $img = null;
         if(self::CACHE_ON) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
-       // echo "<br />čas 7:" . (microtime(true) - $time1);
         echo $image;
+        //echo "cas:" . ((microtime(true) - $time)*1000);
+        echo "cas 4:" . ((microtime(true) - $time1) * 1000);
         return;
     }
 

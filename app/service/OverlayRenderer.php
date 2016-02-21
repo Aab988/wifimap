@@ -58,6 +58,7 @@ class OverlayRenderer {
 	/** adds colors to image */
 	private function allocateColors2Img() {
 		foreach($this->colors as $key=>$color) {
+			//$this->imgcolors[$key] = imagecolorallocate($this->img,$color->r,$color->g,$color->b);
 			$this->imgcolors[$key] = $this->img->colorAllocate($color->r,$color->g,$color->b);
 		}
 	}
@@ -82,6 +83,10 @@ class OverlayRenderer {
 	 * @uses OverlayRenderer::IMAGE_HEIGHT as default height
 	 */
 	private function cropImage() {
+		/*$new = imagecreate(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		imagecopy($new,$this->img,0,0,(imagesx($this->img) - self::IMAGE_WIDTH)/2,(imagesy($this->img) - self::IMAGE_HEIGHT)/2,self::IMAGE_BIGGER,self::IMAGE_BIGGER);
+
+		$this->img = $new;*/
 		$this->img->crop(($this->img->getWidth() - self::IMAGE_WIDTH)/2,($this->img->getHeight() - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
 	}
 
@@ -130,12 +135,22 @@ class OverlayRenderer {
 	 * @param int $y
 	 */
 	private function addPointLabel($w, $x, $y) {
-		if(trim($w->getSsid()) == "") {
+		/*if(trim($w->getSsid()) == "") {
 			$this->img->string(1, $x+7, $y, $w->getMac(), $this->imgcolors["text"]);
 		}
 		else {
 			$text = $w->getSsid();
 			if(strlen($text) > 20) { $text = substr($text,0,20)."..."; }
+			$this->img->string(1, $x+7, $y, $text, $this->imgcolors["text"]);
+		}*/
+		if(trim($w['ssid']) == "") {
+			//imagestring($this->img,1, $x+7, $y, $w['mac'], $this->imgcolors["text"]);
+			$this->img->string(1, $x+7, $y, $w['mac'], $this->imgcolors["text"]);
+		}
+		else {
+			$text = $w['ssid'];
+			if(strlen($text) > 20) { $text = substr($text,0,20)."..."; }
+			//imagestring($this->img,1, $x+7, $y, $text, $this->imgcolors["text"]);
 			$this->img->string(1, $x+7, $y, $text, $this->imgcolors["text"]);
 		}
 	}
@@ -176,10 +191,17 @@ class OverlayRenderer {
 		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
 		$op = $this->getConversionRatio($coords);
 
-		foreach($nets as $w) {
+		/*foreach($nets as $w) {
 			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
 			$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
+			$w = null;
+		}*/
+		foreach($nets as $w) {
+			$xy = $this->latLngToPx($w['latitude'],$w['longitude'],$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w['id_source']],self::IMG_TYPE_RECTANGLE);
+			$w = null;
 		}
+		$nets = null;
 		$this->cropImage();
 		return $this->img;
 	}

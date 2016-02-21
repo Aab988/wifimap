@@ -121,8 +121,7 @@ class WifiManager extends BaseService {
 	 * @param Coords $coords
 	 * @return Wifi[]
 	 */
-	public function getAllNetsInLatLngRange($coords) {
-		$t1 = microtime(true);
+	public function getAllNetsInLatLngRange($coords, $zoom = null) {
 		//$q = $this->getNetsRangeQuery($coords);
 		//echo "<br />t1:" . (microtime(true) - $t1);
 		$wifi = array();
@@ -130,17 +129,17 @@ class WifiManager extends BaseService {
 		//$q = $this->database->query("SELECT * FROM wifi WHERE (`latitude` > ?) AND (`latitude` < ?) AND (`longitude` > ?) AND (`longitude` < ?)",$coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd());
 
 		//$q = $this->database->getConnection()->getPdo()->query($q->getQueryString());
-
 		$pdo = $this->database->getConnection()->getPdo();
 		$sth = $pdo->prepare("SELECT * FROM wifi WHERE (`latitude` > ?) AND (`latitude` < ?) AND (`longitude` > ?) AND (`longitude` < ?)");
 		$sth->execute(array($coords->getLatStart(),$coords->getLatEnd(),$coords->getLonStart(),$coords->getLonEnd()));
-		$data = $sth->fetchAll();
 
+		$data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+		return $data;
 		//$data = $q->fetchAll();
 		//echo "<br />t2:" . (microtime(true) - $t1);
-		foreach($data as $w) {
+		/*foreach($data as $w) {
 			$wifi[] = Wifi::createWifiFromDBRow($w);
-		}
+		}*/
 		//echo "<br />t3:" . (microtime(true) - $t1);
 		return $wifi;
 	}
