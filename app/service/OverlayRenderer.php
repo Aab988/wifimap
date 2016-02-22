@@ -188,7 +188,8 @@ class OverlayRenderer {
 				//$this->img->filledRectangle($x - $width/2, $y - $height/2, $x + $width/2, $y + $height/2, $color);
 				break;
 			case self::IMG_TYPE_ELLIPSE:
-				$this->img->filledEllipse($x,$y,$width,$height,$color);
+				imagefilledellipse($this->img,$x,$y,$width,$height,$color);
+				//$this->img->filledEllipse($x,$y,$width,$height,$color);
 				break;
 		}
 		if($this->zoom > self::SHOW_LABEL_ZOOM && $withLabel) {
@@ -262,7 +263,7 @@ class OverlayRenderer {
 
 	public function drawNone() {
 		$this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-		$this->img->string(4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
+		imagestring($this->img,4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
 		return $this->img;
 	}
 
@@ -270,7 +271,7 @@ class OverlayRenderer {
 	 * create image for MODE_HIGHLIGHT overlay
 	 * @param Coords $coords
 	 * @param Wifi[] $allNets
-	 * @param Wifi[] $highlightedNets
+	 * @param array() $highlightedNets
 	 * @return resource
 	 */
 	public function drawModeHighlight($coords,$allNets,$highlightedNets) {
@@ -279,16 +280,16 @@ class OverlayRenderer {
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
-			$highlightedIds[] = $hn->getId();
+			$highlightedIds[] = $hn['id'];
 		}
 
 		foreach($allNets as $w) {
-			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			if(in_array($w->getId(),$highlightedIds)) {
+			$xy = $this->latLngToPx($w['latitude'],$w['longitude'],$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			if(in_array($w['id'],$highlightedIds)) {
 				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors["highlighted"],self::IMG_TYPE_RECTANGLE);
 			}
 			else {
-				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
+				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w['id_source']],self::IMG_TYPE_RECTANGLE);
 			}
 		}
 		$this->cropImage();

@@ -90,7 +90,8 @@ class WifiManager extends BaseService {
 	 * @param array $params associative array with params ($param => $value)
 	 * @return Nette\Database\Table\Selection
 	 */
-	private function getSearchQuery($coords,$params) {
+	private function getSearchQuery($coords,$params,$select = array('*')) {
+
 
 		$q = $this->getNetsRangeQuery($coords);
 		foreach($params as $param => $val) {
@@ -106,6 +107,33 @@ class WifiManager extends BaseService {
 		}
 		return $q;
 	}
+
+
+
+	public function getSearchQueryForOverlay($coords,$params,$select = array('*')) {
+
+	}
+
+	/**
+	 * builds SQL select
+	 *
+	 * @param array $select
+	 * @return string
+	 */
+	private function buildSelect($select = array('*')) {
+		$sqlSelect = '*';
+		if($select != null) {
+			$select2 = array();
+			foreach($select as $s) {
+				if($s!='') $select2[] = $s;
+			}
+			$sqlSelect = implode(',',$select2);
+		}
+		return $sqlSelect;
+	}
+
+
+
 
 	private function getOneSourceQuery($coords,$id_source) {
 		$q = $this->getNetsRangeQuery($coords);
@@ -158,8 +186,8 @@ class WifiManager extends BaseService {
 	 * @param array $params associative array with params
 	 * @return Wifi[]
 	 */
-	public function getNetsModeSearch($coords,$params) {
-		$q = $this->getSearchQuery($coords,$params);
+	public function getNetsModeSearch($coords,$params,$select = array('*'),$asArray = false) {
+		$q = $this->getSearchQuery($coords,$params,$select);
 		return Wifi::createWifiArrayFromDBRowArray($q->fetchAll());
 	}
 
