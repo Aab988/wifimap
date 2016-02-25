@@ -1,5 +1,4 @@
 /* global google */
-
 var map; // google map object
 
 // initial configuration - constants
@@ -25,6 +24,15 @@ var mainInfoWindow;
 
 var uer = new UER();
 
+function getUrlVars() {
+    var vars = {};
+    window.location.href.replace(/[#&]+([^=&]+)=([^&#]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+
+
 // params in URL
 var hashParams = {};
 // get URL params and values - share feature
@@ -36,12 +44,6 @@ if (hashParams.gm) {
     INIT_CENTER = {lat: parseFloat(res[0]), lng: parseFloat(res[1])};
     INIT_ZOOM = parseInt(res[2]);
 }
-
-
-
-
-
-
 
 // set some params - share feature
 function init() {
@@ -88,7 +90,6 @@ function changeIW(id) {
 
 function initializeMap() {
 
-
     var mapOptions = {center: INIT_CENTER, zoom: INIT_ZOOM, draggableCursor: 'default', tilt: 0};
     map = new google.maps.Map(document.getElementById('mapa'), mapOptions);
 
@@ -124,21 +125,17 @@ function initializeMap() {
             delete params.gm;
 
             $.getJSON(PROCESS_CLICK_URL, params, function (data) {
-                if (data.success) {
-                    createInfoWindow(data.iw, new google.maps.LatLng(data.lat, data.lng));
-                }
+                if (data.success) { createInfoWindow(data.iw, new google.maps.LatLng(data.lat, data.lng)); }
             });
         }
     });
 
     google.maps.event.addListener(map, 'idle', function () {
-        var gmString = map.getCenter().lat() + "," + map.getCenter().lng() + "," + map.getZoom();
-        hashParams.gm = gmString;
+        hashParams.gm = map.getCenter().lat() + "," + map.getCenter().lng() + "," + map.getZoom();
         window.location.hash = $.param(hashParams);
     });
 
     // google maps search
-
     var input = (document.getElementById('pac-input'));
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
@@ -150,12 +147,8 @@ function initializeMap() {
         if (places.length == 0) {
             return;
         }
-        /*for (var i = 0, marker; marker = markers[i]; i++) {
-         marker.setMap(null);
-         }
-
-         // For each place, get the icon, place name, and location.
-         markers = [];*/
+        for (var i = 0; i < markers.length; i++) {markers[i].setMap(null); }
+        markers = [];
         var bounds = new google.maps.LatLngBounds();
         for (var i = 0, place; place = places[i]; i++) {
             var image = {
@@ -165,7 +158,6 @@ function initializeMap() {
                 anchor: new google.maps.Point(17, 34),
                 scaledSize: new google.maps.Size(25, 25)
             };
-
             // Create a marker for each place.
             var marker = new google.maps.Marker({
                 map: map,
@@ -173,12 +165,9 @@ function initializeMap() {
                 title: place.name,
                 position: place.geometry.location
             });
-
             markers.push(marker);
-
             bounds.extend(place.geometry.location);
         }
-
         map.fitBounds(bounds);
     });
 }
@@ -279,13 +268,13 @@ function calculate(id) {
  * zruseni vsech nastaveni - modu a jeho parametru
  */
 function resetAllFilters() {
-    $(".mi-source").removeClass("active");
-    $("#ul-one-source").hide(100);
-
+    $("#frm-searchForm-ssidmac").val(null);
+    $("#frm-searchForm-channel").val(null);
+    $("#frm-searchForm-security").val(null);
+    $("#frm-searchForm-source").val(null);
     removeAllParams();
     modeChanged();
 }
-
 
 function sendRequestAjax(dataurl, requestData, infodiv, callback) {
     if (!callback) callback = function () {
@@ -300,7 +289,6 @@ function sendRequestAjax(dataurl, requestData, infodiv, callback) {
         callback();
     });
 }
-
 
 /**
  * TODO: mohlo by jit refactorovat -> klidne to i sjednotit a latmax a lonmax vyresit tim ze budu mit dva UER
@@ -370,34 +358,8 @@ function endDownloadRequest(infodiv, beginbutton) {
 
 
 $(document).ready(function () {
+
     sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
-
-    $("#mi-one-source").click(function () {
-        $("#ul-one-source").toggle(100);
-    });
-
-    $(".mi-source").click(function () {
-        if ($(this).hasClass("active")) {
-            return;
-        }
-        $(".mi-source").each(function () {
-            $(this).removeClass("active");
-        });
-        // nastavit prekryvnou vrstvu
-        hashParams.mode = MODE_ONE_SOURCE;
-        hashParams.source = this.id;
-        window.location.hash = $.param(hashParams);
-        redrawOverlay();
-
-        $(this).addClass("active");
-    });
-
-    $("#mi-free-nets").click(function () {
-        hashParams.mode = MODE_FREE;
-        window.location.hash = $.param(hashParams);
-        redrawOverlay();
-    });
-
 
     $("#frm-searchForm").submit(function (e) {
         e.preventDefault();
@@ -413,7 +375,6 @@ $(document).ready(function () {
         if (source) hashParams.source = source;
         modeChanged();
     });
-
 
     $("#exportBtn").click(function(e) {
         e.preventDefault();
@@ -434,32 +395,16 @@ $(document).ready(function () {
             $("#downloadFile").attr('href',data.file);
             document.getElementById("downloadFile").click();
         });
-
     });
-
 
     $(".hide-btn").click(function() {
-        if($(this).parent("div").css("margin-right") == "-200px") {
-            $(this).parent("div").animate({
-                "margin-right": "0px"
-            },500);
-        }
-        else {
-            $(this).parent("div").animate({
-                "margin-right": "-200px"
-            },500);
-        }
+        if($(this).parent("div").css("margin-right") == "-200px") { $(this).parent("div").animate({ "margin-right": "0px" },500); }
+        else { $(this).parent("div").animate({ "margin-right": "-200px" },500); }
     });
-
-
-
-
 });
-
 
 /**
  * create google request by wifi id
- *
  * @param wid
  */
 function googleDownloadRequest1(wid) {
