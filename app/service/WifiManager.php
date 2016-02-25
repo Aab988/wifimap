@@ -90,7 +90,7 @@ class WifiManager extends BaseService {
 	 * @param array $params associative array with params ($param => $value)
 	 * @return Nette\Database\Table\Selection
 	 */
-	private function getSearchQuery($coords,$params,$select = array('*')) {
+	private function getSearchQuery($coords,$params) {
 
 
 		$q = $this->getNetsRangeQuery($coords);
@@ -110,9 +110,6 @@ class WifiManager extends BaseService {
 
 
 
-	public function getSearchQueryForOverlay($coords,$params,$select = array('*')) {
-
-	}
 
 	/**
 	 * builds SQL select
@@ -152,14 +149,8 @@ class WifiManager extends BaseService {
 	 */
 	public function getAllNetsInLatLngRange($coords, $select = array('*'), $asArray = false, $limit = null) {
 		//$q = $this->getNetsRangeQuery($coords);
-		$sqlSelect = '*';
-		if($select != null) {
-			$select2 = array();
-			foreach($select as $s) {
-				if($s!='') $select2[] = $s;
-			}
-			$sqlSelect = implode(',',$select2);
-		}
+
+		$sqlSelect = $this->buildSelect($select);
 		$sql = 'SELECT ' . $sqlSelect . ' FROM ' . self::TABLE . ' WHERE  (`latitude` > ?) AND (`latitude` < ?) AND (`longitude` > ?) AND (`longitude` < ?)';
 
 		$pdo = $this->database->getConnection()->getPdo();
@@ -186,11 +177,10 @@ class WifiManager extends BaseService {
 	 * @param array $params associative array with params
 	 * @return Wifi[]
 	 */
-	public function getNetsModeSearch($coords,$params,$select = array('*'),$asArray = false) {
-		$q = $this->getSearchQuery($coords,$params,$select);
+	public function getNetsModeSearch($coords,$params) {
+		$q = $this->getSearchQuery($coords,$params);
 		return Wifi::createWifiArrayFromDBRowArray($q->fetchAll());
 	}
-
 
 
 	public function getNetsBySt($coords,$param, $value) {

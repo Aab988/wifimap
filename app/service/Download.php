@@ -55,7 +55,7 @@ class Download extends BaseService {
             $data[] = $this->prepareArrayForDB($w);
             if(count($data) == $howmany) {
                 try {
-                    $this->database->query("insert into wifi", $data);
+                    $this->database->table('wifi')->insert($data);
                 }
                 catch(\PDOException $pdoe) {
                     echo $pdoe->getMessage();
@@ -65,7 +65,7 @@ class Download extends BaseService {
         }
         if(count($data)) {
             // TODO: osetrit ze uz existuje (DUPLIKATNI KLIC)
-            $this->database->query("insert into wifi", $data);
+            $this->database->table('wifi')->insert($data);
         }
     }
 

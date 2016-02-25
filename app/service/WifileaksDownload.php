@@ -93,7 +93,7 @@ class WifileaksDownload extends Download implements IDownload {
         $array = explode("\t", $line);
         $wifi->setMac($array[0]);
         $wifi->setSsid($array[1]);
-        $wifi->setSec(intval($array[2])+1);
+        $wifi->setSec(intval($array[2]));
         $wifi->setLatitude(doubleval($array[3]));
         $wifi->setLongitude(doubleval($array[4]));
         $wifi->setAltitude(doubleval($array[5]));

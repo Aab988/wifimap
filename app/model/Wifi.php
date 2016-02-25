@@ -125,7 +125,7 @@ class Wifi extends Nette\Object {
      * @return int | WifiSecurity
      */
     public function getSec() {
-        return $this->sec;
+        return ($this->sec == 0) ? 5 : $this->sec;
     }
 
     /**
@@ -428,7 +428,6 @@ class Wifi extends Nette\Object {
                     $this->freenet = '?'; $this->paynet = '?'; $this->wep = '4';
                     break;
             }
-
         }
         if($this->source == WigleDownload::ID_SOURCE) {
             switch($this->wep) {
@@ -448,6 +447,7 @@ class Wifi extends Nette\Object {
                     $this->sec = 4;break;
             }
         }
+        $this->sec++;
     }
 
     /**

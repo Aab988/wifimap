@@ -141,7 +141,6 @@ class WigleDownload extends Download implements IDownload {
                 $wifi->setType($r['type']);
                 $wifi->setWep($o['wep']);
                 $wifi->synchronizeSecurity();
-                $wifi->setSec($wifi->getSec()+1);
                 $wifis[] = $wifi;
             }
         }
