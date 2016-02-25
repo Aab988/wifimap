@@ -49,20 +49,6 @@ class WifiPresenter extends BasePresenter
     /** increasing image latlng range and image size */
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
-    /** use cache? */
-    const CACHE_ON = false;
-
-    /** @var array $cacheExpire expiration by zoom, index = zoom, value = seconds */
-    private static $cacheExpire = array(0,1,2,3,4,5,6,7,8,9=>86400, // 1 day
-                                        10=>57600, // 16 hours
-                                        11,12=>28800, // 8 hours
-                                        13=>14400, // 4 hours
-                                        14,15=>7200, // 2hours
-                                        16,17,18=>3600, // 1 hour
-                                        19,20,21 => 1800); // 30 minutes
-
-    const IMG_CACHE_DIR = "../temp/img_cache";
-
     const MIN_OVERLAY_ZOOM = 10;
     const MIN_INFO_WINDOW_ZOOM = 10;
 
@@ -84,11 +70,8 @@ class WifiPresenter extends BasePresenter
     /** @var OptimizedWifiManager @inject */
     public $oWifiManager;
 
-    /** @var Cache */
-    private $cache;
     /** @var array modes that can be used */
     private $allowedModes = array();
-
 
     private static $modesLabels = array(
         self::MODE_ALL => "Všechny sítě",
@@ -100,24 +83,15 @@ class WifiPresenter extends BasePresenter
         self::MODE_CALCULATED => "Vypočtené polohy sítí"
     );
 
-
     public function __construct()
     {
         parent::__construct();
-        if (self::CACHE_ON) {
-            if(!file_exists(self::IMG_CACHE_DIR)) {
-                mkdir(self::IMG_CACHE_DIR);
-            }
-            $storage = new Nette\Caching\Storages\FileStorage(self::IMG_CACHE_DIR);
-            $this->cache = new Cache($storage);
-        }
+
         // ZAPNUTE MODY (TURNED ON MODES)
         $this->allowedModes = array(
             self::MODE_SEARCH,
             self::MODE_HIGHLIGHT,
             self::MODE_ALL,
-            self::MODE_FREE,
-            self::MODE_ONE_SOURCE,
             self::MODE_ONE,
             self::MODE_CALCULATED
         );
@@ -128,7 +102,6 @@ class WifiPresenter extends BasePresenter
     {
         $httpr = $this->getHttpRequest();
         // pokud je nedostatecny zoom vratit prazdny - nemusim resit -> JS omezeni
-
 
         $r = $this->wifiManager->getClickQueryByMode($httpr);
         $detail = null;

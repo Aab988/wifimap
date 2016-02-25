@@ -85,14 +85,6 @@ class WigleDownload extends Download implements IDownload {
                 "count_downloaded_observations"=>0,
             ));
 
-            // NEUPRAVOVAT -> ZMENA STAHOVANI
-            /**
-            // upravit downlaod request
-            $this->database->table('download_request')
-                ->where('id',$id_download_request)
-                ->update(array('downloaded_count'=>new SqlLiteral('downloaded_count + 1')));
-            */
-
             if((int)$results_decoded["resultCount"] >= self::WIGLE_MAXIMUM_ROWS) {
                 $this->downloadQueue->addRecord($coords, 0, $id_download_request, (int)$results_decoded["last"]);
                 $this->database->table('download_request')
