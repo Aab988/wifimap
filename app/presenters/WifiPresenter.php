@@ -43,8 +43,7 @@ class WifiPresenter extends BasePresenter
     /** default mode if its not set */
     const DEFAULT_MODE = self::MODE_ALL;
 
-    /** can highlight by these params */
-    const MODE_HIGHLIGHT_ALLOWED_BY = array('ssid', 'mac', 'channel');
+
 
     /** increasing image latlng range and image size */
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
@@ -82,6 +81,9 @@ class WifiPresenter extends BasePresenter
         self::MODE_ONE => "Jedna síť",
         self::MODE_CALCULATED => "Vypočtené polohy sítí"
     );
+
+    /** can highlight by these params */
+    public static $MODE_HIGHLIGHT_ALLOWED_BY = array('ssid', 'mac', 'channel');
 
     public function __construct()
     {
@@ -193,7 +195,7 @@ class WifiPresenter extends BasePresenter
                 break;
             case self::MODE_HIGHLIGHT:
                 $by = $request->getQuery("by");
-                if (in_array($by, self::MODE_HIGHLIGHT_ALLOWED_BY)) {
+                if (in_array($by, self::$MODE_HIGHLIGHT_ALLOWED_BY)) {
                     $params['by'] = $by;
                     $val = $request->getQuery("val");
                     $params['val'] = $val;
