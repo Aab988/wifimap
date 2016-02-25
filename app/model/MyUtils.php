@@ -58,11 +58,17 @@ class MyUtils extends Nette\Object {
      * @param string $max_memory fe: '256M'
      *
      */
-    public static function setIni($max_execution_time,$max_memory) {
+    public static function setIni($max_execution_time = null,$max_memory = null) {
         if(!ini_get('safe_mode')) {
-            set_time_limit($max_execution_time);
-            ini_set('memory_limit',$max_memory);
+            if($max_execution_time) set_time_limit($max_execution_time);
+            if($max_memory) ini_set('memory_limit',$max_memory);
         }
     }
 
+    public static function image2string($img) {
+        ob_start();
+        imagepng($img);
+        $image = ob_get_clean();
+        return $image;
+    }
 }

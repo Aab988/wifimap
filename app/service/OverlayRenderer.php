@@ -33,7 +33,8 @@ class OverlayRenderer {
 
 	/** @var int $zoom */
 	private $zoom;
-	/** @var Nette\Utils\Image $img */
+
+	/** @var resource $img */
 	private $img;
 
 	public function __construct($zoom) {
@@ -58,7 +59,8 @@ class OverlayRenderer {
 	/** adds colors to image */
 	private function allocateColors2Img() {
 		foreach($this->colors as $key=>$color) {
-			$this->imgcolors[$key] = $this->img->colorAllocate($color->r,$color->g,$color->b);
+			$this->imgcolors[$key] = imagecolorallocate($this->img,$color->r,$color->g,$color->b);
+			//$this->imgcolors[$key] = $this->img->colorAllocate($color->r,$color->g,$color->b);
 		}
 	}
 
@@ -69,9 +71,11 @@ class OverlayRenderer {
 	 * @param int $height
 	 */
 	private function createImage($width,$height) {
-		$this->img = new Nette\Utils\Image(imagecreate($width,$height));
+		//$this->img = new Nette\Utils\Image(imagecreate($width,$height));
+		$this->img = imagecreate($width,$height);
 		$this->allocateColors2Img();
-		$this->img->colorTransparent($this->imgcolors['background']);
+		imagecolortransparent($this->img,$this->imgcolors['background']);
+		//$this->img->colorTransparent($this->imgcolors['background']);
 	}
 
 
@@ -82,7 +86,24 @@ class OverlayRenderer {
 	 * @uses OverlayRenderer::IMAGE_HEIGHT as default height
 	 */
 	private function cropImage() {
-		$this->img->crop(($this->img->getWidth() - self::IMAGE_WIDTH)/2,($this->img->getHeight() - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		$newImg = imagecreate(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		foreach($this->colors as $color) {
+			imagecolorallocate($newImg,$color->r,$color->g,$color->b);
+		}
+		imagecolortransparent($newImg,$this->imgcolors['background']);
+
+		$width = imagesx($this->img);
+		$height = imagesy($this->img);
+
+		imagecopy($newImg, $this->img, 0,0,($width - self::IMAGE_WIDTH)/	2,($height - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+				// return imagecrop($img,array("x"=>32,"y"=>32,"width"=>256,"height"=>256));
+		$this->img = $newImg;
+				return $newImg;
+		/*$new = imagecreate(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		imagecopy($new,$this->img,0,0,(imagesx($this->img) - self::IMAGE_WIDTH)/2,(imagesy($this->img) - self::IMAGE_HEIGHT)/2,self::IMAGE_BIGGER,self::IMAGE_BIGGER);
+
+		$this->img = $new;*/
+		//$this->img->crop(($this->img->getWidth() - self::IMAGE_WIDTH)/2,($this->img->getHeight() - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
 	}
 
 
@@ -130,13 +151,23 @@ class OverlayRenderer {
 	 * @param int $y
 	 */
 	private function addPointLabel($w, $x, $y) {
-		if(trim($w->getSsid()) == "") {
+		/*if(trim($w->getSsid()) == "") {
 			$this->img->string(1, $x+7, $y, $w->getMac(), $this->imgcolors["text"]);
 		}
 		else {
 			$text = $w->getSsid();
 			if(strlen($text) > 20) { $text = substr($text,0,20)."..."; }
 			$this->img->string(1, $x+7, $y, $text, $this->imgcolors["text"]);
+		}*/
+		if(trim($w['ssid']) == "") {
+			imagestring($this->img,1, $x+7, $y, $w['mac'], $this->imgcolors["text"]);
+			//$this->img->string(1, $x+7, $y, $w['mac'], $this->imgcolors["text"]);
+		}
+		else {
+			$text = $w['ssid'];
+			if(strlen($text) > 20) { $text = substr($text,0,20)."..."; }
+			imagestring($this->img,1, $x+7, $y, $text, $this->imgcolors["text"]);
+			//$this->img->string(1, $x+7, $y, $text, $this->imgcolors["text"]);
 		}
 	}
 
@@ -153,10 +184,12 @@ class OverlayRenderer {
 	public function drawOneNet($x, $y, $width, $height, $wifi, $color, $type, $withLabel = true) {
 		switch ($type) {
 			case self::IMG_TYPE_RECTANGLE:
-				$this->img->filledRectangle($x - $width/2, $y - $height/2, $x + $width/2, $y + $height/2, $color);
+				imagefilledrectangle($this->img,$x - $width/2, $y - $height/2, $x + $width/2, $y + $height/2, $color);
+				//$this->img->filledRectangle($x - $width/2, $y - $height/2, $x + $width/2, $y + $height/2, $color);
 				break;
 			case self::IMG_TYPE_ELLIPSE:
-				$this->img->filledEllipse($x,$y,$width,$height,$color);
+				imagefilledellipse($this->img,$x,$y,$width,$height,$color);
+				//$this->img->filledEllipse($x,$y,$width,$height,$color);
 				break;
 		}
 		if($this->zoom > self::SHOW_LABEL_ZOOM && $withLabel) {
@@ -176,10 +209,17 @@ class OverlayRenderer {
 		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
 		$op = $this->getConversionRatio($coords);
 
-		foreach($nets as $w) {
+		/*foreach($nets as $w) {
 			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
 			$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
+			$w = null;
+		}*/
+		foreach($nets as $w) {
+			$xy = $this->latLngToPx($w['latitude'],$w['longitude'],$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w['id_source']],self::IMG_TYPE_RECTANGLE);
+			$w = null;
 		}
+		$nets = null;
 		$this->cropImage();
 		return $this->img;
 	}
@@ -223,7 +263,7 @@ class OverlayRenderer {
 
 	public function drawNone() {
 		$this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
-		$this->img->string(4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
+		imagestring($this->img,4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);
 		return $this->img;
 	}
 
@@ -231,7 +271,7 @@ class OverlayRenderer {
 	 * create image for MODE_HIGHLIGHT overlay
 	 * @param Coords $coords
 	 * @param Wifi[] $allNets
-	 * @param Wifi[] $highlightedNets
+	 * @param array() $highlightedNets
 	 * @return resource
 	 */
 	public function drawModeHighlight($coords,$allNets,$highlightedNets) {
@@ -240,16 +280,16 @@ class OverlayRenderer {
 
 		$highlightedIds = array();
 		foreach($highlightedNets as $key=>$hn) {
-			$highlightedIds[] = $hn->getId();
+			$highlightedIds[] = $hn['id'];
 		}
 
 		foreach($allNets as $w) {
-			$xy = $this->latLngToPx($w->getLatitude(),$w->getLongitude(),$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
-			if(in_array($w->getId(),$highlightedIds)) {
+			$xy = $this->latLngToPx($w['latitude'],$w['longitude'],$coords->getLatStart(),$coords->getLonStart(),$op->onepxlat,$op->onepxlon);
+			if(in_array($w['id'],$highlightedIds)) {
 				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors["highlighted"],self::IMG_TYPE_RECTANGLE);
 			}
 			else {
-				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w->getSource()],self::IMG_TYPE_RECTANGLE);
+				$this->drawOneNet($xy->getX(),$xy->getY(),4,4,$w,$this->imgcolors[$w['id_source']],self::IMG_TYPE_RECTANGLE);
 			}
 		}
 		$this->cropImage();

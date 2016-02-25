@@ -5,6 +5,7 @@ namespace App\Presenters;
 use App\Model\Coords;
 use App\Model\MyUtils;
 use App\Model\Wifi;
+use App\Service\OptimizedWifiManager;
 use App\Service\OverlayRenderer;
 use App\Service\SourceManager;
 use App\Service\WifiLocationService;
@@ -79,6 +80,9 @@ class WifiPresenter extends BasePresenter
 
     /** @var WifiSecurityService @inject */
     public $wifisecService;
+
+    /** @var OptimizedWifiManager @inject */
+    public $oWifiManager;
 
     /** @var Cache */
     private $cache;
@@ -176,9 +180,8 @@ class WifiPresenter extends BasePresenter
 
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
-        $time1 = microtime(true);
         header("Content-type: image/png");
-        MyUtils::setIni(180, '1024M');
+        //MyUtils::setIni(180, '2048M');
 
         $request = $this->getHttpRequest();
         $zoom = $request->getQuery("zoom");
@@ -189,15 +192,15 @@ class WifiPresenter extends BasePresenter
         // kontrola kvuli cache key -> aby mi nemohl ulozit na server nejaky skodlivy kod
         if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
 
+        // moc maly zoom vratim obrazek at si priblizi
         if($zoom < self::MIN_OVERLAY_ZOOM) {
-            echo $this->overlayRenderer->drawNone()->toString(Nette\Utils\Image::PNG);
+            echo MyUtils::image2string($this->overlayRenderer->drawNone());
             exit;
         }
 
+        // zvysim rozsah souradnic - kvuli orezavani
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $coords->increaseLatLngRange(self::INCREASE_LATLNG_RANGE_ABOUT);
-
-       // echo "čas 1: " . (microtime(true) - $time1);
 
         // params for image creation
         $params = array();
@@ -237,11 +240,10 @@ class WifiPresenter extends BasePresenter
                 break;
         }
 
-       // echo "<br />čas 2:" . (microtime(true) - $time1);
-
+        // vygenerovani klice pro cache
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
-        //echo "<br />čas 3:" . (microtime(true) - $time1);
 
+        // zkusi se nalezt v cache
         if(self::CACHE_ON) {
             $img = $this->cache->load($key);
             if($img != null) {
@@ -249,41 +251,47 @@ class WifiPresenter extends BasePresenter
                 return;
             }
         }
-       // echo "<br />čas 4:" . (microtime(true) - $time1);
 
+        // ziskani dat a vygenerovani prekryvne vrstvy
+
+        $img = $this->overlayRenderer->drawNone();
         switch($mode) {
             case self::MODE_SEARCH:
-                $nets = $this->wifiManager->getNetsModeSearch($coords, $params);
+                $params['coords'] = $coords;
+                $nets = $this->oWifiManager->getNetsByParams($params,array('ssid,mac,latitude,longitude,id_source'));
+                //$nets = $this->wifiManager->getNetsModeSearch($coords, $params);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
             case self::MODE_HIGHLIGHT:
                 if(!empty($params)) {
-                    $highlitedNets = $this->wifiManager->getNetsBySt($coords, $params['by'], $params['val']);
-                    $allNets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-                    $img = $this->overlayRenderer->drawModeHighlight($coords, $allNets, $highlitedNets);
+                    $params['coords'] = $coords;
+                    $params[$params['by']] = $params['val'];
+                    unset($params['by']); unset($params['val']);
+                    $highlightedIds = $this->oWifiManager->getNetsByParams($params,array('id'));
+                    $allNets = $this->oWifiManager->getNetsByParams(array('coords'=>$params['coords']),array('id,ssid,mac,latitude,longitude,id_source'));
+                    $img = $this->overlayRenderer->drawModeHighlight($coords, $allNets, $highlightedIds);
                 }
                 else {
-                    $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
+                    $nets = $this->wifiManager->getAllNetsInLatLngRange($coords,array('latitude','longitude','ssid','mac','id_source'),true);
                     $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 }
                 break;
-            case self::MODE_ONE_SOURCE:
+            /*case self::MODE_ONE_SOURCE:
+
                 $nets = $this->wifiManager->getNetsModeOneSource($coords, $params['source']);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                break;
-            case self::MODE_FREE:
+                break;*/
+            /*case self::MODE_FREE:
                 $nets = $this->wifiManager->getFreeNets($coords);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                break;
+                break;*/
             case self::MODE_ONE:
                 $nets = $this->wifiManager->getNetsModeSearch($coords,$params);
                 $img = $this->overlayRenderer->drawModeOne($coords,$nets);
                 break;
             case self::MODE_CALCULATED:
                 $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
-                //dump($net);
                 $nets = $this->wifiLocationService->getLocation($net);
-                //dump($nets);
                 $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('mac'=>$net->getMac()));
                 $latt = 0; $lont = 0;
                 foreach($nets as $net) {
@@ -298,21 +306,19 @@ class WifiPresenter extends BasePresenter
                 $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
-                //echo "<br />čas 4.1:" . (microtime(true) - $time1);
-                $nets = $this->wifiManager->getAllNetsInLatLngRange($coords);
-               // echo "<br />čas 4.2:" . (microtime(true) - $time1);
+
+                $nets = $this->wifiManager->getAllNetsInLatLngRange($coords,array('latitude','longitude','ssid','mac','id_source'),true);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                //echo "<br />čas 4.3:" . (microtime(true) - $time1);
                 break;
+
         }
-        //echo "<br />čas 5:" . (microtime(true) - $time1);
         //$img = $this->overlayRenderer->drawNone();
-        $image = $img->toString(Nette\Utils\Image::PNG);
-       // echo "<br />čas 6:" . (microtime(true) - $time1);
+        //$image = $img->toString(Nette\Utils\Image::PNG);
+        $image = MyUtils::image2string($img);
+        $img = null;
         if(self::CACHE_ON) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
-       // echo "<br />čas 7:" . (microtime(true) - $time1);
         echo $image;
         return;
     }
