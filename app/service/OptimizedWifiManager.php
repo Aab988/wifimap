@@ -9,6 +9,7 @@
  * Time: 17:34
  */
 namespace App\Service;
+use App\Model\Coords;
 use App\Model\MyUtils;
 use Nette;
 
@@ -77,13 +78,6 @@ class OptimizedWifiManager extends BaseService {
         return $data;
 
     }
-
-
-
-
-
-
-
 
     /**
      * builds SQL select

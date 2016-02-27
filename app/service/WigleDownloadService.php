@@ -22,7 +22,6 @@ class WigleDownloadService extends BaseService {
 
     public function moveFrom1TableToAnother($table1,$table2,$columns=array(),$conditions = array()) {
 
-
         $sql = "INSERT INTO $table2";
         if(!empty($columns)) $sql.="(";
         foreach($columns as $column) {
@@ -46,12 +45,7 @@ class WigleDownloadService extends BaseService {
                 $sql.=$cond . "=(" . $val . ")";
             }
         }
-
-
-
         $this->database->query($sql);
-
-
     }
 
 

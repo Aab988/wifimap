@@ -14,9 +14,6 @@ class Logger extends Nette\Object {
     /** @var Nette\Database\Context */
     private $database;
 
-    /** @var array */
-    private $logs = array();
-
     /**
      * @param Nette\Database\Context $database
      */
