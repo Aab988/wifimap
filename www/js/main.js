@@ -49,7 +49,10 @@ if (hashParams.gm) {
 function init() {
     switch (hashParams.mode) {
         case MODE_SEARCH:
-            if (hashParams.ssid) $("#form-ssid").val(hashParams.ssid);
+            if (hashParams.ssidmac) $("#frm-searchForm-ssidmac").val(decodeURIComponent(hashParams.ssidmac));
+            if (hashParams.channel) $("#frm-searchForm-channel").val(hashParams.channel);
+            if (hashParams.security) $("#frm-searchForm-security").val(hashParams.security);
+            if (hashParams.source) $("#frm-searchForm-source").val(hashParams.source);
             break;
     }
     hashParams.mode = (hashParams.mode) ? hashParams.mode : MODE_ALL;
@@ -128,6 +131,7 @@ function initializeMap() {
 
     google.maps.event.addListener(map, 'idle', function () {
         hashParams.gm = map.getCenter().lat() + "," + map.getCenter().lng() + "," + map.getZoom();
+        hashParams.ssidmac = decodeURIComponent(hashParams.ssidmac);
         window.location.hash = $.param(hashParams);
     });
 
@@ -243,6 +247,7 @@ function useAsFilter(form) {
     }
     hashParams.mode = MODE_SEARCH;
     hashParams[by] = val;
+    $("#frm-searchForm-ssidmac").val(decodeURIComponent(val));
     modeChanged();
 }
 
@@ -360,7 +365,7 @@ $(document).ready(function () {
     $("#frm-searchForm").submit(function (e) {
         e.preventDefault();
         removeAllParams();
-        ssidmac = $(this).find("#frm-searchForm-ssidmac").val();
+        ssidmac = decodeURI($(this).find("#frm-searchForm-ssidmac").val());
         channel = $(this).find("#frm-searchForm-channel").val();
         security = $(this).find("#frm-searchForm-security").val();
         source = $(this).find("#frm-searchForm-source").val();

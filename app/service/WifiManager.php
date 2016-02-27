@@ -272,17 +272,9 @@ class WifiManager extends BaseService {
 				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
 				break;
-			case WifiPresenter::MODE_ONE_SOURCE:
-				$srca = explode("-",$request->getQuery("source"));
-				$source = (isset($srca[1]))?intval($srca[1]):-1;
-				$sql = $this->getOneSourceQuery($requestCoords,$source);
-				break;
 			case WifiPresenter::MODE_ONE:
 				$params['ssid'] = $request->getQuery('ssid');
 				$sql = $this->getSearchQuery($requestCoords,$params);
-				break;
-			case WifiPresenter::MODE_FREE:
-				$sql = $this->getFreeNetsQuery($requestCoords);
 				break;
 			default:
 				$sql = $this->getNetsRangeQuery($requestCoords);
