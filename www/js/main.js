@@ -131,7 +131,9 @@ function initializeMap() {
 
     google.maps.event.addListener(map, 'idle', function () {
         hashParams.gm = map.getCenter().lat() + "," + map.getCenter().lng() + "," + map.getZoom();
-        hashParams.ssidmac = decodeURIComponent(hashParams.ssidmac);
+        if(hashParams.ssidmac) {
+            hashParams.ssidmac = decodeURIComponent(hashParams.ssidmac);
+        }
         window.location.hash = $.param(hashParams);
     });
 
@@ -365,7 +367,7 @@ $(document).ready(function () {
     $("#frm-searchForm").submit(function (e) {
         e.preventDefault();
         removeAllParams();
-        ssidmac = decodeURI($(this).find("#frm-searchForm-ssidmac").val());
+        ssidmac = decodeURIComponent($(this).find("#frm-searchForm-ssidmac").val());
         channel = $(this).find("#frm-searchForm-channel").val();
         security = $(this).find("#frm-searchForm-security").val();
         source = $(this).find("#frm-searchForm-source").val();
@@ -379,7 +381,7 @@ $(document).ready(function () {
 
     $("#exportBtn").click(function(e) {
         e.preventDefault();
-        ssidmac = $("#frm-searchForm-ssidmac").val();
+        ssidmac = decodeURIComponent($("#frm-searchForm-ssidmac").val());
         channel = $("#frm-searchForm-channel").val();
         security = $("#frm-searchForm-security").val();
         source = $("#frm-searchForm-source").val();

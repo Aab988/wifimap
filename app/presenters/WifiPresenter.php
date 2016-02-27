@@ -297,6 +297,8 @@ class WifiPresenter extends BasePresenter
             $params['mode'] = self::$modesLabels[self::DEFAULT_MODE];
         }
         if(isset($params['source'])) $params['source'] = ($this->sourceManager->getById(intval($params['source'])))?$this->sourceManager->getById(intval($params['source']))->name:$params['source'];
+        if(isset($params['ssidmac'])) $params['ssidmac'] = urldecode($params['ssidmac']);
+
         unset($params['id']); unset($params['gm']);unset($params['action']);
         $this->template->parameters = $params;
     }
