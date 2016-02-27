@@ -8,7 +8,6 @@ use App\Model\Wifi;
 use App\Service\OptimizedWifiManager;
 use App\Service\OverlayRenderer;
 use App\Service\SourceManager;
-use App\Service\WifiLocationService;
 use App\Service\WifiManager;
 use App\Service\WifiSecurityService;
 use Nette;
@@ -17,32 +16,19 @@ use Tracy\Debugger;
 
 class WifiPresenter extends BasePresenter
 {
-    // MODES
-    /*
-* MODY
-*
-* MODE_ALL - vsechny site
-* MODE_ONE_SOURCE - pouze jeden zdroj
-* MODE_SEARCH - vyhledavani
-* MODE_HIGHLIGHT - oznaceni podle parametru
-* MODE_FREE - pouze volne site
-* MODE_ONE - jedna sit
-* MODE_CALCULATED_POSITION - vypoctena pozice site
-*
-*/
-
+    /** all APs without filter */
     const MODE_ALL = "MODE_ALL";
+    /** filtered APs */
     const MODE_SEARCH = "MODE_SEARCH";
+    /** highlighted APs by params */
     const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
-    const MODE_ONE_SOURCE = "MODE_ONE_SOURCE";
-    const MODE_FREE = "MODE_FREE";
+    /** only one AP */
     const MODE_ONE = 'MODE_ONE';
-
+    /** calculated position */
     const MODE_CALCULATED = 'MODE_CALCULATED';
 
     /** default mode if its not set */
     const DEFAULT_MODE = self::MODE_ALL;
-
 
 
     /** increasing image latlng range and image size */
@@ -53,9 +39,6 @@ class WifiPresenter extends BasePresenter
 
     /** @var WifiManager @inject */
     public $wifiManager;
-
-    /** @var WifiLocationService @inject */
-    public $wifiLocationService;
 
     /** @var OverlayRenderer */
     public $overlayRenderer;
@@ -76,8 +59,6 @@ class WifiPresenter extends BasePresenter
         self::MODE_ALL => "Všechny sítě",
         self::MODE_SEARCH => "Vyhledávání",
         self::MODE_HIGHLIGHT => "Zvýraznění bodu v mapě",
-        self::MODE_FREE => "Nezabezpečené sítě",
-        self::MODE_ONE_SOURCE => "Pouze jeden zdroj",
         self::MODE_ONE => "Jedna síť",
         self::MODE_CALCULATED => "Vypočtené polohy sítí"
     );
@@ -88,8 +69,6 @@ class WifiPresenter extends BasePresenter
     public function __construct()
     {
         parent::__construct();
-
-        // ZAPNUTE MODY (TURNED ON MODES)
         $this->allowedModes = array(
             self::MODE_SEARCH,
             self::MODE_HIGHLIGHT,
@@ -99,7 +78,10 @@ class WifiPresenter extends BasePresenter
         );
     }
 
-
+    /**
+     * show detail of one AP
+     * @throws Nette\Application\AbortException
+     */
     public function renderProcessClick()
     {
         $httpr = $this->getHttpRequest();
@@ -153,10 +135,19 @@ class WifiPresenter extends BasePresenter
         $this->terminate();
     }
 
+    /**
+     * render one image for overlay
+     *
+     * @param string $mode
+     * @param float $lat1
+     * @param float $lat2
+     * @param float $lon1
+     * @param float $lon2
+     */
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
-        header("Content-type: image/png");
-        //MyUtils::setIni(180, '2048M');
+        //header("Content-type: image/png");
+        MyUtils::setIni(180, '1024M');
 
         $request = $this->getHttpRequest();
         $zoom = $request->getQuery("zoom");
@@ -201,15 +192,8 @@ class WifiPresenter extends BasePresenter
                     $params['val'] = $val;
                 }
                 break;
-            case self::MODE_ONE_SOURCE:
-                $srca = explode("-", $this->getHttpRequest()->getQuery("source"));
-                $source = (isset($srca[1])) ? intval($srca[1]) : 0;
-                $params['source'] = $source;
-                break;
             case self::MODE_ONE:
                 $params['ssid'] = $this->getHttpRequest()->getQuery('ssid');
-                break;
-            case self::MODE_FREE:
                 break;
             default:
                 break;
@@ -251,22 +235,23 @@ class WifiPresenter extends BasePresenter
                     $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 }
                 break;
-            /*case self::MODE_ONE_SOURCE:
-
-                $nets = $this->wifiManager->getNetsModeOneSource($coords, $params['source']);
-                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                break;*/
-            /*case self::MODE_FREE:
-                $nets = $this->wifiManager->getFreeNets($coords);
-                $img = $this->overlayRenderer->drawModeAll($coords, $nets);
-                break;*/
             case self::MODE_ONE:
                 $nets = $this->wifiManager->getNetsModeSearch($coords,$params);
                 $img = $this->overlayRenderer->drawModeOne($coords,$nets);
                 break;
             case self::MODE_CALCULATED:
                 $net = $this->wifiManager->getWifiById($this->getHttpRequest()->getQuery('a'));
-                $nets = $this->wifiLocationService->getLocation($net);
+                $lat = $net->getLatitude();
+                $lon = $net->getLongitude();
+
+                $lat1 = doubleval($lat) - 0.003;
+                $lat2 = doubleval($lat) + 0.003;
+                $lon1 = doubleval($lon) - 0.003/2;
+                $lon2 = doubleval($lon) + 0.003/2;
+
+                $coordsNew = new Coords($lat1,$lat2,$lon1,$lon2);
+
+                $nets = $this->wifiManager->getNetsModeSearch($coordsNew, array('mac'=>$net->getMac()));
                 $nets2 = $this->wifiManager->getNetsModeSearch($coords,array('mac'=>$net->getMac()));
                 $latt = 0; $lont = 0;
                 foreach($nets as $net) {
@@ -287,8 +272,6 @@ class WifiPresenter extends BasePresenter
                 break;
 
         }
-        //$img = $this->overlayRenderer->drawNone();
-        //$image = $img->toString(Nette\Utils\Image::PNG);
         $image = MyUtils::image2string($img);
         $img = null;
         if(self::CACHE_ON) {
@@ -307,7 +290,12 @@ class WifiPresenter extends BasePresenter
         Debugger::$productionMode = true;
         $params = $this->request->getParameters();
         if(isset($params['security'])) $params['security'] = $this->wifisecService->getById(intval($params['security']))->getLabel();
-        if(isset($params['mode'])) $params['mode'] = (array_key_exists($params['mode'],self::$modesLabels))?self::$modesLabels[$params['mode']]:$params['mode'];
+        if(isset($params['mode'])) {
+            $params['mode'] = (array_key_exists($params['mode'],self::$modesLabels)) ? self::$modesLabels[$params['mode']] : $params['mode'];
+        }
+        else {
+            $params['mode'] = self::$modesLabels[self::DEFAULT_MODE];
+        }
         if(isset($params['source'])) $params['source'] = ($this->sourceManager->getById(intval($params['source'])))?$this->sourceManager->getById(intval($params['source']))->name:$params['source'];
         unset($params['id']); unset($params['gm']);unset($params['action']);
         $this->template->parameters = $params;

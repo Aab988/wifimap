@@ -51,10 +51,6 @@ function init() {
         case MODE_SEARCH:
             if (hashParams.ssid) $("#form-ssid").val(hashParams.ssid);
             break;
-        case MODE_ONE_SOURCE:
-            $("#ul-one-source").show(100);
-            if (hashParams.source) $("#" + hashParams.source).addClass("active");
-            break;
     }
     hashParams.mode = (hashParams.mode) ? hashParams.mode : MODE_ALL;
 }

@@ -125,7 +125,7 @@ class Wifi extends Nette\Object {
      * @return int | WifiSecurity
      */
     public function getSec() {
-        return ($this->sec == 0) ? 5 : $this->sec;
+        return (is_numeric($this->sec) && $this->sec == 0) ? 5 : $this->sec;
     }
 
     /**
