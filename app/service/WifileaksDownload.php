@@ -72,6 +72,10 @@ class WifileaksDownload extends Download implements IDownload {
                 }
 
                 $filePath = self::WIFILEAKS_DOWNLOAD_DIR . $latest['file'];
+                // smazani predchozich
+                $this->database->table("wifi")->where("id_source",self::ID_SOURCE)->delete();
+
+                // nahrani novych
                 $insertedRows  = $this->parseData($filePath);
                 $this->logger->addLog(new Log(Log::TYPE_INFO,'WIFILEAKS DOWNLOAD','ulozeno ' . $insertedRows . ' siti'));
                 $this->sourceManager->saveLatestDownloadDataByIdSource(self::ID_SOURCE,$latest['file']);
