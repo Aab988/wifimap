@@ -155,7 +155,7 @@ class WifiPresenter extends BasePresenter
         $nets = $this->oWifiManager->getNetsByParams($params,$select,null,"distance");
 
         // neni to rozkliknuto
-        if(!$httpr->getQuery("net")) {
+        if(!$httpr->getQuery("net") && isset($nets[0])) {
             $wifi = $nets[0];
             $detail["id"] = $wifi["id"];
             $detail["mac"] = $wifi["mac"];
