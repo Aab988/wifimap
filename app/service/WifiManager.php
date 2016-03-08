@@ -247,10 +247,6 @@ class WifiManager extends BaseService {
 		$requestCoords = new Coords($lat1,$lat2,$lon1,$lon2);
 
 		switch($request->getQuery("mode")) {
-			case WifiPresenter::MODE_HIGHLIGHT:
-				$sql = $this->getNetsRangeQuery($requestCoords);
-				break;
-
 			case WifiPresenter::MODE_SEARCH:
 				$params = array();
 				if ($request->getQuery("ssidmac")) {

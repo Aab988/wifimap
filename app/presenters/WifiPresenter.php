@@ -37,6 +37,9 @@ class WifiPresenter extends BasePresenter
     const MIN_OVERLAY_ZOOM = 10;
     const MIN_INFO_WINDOW_ZOOM = 10;
 
+    /** polomer kruznice vytvorene z bodu kliknuti */
+    const CLICK_POINT_CIRCLE_RADIUS = 0.03;
+
     /** @var WifiManager @inject */
     public $wifiManager;
 
@@ -86,51 +89,120 @@ class WifiPresenter extends BasePresenter
     {
         $httpr = $this->getHttpRequest();
         // pokud je nedostatecny zoom vratit prazdny - nemusim resit -> JS omezeni
-
-        $r = $this->wifiManager->getClickQueryByMode($httpr);
-        $detail = null;
-        if ($httpr->getQuery("net")) {
-            $net = intval($httpr->getQuery("net"));
-            $detail = $this->wifiManager->getWifiById($net);
-            $detail->setSec($this->wifisecService->getById($detail->getSec()));
-            $r = $this->wifiManager->getClickQueryByMode($httpr, $detail->getLatitude(), $detail->getLongitude());
-        } else {
-            $f = $r->fetch();
-            if ($f) {
-                $detail = Wifi::createWifiFromDBRow($f);
-                $detail->setSec($this->wifisecService->getById($f->sec));
-            }
+        if($httpr->getQuery("zoom") != null && $httpr->getQuery("zoom") < self::MIN_INFO_WINDOW_ZOOM) {
+            echo json_encode(array("success"=>false), JSON_UNESCAPED_UNICODE);
+            $this->terminate();
         }
+
+        $click_lat = doubleval($httpr->getQuery("click_lat"));
+        $click_lon = doubleval($httpr->getQuery("click_lon"));
+
+        $detail = array();
+        // pokud jiz je konkretni sit (prekliknuto z IW)
+        if($httpr->getQuery("net")) {
+            $id = intval($httpr->getQuery("net"));
+            $wifi = $this->wifiManager->getWifiById($id);
+
+            $click_lat = $wifi->getLatitude();
+            $click_lon = $wifi->getLongitude();
+
+            $detail["id"] = $wifi->getId();
+            $detail["mac"] = $wifi->getMac();
+            $detail["latitude"] = $wifi->getLatitude();
+            $detail["longitude"] = $wifi->getLongitude();
+            $detail["ssid"] = $wifi->getSsid();
+            $detail["channel"] = $wifi->getChannel();
+            $detail["altitude"] = $wifi->getAltitude();
+            $detail["calculated"] = $wifi->getCalculated();
+            $detail["dateAdded"] = $wifi->getDateAdded();
+            $detail["accuracy"] = $wifi->getAccuracy();
+            $detail["sec"]["label"] = $this->wifisecService->getById($wifi->getSec())->getLabel();
+            $source = $this->sourceManager->getById($wifi->getSource());
+            $detail["source"]["id"] = $source["id"];
+            $detail["source"]["name"] = $source["name"];
+        }
+
+        $mapCoords = new Coords($httpr->getQuery("map_lat1"),$httpr->getQuery("map_lat2"),$httpr->getQuery("map_lon1"),$httpr->getQuery("map_lon2"));
+
+        $lat1 = (doubleval($click_lat) - self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLat());
+        $lat2 = (doubleval($click_lat) + self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLat());
+        $lon1 = (doubleval($click_lon) - self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLon());
+        $lon2 = (doubleval($click_lon) + self::CLICK_POINT_CIRCLE_RADIUS * $mapCoords->getDeltaLon());
+
+        $requestCoords = new Coords($lat1,$lat2,$lon1,$lon2);
+
+        $params = array("coords" => $requestCoords);
+        // podle nastaveneho modu rozhodnout
+        switch($httpr->getQuery("mode")) {
+            case self::MODE_SEARCH:
+                if ($httpr->getQuery("ssidmac") != null) {
+                    if(MyUtils::isMacAddress(urldecode($httpr->getQuery("ssidmac")))) { $params['mac'] = urldecode($httpr->getQuery("ssidmac")); }
+                    else { $params["ssid"] = $httpr->getQuery("ssidmac"); }
+                }
+                if($httpr->getQuery("channel") != null && $httpr->getQuery("channel") != "") { $params['channel'] = intval($httpr->getQuery("channel")); }
+                if($httpr->getQuery("security") != null && $httpr->getQuery("security") != "") { $params['sec'] = intval($httpr->getQuery("security")); }
+                if($httpr->getQuery("source") != null && $httpr->getQuery("source") != "") { $params["id_source"] = intval($httpr->getQuery("source")); }
+                break;
+            case self::MODE_ONE:
+                $params['ssid'] = $httpr->getQuery('ssid');
+                break;
+            default:
+                break;
+        }
+
+        $select = array("id","mac","latitude","longitude","ssid","channel","altitude","calculated","date_added","accuracy","sec","id_source","SQRT(POW(latitude-".doubleval($click_lat).",2)+POW(longitude-".doubleval($click_lon).",2)) AS distance");
+
+        $nets = $this->oWifiManager->getNetsByParams($params,$select,null,"distance");
+
+        // neni to rozkliknuto
+        if(!$httpr->getQuery("net")) {
+            $wifi = $nets[0];
+            $detail["id"] = $wifi["id"];
+            $detail["mac"] = $wifi["mac"];
+            $detail["latitude"] = $wifi["latitude"];
+            $detail["longitude"] = $wifi["longitude"];
+            $detail["ssid"] = $wifi["ssid"];
+            $detail["channel"] = $wifi["channel"];
+            $detail["altitude"] = $wifi["altitude"];
+            $detail["calculated"] = $wifi["calculated"];
+            $detail["dateAdded"] = $wifi["date_added"];
+            $detail["accuracy"] = $wifi["accuracy"];
+            $detail["sec"]["label"] = $this->wifisecService->getById($wifi["sec"])->getLabel();
+            $source = $this->sourceManager->getById($wifi["id_source"]);
+            $detail["source"]["id"] = $source["id"];
+            $detail["source"]["name"] = $source["name"];
+        }
+
+        $count = count($nets) - 1;
+        $others = array();
+
+        unset($nets[0]);
+        foreach(array_slice($nets,0,5,true) as $w) {
+            $others[] = array(
+                'id' => $w["id"],
+                'mac' => $w['mac'],
+                'ssid' => $w['ssid']
+            );
+        }
+
         $json = array();
-        $others = $r->fetchAll();
-        $this->template->count = count($others);
 
-
-        if ($detail) {
-            unset($others[$detail->getId()]);
-            $json['lat'] = $detail->getLatitude();
-            $json['lng'] = $detail->getLongitude();
-        }
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
-
-        // TODO: pokud detail je null osetrit
-
-        //$detail->setSec($this->wifisecService->getById($detail->getSec()));
-        $detail->setSource($this->sourceManager->getById($detail->getSource()));
-        $this->template->detail = $detail;
-
+        $this->template->count = $count;
         $this->template->others = $others;
+        $this->template->detail = $detail;
         $temp = (string)$this->template;
         $json['iw'] = $temp;
-
-
 
         if($detail == null) {
             $json['success'] = false;
         }
         else {
             $json['success'] = true;
+            $json['lat'] = $detail['latitude'];
+            $json['lng'] = $detail['longitude'];
         }
+
         echo json_encode($json, JSON_UNESCAPED_UNICODE);
         $this->terminate();
     }

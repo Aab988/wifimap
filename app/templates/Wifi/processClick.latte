@@ -1,71 +1,73 @@
 {ifset $detail}
 <b>
-{if $detail->ssid}
-    {$detail->ssid}
-{elseif $detail->mac}
-    {$detail->mac}
+{if $detail['ssid']}
+    {$detail['ssid']}
+{elseif $detail['mac']}
+    {$detail['mac']}
 {/if}
 </b>
-{if $detail->calculated == 1}
+{if $detail['calculated'] == 1}
 <p>Tento bod má vypočtené souřadnice</p>
 {/if}
 <table>
     <tr>
         <td>Datum přidání</td>
-        <td>{$detail->dateAdded|date:'j. n. Y'}</td>
+        <td>{$detail['dateAdded']|date:'j. n. Y'}</td>
     </tr>
     <tr>
         <td>Latitude</td>
-        <td>{$detail->latitude}</td>
+        <td>{$detail['latitude']}</td>
     </tr>
     <tr>
         <td>Longitude</td>
-        <td>{$detail->longitude}</td>
+        <td>{$detail['longitude']}</td>
     </tr>
     <tr>
         <td>Altitude</td>
-        <td>{$detail->altitude} m</td>
+        <td>{$detail['altitude']} m</td>
     </tr>
     <tr>
         <td>Zabezpečení</td>
-        <td>{$detail->sec->label}</td>
+        <td>{$detail['sec']['label']}</td>
     </tr>
     <tr>
         <td>MAC</td>
-        <td>{$detail->mac}</td>
+        <td>{$detail['mac']}</td>
     </tr>
     <tr>
         <td>Zdroj</td>
-        <td>{$detail->source->name}</td>
+        <td>{$detail['source']['name']}</td>
     </tr>
-    {if $detail->channel}
+    {if $detail['channel']}
     <tr>
         <td>Kanál</td>
-        <td>{$detail->channel}</td>
+        <td>{$detail['channel']}</td>
     </tr>
     {/if}
 </table>
-<form onsubmit="return highlightFormSubmit(this);" id="highlightForm-{$detail->id}">
+<form onsubmit="return highlightFormSubmit(this);" id="highlightForm-{$detail['id']}">
     <select name="highlight-by" class="highlightBy">
-        {if $detail->ssid}<option value="ssid">SSID</option>{/if}
-        {if $detail->mac}<option value="mac">MAC</option>{/if}
-        {if $detail->channel}<option value="channel">Kanál</option>{/if}
+        {if $detail['ssid']}<option value="ssid">SSID</option>{/if}
+        {if $detail['mac']}<option value="mac">MAC</option>{/if}
+        {if $detail['channel']}<option value="channel">Kanál</option>{/if}
     </select>
-    {if $detail->ssid}<input type="hidden" name="ssid" class="ssid" value="{$detail->ssid}">{/if}
-    {if $detail->mac}<input type="hidden" name="mac" class="mac" value="{$detail->mac}">{/if}
-    {if $detail->channel}<input type="hidden" name="channel" class="channel" value="{$detail->channel}" />{/if}
+    {if $detail['ssid']}<input type="hidden" name="ssid" class="ssid" value="{$detail['ssid']}">{/if}
+    {if $detail['mac']}<input type="hidden" name="mac" class="mac" value="{$detail['mac']}">{/if}
+    {if $detail['channel']}<input type="hidden" name="channel" class="channel" value="{$detail['channel']}" />{/if}
     <input name="action" type="submit" value="Označit" />
 </form>
 <div class="clearfix"></div>
 <br />
-<button class="btn btn-primary" onclick="calculate({$detail->id})">Vypočíst polohu</button>
-<button class="btn btn-primary" onclick="useAsFilter('#highlightForm-{$detail->id}')">Použít jako filtr</button>
-<button class="btn btn-primary" onclick="googleDownloadRequest1({$detail->id})" title="Kliknutím vytvoříte požadavek pro stažení této sítě z google(nedojde k okamžitému stažení, pouze se přidá požadavek do fronty)">Stáhnout z Google</button>
-<button class="btn btn-primary" onclick="showOnlyOneNet({if $detail->ssid != ''}{$detail->ssid}{else}{$detail->mac}{/if})">Zobrazit pouze tuto síť</button>
+<button class="btn btn-primary" onclick="calculate({$detail['id']})">Vypočíst polohu</button>
+<button class="btn btn-primary" onclick="useAsFilter('#highlightForm-{$detail['id']}')">Použít jako filtr</button>
+{if $detail['source']['id'] != App\Service\GoogleDownload::ID_SOURCE}
+<button class="btn btn-primary" onclick="googleDownloadRequest1({$detail['id']})" title="Kliknutím vytvoříte požadavek pro stažení této sítě z google(nedojde k okamžitému stažení, pouze se přidá požadavek do fronty)">Stáhnout z Google</button>
+{/if}
+<button class="btn btn-primary" onclick="showOnlyOneNet({if $detail['ssid'] != ''}{$detail['ssid']}{else}{$detail['mac']}{/if})">Zobrazit pouze tuto síť</button>
 {if $count > 1}
 <br /><span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: {$count-1} - pro zpřesnění informací přibližte mapu</span><br />
 {foreach array_slice($others,0,5,true) as $other}
-    <a href="" onclick="return changeIW({$other->id})">{($other->ssid) ? $other->ssid : $other->mac}</a><br />
+    <a href="" onclick="return changeIW({$other['id']})">{($other['ssid']) ? $other['ssid'] : $other['mac']}</a><br />
 {/foreach}
 {/if}
 {/ifset}

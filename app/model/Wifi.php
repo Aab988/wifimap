@@ -122,7 +122,7 @@ class Wifi extends Nette\Object {
     }
 
     /**
-     * @return int | WifiSecurity
+     * @return int
      */
     public function getSec() {
         return (is_numeric($this->sec) && $this->sec == 0) ? 5 : $this->sec;
@@ -381,7 +381,7 @@ class Wifi extends Nette\Object {
     }
 
     /**
-     * @param int | Source $source
+     * @param int $source
      */
     public function setSource($source) {
         $this->source = $source;
@@ -496,6 +496,37 @@ class Wifi extends Nette\Object {
     public function setCalculated($calculated)
     {
         $this->calculated = $calculated;
+    }
+
+    /**
+     * return array
+     */
+    public function toArray() {
+        return array(
+            "id_source" => $this->getSource(),
+            "date_added" => $this->getDateAdded(),
+            "mac" => $this->getMac(),
+            "ssid" => $this->getSsid(),
+            "sec" => $this->getSec(),
+            "latitude" => $this->getLatitude(),
+            "longitude" => $this->getLongitude(),
+            "altitude" => $this->getAltitude(),
+            "comment" => $this->getComment(),
+            "name" => $this->getName(),
+            "type" => $this->getType(),
+            "freenet" => $this->getFreenet(),
+            "paynet" => $this->getPaynet(),
+            "firsttime" => $this->getFirsttime(),
+            "lasttime" => $this->getLasttime(),
+            "flags" => $this->getFlags(),
+            "wep" => $this->getWep(),
+            "lastupdt" => $this->getLastupdt(),
+            "channel" => $this->getChannel(),
+            "bcninterval" => $this->getBcninterval(),
+            "qos" => $this->getQos(),
+            "accuracy"=>$this->getAccuracy(),
+            "calculated"=>$this->getCalculated()
+        );
     }
 
 }

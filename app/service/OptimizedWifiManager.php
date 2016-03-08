@@ -31,8 +31,14 @@ class OptimizedWifiManager extends BaseService {
         $this->pdo = $this->database->getConnection()->getPdo();
     }
 
-
-    public function getNetsByParams($params, $select = array('*'), $limit = null) {
+    /**
+     * @param array $params
+     * @param array $select
+     * @param null|int  $limit
+     * @param null|string  $order
+     * @return array
+     */
+    public function getNetsByParams($params, $select = array('*'), $limit = null, $order = null) {
         $SQLselect = $this->buildSelect($select);
 
         $SQLwhere = array();
@@ -68,6 +74,8 @@ class OptimizedWifiManager extends BaseService {
         $where = implode(' AND ',$SQLwhere);
 
         $sql = "SELECT " . $SQLselect . " FROM " . self::TABLE . " WHERE " . $where;
+        if($order) $sql .= " ORDER BY " . $order;
+        if($limit) $sql .= " LIMIT " . intval($limit);
 
         $sth = $this->pdo->prepare($sql);
         foreach($pdoParams as $p => $v) {
