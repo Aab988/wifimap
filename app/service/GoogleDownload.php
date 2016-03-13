@@ -156,22 +156,24 @@ class GoogleDownload extends Download implements IDownload {
     public function createRequestFromWifi(Wifi $wifi) {
         $this->wifiManager = new WifiManager($this->database);
 
-        // zjistim jestli dana plocha je jiz stazena z wigle
-
         // ziskam druhou nejblizsi sit
         $w2 = $this->wifiManager->getClosestWifiToWifi($wifi);
-        // pridam do DB fronty -> pokud tam jeste neni
-        if($this->getGoogleRequestByWifiIds($wifi->getId(),$w2->getId())) {
-            // log eistuje
-            return;
+
+        if($w2) {
+            // pridam do DB fronty -> pokud tam jeste neni
+            if($this->getGoogleRequestByWifiIds($wifi->getId(),$w2->getId())) {
+                // log eistuje
+                return;
+            }
+
+            $this->database->table("google_request")->insert(array(
+                'created'=>new DateTime(),
+                'id_wifi1' => $wifi->getId(),
+                'id_wifi2' => $w2->getId(),
+                'downloaded' => 'N'
+            ));
         }
 
-        $this->database->table("google_request")->insert(array(
-            'created'=>new DateTime(),
-            'id_wifi1' => $wifi->getId(),
-            'id_wifi2' => $w2->getId(),
-            'downloaded' => 'N'
-        ));
 
     }
 

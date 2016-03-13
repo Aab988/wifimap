@@ -104,7 +104,7 @@ class WigleDownload extends Download implements IDownload {
 
         $ap = $this->database->table('wigle_aps')
             ->where('downloaded',0)
-            ->order('priority DESC')
+            ->order('priority DESC, rand()')
             ->limit(1)
             ->fetch();
 
@@ -160,7 +160,6 @@ class WigleDownload extends Download implements IDownload {
         if ($rows) foreach($rows as $row) {
             $w = Wifi::createWifiFromDBRow($row);
             if($w) $googleDownloadService->createRequestFromWifi($w);
-            // TODO: pokud neni - co udelat
         }
 
         $this->database->table(DownloadImportService::TABLE)

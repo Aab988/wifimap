@@ -275,7 +275,7 @@ class WifiPresenter extends BasePresenter
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
 
         // zkusi se nalezt v cache
-        if(self::CACHE_ON) {
+        if(self::CACHE_ON && $mode != self::MODE_CALCULATED) {
             $img = $this->cache->load($key);
             if($img != null) {
                 echo $img;
@@ -346,7 +346,7 @@ class WifiPresenter extends BasePresenter
         }
         $image = MyUtils::image2string($img);
         $img = null;
-        if(self::CACHE_ON) {
+        if(self::CACHE_ON && $mode != self::MODE_CALCULATED) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
         echo $image;
