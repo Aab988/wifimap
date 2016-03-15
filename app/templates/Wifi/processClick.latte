@@ -13,7 +13,7 @@
 {/ifset}
 </h4>
 <div class="clearfix"></div>
-<table class="iw-table col-md-6 table-bordered">
+<table class="iw-table col-md-6 table-bordered pull-left">
     <tr>
         <td>SSID(název sítě):</td>
         <td>{ifset $detail['ssid']}{if $detail['ssid']}{$detail['ssid']}{else}<i>nenastaveno</i>{/if}{else}<i>nenastaveno</i>{/ifset}</td>
@@ -34,10 +34,7 @@
         <td>Zdroj</td>
         <td>{ifset $detail['source']['name']}{$detail['source']['name']}{else}<i>není k dispozici</i>{/ifset}</td>
     </tr>
-    <tr>
-        <td>Datum přidání</td>
-        <td>{if $detail['dateAdded'] && $detail['dateAdded'] != '0000-00-00'}{$detail['dateAdded']|date:'j. n. Y'}{else}<i>není k dispozici</i>{/if}</td>
-    </tr>
+
 </table>
 <table class="col-md-5 iw-table table-bordered pull-right">
     <tr>
@@ -56,21 +53,25 @@
         <td>Přesnost</td>
         <td>{if $detail['accuracy']}{$detail['accuracy']} m{else}<i>neznámá</i>{/if}</td>
     </tr>
+    <tr>
+        <td>Datum přidání</td>
+        <td>{if $detail['dateAdded'] && $detail['dateAdded'] != '0000-00-00'}{$detail['dateAdded']|date:'j. n. Y'}{else}<i>není k dispozici</i>{/if}</td>
+    </tr>
 </table>
 <div class="clearfix"></div><br />
-<form onsubmit="return highlightFormSubmit(this);" id="highlightForm-{$detail['id']}" class="form-inline">
+<form onsubmit="return highlightFormSubmit(this);" id="highlightForm-{$detail['id']}" class="form-inline pull-left">
     <label for="highlightBy">Označit/filtrovat podle</label>
     <select name="highlight-by" id="highlightBy" class="highlightBy form-control input-sm">
         {if $detail['ssid']}<option value="ssid">SSID</option>{/if}
         {if $detail['mac']}<option value="mac">MAC</option>{/if}
-        {if $detail['channel']}<option value="channel">Kanál</option>{/if}
+        {ifset $detail['channel']}<option value="channel">Kanál</option>{/ifset}
     </select>
     {if $detail['ssid']}<input type="hidden" name="ssid" class="ssid" value="{$detail['ssid']}">{/if}
     {if $detail['mac']}<input type="hidden" name="mac" class="mac" value="{$detail['mac']}">{/if}
-    {if $detail['channel']}<input type="hidden" name="channel" class="channel" value="{$detail['channel']}" />{/if}
+    {ifset $detail['channel']}<input type="hidden" name="channel" class="channel" value="{$detail['channel']}" />{/ifset}
     <input name="action" type="submit" value="Označit" class="btn btn-success btn-sm" />
-    <button class="btn btn-success btn-sm" onclick="useAsFilter('#highlightForm-{$detail['id']}')">Použít jako filtr</button>
 </form>
+<button class="btn btn-success btn-sm pull-left" id="useAsFilterBtn" onclick="useAsFilter('#highlightForm-{!$detail['id']}')">Použít jako filtr</button>
 <div class="clearfix"></div><br />
 
 <button class="btn btn-primary" onclick="calculate({$detail['id']})">Vypočíst polohu</button>

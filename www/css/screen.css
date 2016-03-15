@@ -320,3 +320,6 @@ html.js .jshidden {
 .iw-table tr td {
     padding: 5px;
 }
+#useAsFilterBtn {
+    margin-left: 3px;
+}
