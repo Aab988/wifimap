@@ -1,5 +1,6 @@
 <p>Na mapě se Vám zobrazil obdélník, jenž si můžete libovolně upravovat. Jediné omezení je v jeho maximální možné velikosti.</p>
 <p>Po označení vámi vybrané plochy klikněte na tlačítko Požádat o stažení</p>
-
-<button onclick="createDownloadRequest('{block askForDownloadURL}{/block}','#requestInfo')" class="btn btn-sm btn-success">Požádat o stažení</button>
+<p id="time2down"></p>
+<button data-source="{block sourceId}{/block}" id="createDownloadRequest" onclick="createDownloadRequest('{block askForDownloadURL}{/block}','#requestInfo')" class="btn btn-sm btn-success">Požádat o stažení</button>
 <button onclick="cancelDownloadRequest('#requestInfo','{block showAfterCancel}{/block}')" class="btn btn-sm btn-danger">Zrušit</button>
+

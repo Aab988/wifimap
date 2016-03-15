@@ -43,7 +43,23 @@ function UER() {
             draggable: true,
             editable: true
         });
+
         userEditableRectangleBounds = userEditableRectangle.getBounds();
+    };
+
+    this.getTime = function() {
+        $.ajax("download/time2down",{
+            data: {
+                lat1: userEditableRectangle.getBounds().getSouthWest().lat(),
+                lat2: userEditableRectangle.getBounds().getNorthEast().lat(),
+                lon1: userEditableRectangle.getBounds().getSouthWest().lng(),
+                lon2: userEditableRectangle.getBounds().getNorthEast().lng(),
+                sourceDownloadFrom: $("#createDownloadRequest").attr("data-source"),
+                filter: getUrlVars(),
+            }
+        }).done(function(data) {
+            eval(data);
+        });
     };
 
     this.createListener = function() {
@@ -100,7 +116,22 @@ function UER() {
                 userEditableRectangle.setBounds(bounds);
             }
             userEditableRectangleBounds = userEditableRectangle.getBounds();
+
+            $.ajax("download/time2down",{
+                data: {
+                    lat1: userEditableRectangle.getBounds().getSouthWest().lat(),
+                    lat2: userEditableRectangle.getBounds().getNorthEast().lat(),
+                    lon1: userEditableRectangle.getBounds().getSouthWest().lng(),
+                    lon2: userEditableRectangle.getBounds().getNorthEast().lng(),
+                    sourceDownloadFrom: $("#createDownloadRequest").attr("data-source"),
+                    filter: getUrlVars(),
+                }
+            }).done(function(data) {
+                eval(data);
+            });
         });
+
+
     };
 
     this.getUserEditableRectangle = function() {

@@ -411,4 +411,12 @@ AND dr.date = groupeddr.MaxDateTime
     }
 
 
+    public function getTime2Download() {
+        // zjistit delku fronty
+
+        //
+    }
+
+
+
 }

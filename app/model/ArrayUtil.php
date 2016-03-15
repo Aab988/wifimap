@@ -21,4 +21,16 @@ class ArrayUtil {
         return (bool)$return;
     }
 
+    /**
+     * @param array $array
+     * @param array $keys
+     * @return bool
+     */
+    public static function arrayHasSomeKey($array,$keys) {
+        foreach($keys as $key) {
+            if(array_key_exists($key,$array)) return true;
+        }
+        return false;
+    }
+
 }

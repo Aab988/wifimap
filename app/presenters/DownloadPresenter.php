@@ -2,6 +2,7 @@
 
 namespace App\Presenters;
 
+use App\Model\ArrayUtil;
 use \App\Model\Coords;
 use App\Model\MyUtils;
 use App\Model\Wifi;
@@ -25,6 +26,8 @@ class DownloadPresenter extends BasePresenter {
     public $downloadQueue;
     /** @var \App\Service\WifiManager @inject */
     public $wifiManager;
+    /** @var Service\OptimizedWifiManager @inject */
+    public $oWifiManager;
 
     /**
      * CRON - 50times a day
@@ -115,7 +118,8 @@ class DownloadPresenter extends BasePresenter {
         $this->determineView($show);
     }
 
-    public function renderAddWigleRequestHelp() {}
+    public function renderAddWigleRequestHelp() {
+    }
 
     public function renderAddWigleRequest() {
         $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
@@ -132,7 +136,8 @@ class DownloadPresenter extends BasePresenter {
     }
 
     /** show help for google request */
-    public function renderAddGoogleRequestHelp() {}
+    public function renderAddGoogleRequestHelp() {
+    }
 
     /** add download request */
     public function renderAddGoogleRequest() {
@@ -221,6 +226,123 @@ class DownloadPresenter extends BasePresenter {
 
 
     }
+
+    public function renderTime2down($lat1,$lat2,$lon1,$lon2,$sourceDownloadFrom) {
+        $coords = new Coords($lat1,$lat2,$lon1,$lon2);
+        $sourceDownloadFrom = (int)$sourceDownloadFrom;
+        $request = $this->getHttpRequest();
+        $filter = $request->getQuery("filter");
+        $filterSet = ArrayUtil::arrayHasSomeKey($filter,array("ssidmac","channel","source","security","ssid"));
+        $text = "";
+
+        if($filterSet) {
+            $text = "<strong>Máte nastavený filtr, vytvoří se požadavek přímo na vyfiltrované body</strong><br />";
+            $mode = WifiPresenter::MODE_ALL;
+
+            //dump($filter["mode"]);
+            if (isset($filter["mode"])) {
+                $mode = $filter["mode"];
+            }
+
+            $params = array();
+            //dump($mode);
+            switch ($mode) {
+                case WifiPresenter::MODE_SEARCH:
+                    if (isset($filter["ssidmac"])) {
+                        $ssidmac = $filter["ssidmac"];
+                        if ($ssidmac) {
+                            if (MyUtils::isMacAddress($ssidmac)) {
+                                $params['mac'] = urldecode($ssidmac);
+                            } else {
+                                $params['ssid'] = $ssidmac;
+                            }
+                        }
+                    }
+                    if (isset($filter['channel'])) {
+                        $channel = $filter['channel'];
+                        if ($channel != null && $channel != "") {
+                            $params['channel'] = intval($channel);
+                        }
+                    }
+                    if (isset($filter['security'])) {
+                        $security = $filter['security'];
+                        if ($security != null && $security != '') {
+                            $params['sec'] = intval($security);
+                        }
+                    }
+                    if (isset($filter['source'])) {
+                        $source = $filter['source'];
+                        if ($source != null && $source != "") {
+                            $params['id_source'] = intval($source);
+                        }
+                    }
+                    break;
+                case WifiPresenter::MODE_ONE:
+                    $params['ssid'] = $this->getHttpRequest()->getQuery('ssid');
+                    break;
+                default:
+                    break;
+            }
+
+            $params["coords"] = $coords;
+            //$params["id_source"] = $source;
+
+            //dump($params);
+            // dump($this->getHttpRequest()->getQuery("filter"));
+            $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
+            //  dump($nets);
+            $netsCount = count($nets);
+
+
+            $macAddresses = array();
+
+            foreach($nets as $net) {
+                $macAddresses[$net['mac']] = $net;
+            }
+
+            $beforeMinutes = 0; $afterMinutes = 0;
+            switch($sourceDownloadFrom) {
+                case Service\WigleDownload::ID_SOURCE:
+                    $beforeMinutes = $this->wigleDownload->getWigleApsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
+                    $afterMinutes = count($macAddresses)*Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
+                    break;
+                case Service\GoogleDownload::ID_SOURCE:
+                    $beforeMinutes = $this->wigleDownload->getWigleApsCount(2)* Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + $this->googleDownload->getGoogleRequestsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
+                    $afterMinutes = count($macAddresses)*Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + count($macAddresses) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
+                    break;
+            }
+
+
+            $hodin1 = floor($beforeMinutes/60); $minut1 = $beforeMinutes - $hodin1 * 60;
+            $hodin2 = floor($afterMinutes/60); $minut2 = $afterMinutes - ($hodin2 * 60);
+
+            $text.= "Vyfiltrovaných sítí je " . $netsCount . ".<br />";
+
+            $text .= "Získání dat bude trvat <strong>" . $hodin2 . "hodin a " . $minut2 . "minut + " . $hodin1 . "hodin a " . $minut1 . "minut</strong>";
+
+            /* foreach($macAddresses as $macaddr) {
+                 // vytvoreni importu
+                 $downloadImport = new DownloadImport();
+                 $downloadImport->setMac($macaddr);
+
+                 // pridani do wigle fronty
+                 $row = $this->wigleDownload->save2WigleAps(null,$macaddr,$priority);
+
+                 // nastaveni importu
+                 $downloadImport->setIdWigleAps($row->getPrimary());
+                 $downloadImport->setState(DownloadImport::ADDED_WIGLE);
+
+                 // ulozeni importu
+                 dump($downloadImport);
+                 $this->downloadImportService->addImport($downloadImport);
+             }*/
+
+            echo "$('#time2down').html('".$text."');";
+            //echo "$('#createDownloadRequest').hide();";
+        }
+        $this->terminate();
+    }
+
 
 
 

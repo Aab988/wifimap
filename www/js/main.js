@@ -303,7 +303,7 @@ $("#beginGoogleRequest").click(function () {
     uer.createUserEditableRectangle();
     uer.createListener();
     $(this).hide();
-    sendRequestAjax($(this).attr('data-url'), {}, "#requestInfo");
+    sendRequestAjax($(this).attr('data-url'), {}, "#requestInfo",function() { uer.getTime(); });
 });
 
 $('#beginWigleRequest').click(function () {
@@ -313,7 +313,7 @@ $('#beginWigleRequest').click(function () {
     uer.createUserEditableRectangle();
     uer.createListener();
     $(this).hide();
-    sendRequestAjax($(this).attr('data-url'), {}, "#requestInfo");
+    sendRequestAjax($(this).attr('data-url'), {}, "#requestInfo",function() { uer.getTime(); });
 });
 
 /**

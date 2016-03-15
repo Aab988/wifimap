@@ -1,3 +1,4 @@
 {layout 'addrequesthelp.latte'}
+{block sourceId}{App\Service\GoogleDownload::ID_SOURCE}{/block}
 {block askForDownloadURL}{link Download:addgooglerequest}{/block}
 {block showAfterCancel}#beginGoogleRequest{/block}

@@ -210,5 +210,16 @@ class GoogleDownload extends Download implements IDownload {
         $this->wifiManager = $wifiManager;
     }
 
+    /**
+     * @param int $priority
+     * @return int
+     */
+    public function getGoogleRequestsCount($priority = 2) {
+        $count = $this->database->table('google_request')
+            ->where('downloaded','N');
+        if($priority) $count->where('priority >= ?',$priority);
+        return $count->count();
+    }
+
 
 }
