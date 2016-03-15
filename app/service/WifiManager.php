@@ -383,6 +383,7 @@ class WifiManager extends BaseService {
 		return $this->database->table("wifi")
 			->select("DISTINCT channel")
 			->where("channel IS NOT NULL")
+			->where('channel > 0')
 			->fetchAll();
 	}
 

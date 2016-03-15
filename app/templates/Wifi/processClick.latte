@@ -28,7 +28,7 @@
     </tr>
     <tr>
         <td>Kanál:</td>
-        <td>{ifset $detail['channel']}{$detail['channel']}{else}<i>není k dispozici</i>{/ifset}</td>
+        <td>{if $detail['channel']}{$detail['channel']}{else}<i>není k dispozici</i>{/if}</td>
     </tr>
     <tr>
         <td>Zdroj</td>
@@ -64,11 +64,11 @@
     <select name="highlight-by" id="highlightBy" class="highlightBy form-control input-sm">
         {if $detail['ssid']}<option value="ssid">SSID</option>{/if}
         {if $detail['mac']}<option value="mac">MAC</option>{/if}
-        {ifset $detail['channel']}<option value="channel">Kanál</option>{/ifset}
+        {if $detail['channel']}<option value="channel">Kanál</option>{/if}
     </select>
     {if $detail['ssid']}<input type="hidden" name="ssid" class="ssid" value="{$detail['ssid']}">{/if}
     {if $detail['mac']}<input type="hidden" name="mac" class="mac" value="{$detail['mac']}">{/if}
-    {ifset $detail['channel']}<input type="hidden" name="channel" class="channel" value="{$detail['channel']}" />{/ifset}
+    {if $detail['channel']}<input type="hidden" name="channel" class="channel" value="{$detail['channel']}" />{/if}
     <input name="action" type="submit" value="Označit" class="btn btn-success btn-sm" />
 </form>
 <button class="btn btn-success btn-sm pull-left" id="useAsFilterBtn" onclick="useAsFilter('#highlightForm-{!$detail['id']}')">Použít jako filtr</button>
