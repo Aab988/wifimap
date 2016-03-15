@@ -313,3 +313,10 @@ html.js .jshidden {
     padding-top: 20%;
     font-size: 30px;
 }
+
+.iw-table tr td:first-child {
+    font-weight: bold;
+}
+.iw-table tr td {
+    padding: 5px;
+}

@@ -189,12 +189,12 @@ class WifiPresenter extends BasePresenter
         }
 
         $json = array();
-
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
         $this->template->count = $count;
         $this->template->others = $others;
         $this->template->detail = $detail;
         $temp = (string)$this->template;
+
         $json['iw'] = $temp;
 
         if($detail == null) {
