@@ -147,7 +147,9 @@ class WifiPresenter extends BasePresenter
                 if($httpr->getQuery("source") != null && $httpr->getQuery("source") != "") { $params["id_source"] = intval($httpr->getQuery("source")); }
                 break;
             case self::MODE_ONE:
-                $params['ssid'] = $httpr->getQuery('ssid');
+                $ssidmac = $this->getHttpRequest()->getQuery('ssid');
+                if(MyUtils::isMacAddress($ssidmac)) { $params['mac'] = urldecode($ssidmac); }
+                else { $params['ssid'] = $ssidmac; }
                 break;
             default:
                 break;
@@ -268,7 +270,9 @@ class WifiPresenter extends BasePresenter
                 }
                 break;
             case self::MODE_ONE:
-                $params['ssid'] = $this->getHttpRequest()->getQuery('ssid');
+                $ssidmac = $this->getHttpRequest()->getQuery('ssid');
+                if(MyUtils::isMacAddress($ssidmac)) { $params['mac'] = urldecode($ssidmac); }
+                else { $params['ssid'] = $ssidmac; }
                 break;
             default:
                 break;
