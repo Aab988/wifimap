@@ -15,26 +15,25 @@
 <div class="clearfix"></div>
 <table class="iw-table col-md-6 table-bordered pull-left">
     <tr>
-        <td>SSID(název sítě):</td>
+        <td title="SSID - Název sítě">SSID</td>
         <td>{ifset $detail['ssid']}{if $detail['ssid']}{$detail['ssid']}{else}<i>nenastaveno</i>{/if}{else}<i>nenastaveno</i>{/ifset}</td>
     </tr>
     <tr>
-        <td>MAC adresa:</td>
+        <td>MAC adresa</td>
         <td>{ifset $detail['mac']}{if $detail['mac']}{$detail['mac']}{else}<i>není k dispozici</i>{/if}{else}<i>není k dispozici</i>{/ifset}</td>
     </tr>
     <tr>
-        <td>Typ zabezpečení:</td>
+        <td>Typ zabezpečení</td>
         <td>{ifset $detail['sec']['label']}{$detail['sec']['label']}{else}<i>není k dispozici</i>{/ifset}</td>
     </tr>
     <tr>
-        <td>Kanál:</td>
+        <td>Kanál</td>
         <td>{if $detail['channel']}{$detail['channel']}{else}<i>není k dispozici</i>{/if}</td>
     </tr>
     <tr>
         <td>Zdroj</td>
         <td>{ifset $detail['source']['name']}{$detail['source']['name']}{else}<i>není k dispozici</i>{/ifset}</td>
     </tr>
-
 </table>
 <table class="col-md-5 iw-table table-bordered pull-right">
     <tr>
@@ -73,12 +72,12 @@
 </form>
 <button class="btn btn-success btn-sm pull-left" id="useAsFilterBtn" onclick="useAsFilter('#highlightForm-{!$detail['id']}')">Použít jako filtr</button>
 <div class="clearfix"></div><br />
-
-<button class="btn btn-primary" onclick="calculate({$detail['id']})">Vypočíst polohu</button>
-{if $detail['source']['id'] != App\Service\GoogleDownload::ID_SOURCE}
-<button class="btn btn-primary" onclick="googleDownloadRequest1({$detail['id']})" title="Kliknutím vytvoříte požadavek pro stažení této sítě z google(nedojde k okamžitému stažení, pouze se přidá požadavek do fronty)">Stáhnout z Google</button>
-{/if}
-<button class="btn btn-primary" onclick="showOnlyOneNet({if $detail['ssid'] != ''}{$detail['ssid']}{else}{$detail['mac']}{/if})">Zobrazit pouze tuto síť</button>
+    <button class="btn btn-primary btn-sm" onclick="calculate({$detail['id']})">Vypočíst polohu</button>
+    {if $detail['source']['id'] != App\Service\GoogleDownload::ID_SOURCE}
+        <button class="btn btn-primary btn-sm" onclick="googleDownloadRequest1({$detail['id']})" title="Kliknutím vytvoříte požadavek pro stažení této sítě z google(nedojde k okamžitému stažení, pouze se přidá požadavek do fronty)">Stáhnout z Google</button>
+    {/if}
+    <button class="btn btn-primary btn-sm" onclick="showOnlyOneNet({if $detail['ssid'] != ''}{$detail['ssid']}{else}{$detail['mac']}{/if})">Zobrazit pouze tuto síť</button>
+<div class="clearfix"></div>
 {if $count > 1}
 <br /><span>V blízkém okolí bodu vašeho kliknutí se nachází více sítí: {$count-1} - pro zpřesnění informací přibližte mapu</span><br />
 {foreach array_slice($others,0,5,true) as $other}
