@@ -110,7 +110,9 @@ class GoogleDownload extends Download implements IDownload {
                 // nastavit priznak staezno na download
             }
         }
-        $this->saveMultiInsert($wifis,self::REQUESTS_LIMIT);
+        foreach($wifis as $wifi) {
+            $this->save($wifi);
+        }
     }
 
 

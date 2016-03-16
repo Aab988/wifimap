@@ -104,4 +104,14 @@ class Download extends BaseService {
         );
         return $array;
     }
+
+    /**
+     * only save without preparation (already have right sec)
+     *
+     * @param Wifi $w
+     */
+    public function save(Wifi $w) {
+        $this->database->table('wifi')->insert($w->toArray());
+    }
+
 }

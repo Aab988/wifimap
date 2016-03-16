@@ -125,7 +125,7 @@ class Wifi extends Nette\Object {
      * @return int
      */
     public function getSec() {
-        return (is_numeric($this->sec) && $this->sec == 0) ? 5 : $this->sec;
+        return ((is_numeric($this->sec) && $this->sec == 0)|| $this->sec > 5) ? 5 : $this->sec;
     }
 
     /**
@@ -409,6 +409,7 @@ class Wifi extends Nette\Object {
      * synchronize security values between wigle and wifileaks
      */
     public function synchronizeSecurity() {
+
         // security 0 - open, 1- WEP, 2- WPA1, 3-WPA2,4-other
         if($this->source == WifileaksDownload::ID_SOURCE) {
             switch(intval($this->sec)) {
