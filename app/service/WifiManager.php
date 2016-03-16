@@ -384,6 +384,7 @@ class WifiManager extends BaseService {
 			->select("DISTINCT channel")
 			->where("channel IS NOT NULL")
 			->where('channel > 0')
+			->order('channel ASC')
 			->fetchAll();
 	}
 
