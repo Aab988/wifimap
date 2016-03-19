@@ -342,7 +342,7 @@ class WifiPresenter extends BasePresenter
                 $net = new Wifi();
                 $net->setLatitude($lat_avg);
                 $net->setLongitude($lon_avg);
-                $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
+                $img = $this->overlayRenderer->drawCalculated($coords,$nets,$net);
                 break;
             default:
 

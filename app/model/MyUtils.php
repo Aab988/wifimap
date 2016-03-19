@@ -69,6 +69,7 @@ class MyUtils extends Nette\Object {
         ob_start();
         imagepng($img);
         $image = ob_get_clean();
+        imagedestroy($img);
         return $image;
     }
 }

@@ -90,7 +90,7 @@ class OverlayRenderer {
 		imagecolortransparent($newImg,$this->imgcolors['background']);
 		$width = imagesx($this->img);
 		$height = imagesy($this->img);
-		imagecopy($newImg, $this->img, 0,0,($width - self::IMAGE_WIDTH)/	2,($height - self::IMAGE_HEIGHT)/2,self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
+		imagecopy($newImg, $this->img, 0,0,($width - self::IMAGE_WIDTH)/	2,($height - self::IMAGE_HEIGHT)/2,$width,$height);
 		$this->img = $newImg;
 		return $newImg;
 	}
