@@ -47,6 +47,8 @@ class BasePresenter extends Nette\Application\UI\Presenter
 		parent::startup();
 
 		$this->template->isMapPage = ($this->getPresenter()->getName() == "Homepage");
+		$this->template->actualPage = $this->getPresenter()->getName();
+
 	}
 
 
