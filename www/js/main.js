@@ -242,14 +242,23 @@ function showOnlyOneNet(ssid) {
 
 function useAsFilter(form) {
     removeAllParams();
+
+    $("#frm-searchForm-ssidmac").val("");
+    $("#frm-searchForm-channel").val("");
+    $("#frm-searchForm-security").val("");
+    $("#frm-searchForm-source").val("");
+
     var by = $(form).find('.highlightBy').val();
     var val = $(form).find("."+by).val();
     if(by == 'ssid' || by == 'mac') {
         by = 'ssidmac';
+        hashParams[by] = val;
+        $("#frm-searchForm-ssidmac").val(decodeURIComponent(val));
+    }
+    if(by == "channel") {
+        $("#frm-searchForm-channel").val(decodeURIComponent(val));
     }
     hashParams.mode = MODE_SEARCH;
-    hashParams[by] = val;
-    $("#frm-searchForm-ssidmac").val(decodeURIComponent(val));
     modeChanged();
 }
 
