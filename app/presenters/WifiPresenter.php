@@ -6,6 +6,7 @@ use App\Model\ArrayUtil;
 use App\Model\Coords;
 use App\Model\MyUtils;
 use App\Model\Wifi;
+use App\Service\DownloadRequest;
 use App\Service\GoogleDownload;
 use App\Service\OptimizedWifiManager;
 use App\Service\OverlayRenderer;
@@ -60,6 +61,10 @@ class WifiPresenter extends BasePresenter
 
     /** @var array modes that can be used */
     private $allowedModes = array();
+
+    /** @var DownloadRequest @inject */
+    public $downloadRequest;
+
 
     private static $modesLabels = array(
         self::MODE_ALL => "Všechny sítě",
@@ -190,11 +195,15 @@ class WifiPresenter extends BasePresenter
             );
         }
 
+        $alreadyInGoogleQueue = $this->downloadRequest->isInGoogleQueue($detail['id']);
+
         $json = array();
         $this->template->setFile(__DIR__ . "/../templates/Wifi/processClick.latte");
         $this->template->count = $count;
         $this->template->others = $others;
         $this->template->detail = $detail;
+
+        $this->template->alreadyInGoogleQueue = $alreadyInGoogleQueue;
         $temp = (string)$this->template;
 
         $json['iw'] = $temp;

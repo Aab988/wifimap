@@ -419,4 +419,14 @@ AND dr.date = groupeddr.MaxDateTime
 
 
 
+    public function isInGoogleQueue($wifiId) {
+        $count = $this->database->table('google_request')
+            ->where('id_wifi1',$wifiId)
+            ->where('downloaded','N')
+            ->count();
+        if($count > 0) return true;
+        return false;
+    }
+
+
 }

@@ -420,7 +420,10 @@ $(document).ready(function () {
  * @param wid
  */
 function googleDownloadRequest1(wid) {
-    $.ajax(GOOGLE_DOWNLOAD_URL, { data: { wid: wid } }).done(function () {});
+    $.ajax(GOOGLE_DOWNLOAD_URL, { data: { wid: wid } }).done(function () {
+        $("#googleDownloadRequest-"+wid).remove();
+        $("#iw-info-dynamic-"+wid).html('<div class="alert alert-success"><strong>Úspěšně přidáno do Google fronty!</strong></div>');
+    });
     return false;
 }
 
