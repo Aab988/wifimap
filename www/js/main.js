@@ -334,6 +334,7 @@ $('#beginWigleRequest').click(function () {
  */
 function createDownloadRequest(url, infodiv) {
     // vzit souradnice
+    console.log($("#notify_email").val());
     var bounds = uer.getUserEditableRectangle().getBounds();
     var data = {
         lat1: bounds.getSouthWest().lat(),
@@ -341,6 +342,7 @@ function createDownloadRequest(url, infodiv) {
         lon1: bounds.getSouthWest().lng(),
         lon2: bounds.getNorthEast().lng(),
         sourceDownloadFrom: $("#createDownloadRequest").attr("data-source"),
+        notifyEmail: $("#notify_email").val(),
         filter: getUrlVars()
     };
     sendRequestAjax(url, data, infodiv, function () {

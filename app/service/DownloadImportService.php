@@ -8,6 +8,7 @@ namespace App\Service;
 
 
 use App\Model\DownloadImport;
+use Nette\Database\IRow;
 
 class DownloadImportService extends BaseService {
 
@@ -15,9 +16,10 @@ class DownloadImportService extends BaseService {
 
     /**
      * @param DownloadImport $di
+     * @return bool|int|\Nette\Database\Table\IRow
      */
     public function addImport(DownloadImport $di) {
-        $this->database->table(self::TABLE)->insert($di->toArray());
+        return $this->database->table(self::TABLE)->insert($di->toArray());
     }
 
     /**

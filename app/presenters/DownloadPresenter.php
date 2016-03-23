@@ -32,6 +32,8 @@ class DownloadPresenter extends BasePresenter
     public $oWifiManager;
     /** @var Service\DownloadImportService @inject */
     public $downloadImportService;
+    /** @var Service\NotifyEmailService @inject */
+    public $notifyEmailService;
 
     /** maximalni pocet hodin, po ktery lze vytvaret pozadavek s vyfiltrovanymi body */
     const MAX_HOURS_FILTERED_REQUEST = 168;
@@ -178,10 +180,18 @@ class DownloadPresenter extends BasePresenter
             $macAddresses[$net['mac']] = $net;
         }
 
+        $notifyEmail = null;
+        if($this->getHttpRequest()->getQuery("notifyEmail") != "") {
+            $notifyEmail = $this->notifyEmailService->addNotifyEmail($this->getHttpRequest()->getQuery("notifyEmail"));
+            setcookie("notify_email", $this->getHttpRequest()->getQuery("notifyEmail"), time()+3600);
+        }
+
+
         if($sourceDownloadFrom == Service\WigleDownload::ID_SOURCE) {
             // jen z wigle -> pridame pouze do wigle_aps
             foreach(array_keys($macAddresses) as $macaddr) {
                 $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
             }
         }
         elseif($sourceDownloadFrom == Service\GoogleDownload::ID_SOURCE) {
@@ -195,11 +205,13 @@ class DownloadPresenter extends BasePresenter
                 $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
 
                 // nastaveni importu
-                $downloadImport->setIdWigleAps($row->getPrimary());
+                $downloadImport->setIdWigleAps($row->getPrimary(true));
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
                 $downloadImport->setState(DownloadImport::ADDED_WIGLE);
 
                 // ulozeni importu
-                $this->downloadImportService->addImport($downloadImport);
+                $importId = $this->downloadImportService->addImport($downloadImport);
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailDownloadImport($notifyEmail,$importId->getPrimary(true));
             }
         }
         return Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
@@ -296,7 +308,6 @@ class DownloadPresenter extends BasePresenter
         $this->terminate();
     }
 
-
     /**
      * CRON - every 30 minutes
      *
@@ -392,28 +403,30 @@ class DownloadPresenter extends BasePresenter
             else {
                 echo "$('#createDownloadRequest').show();";
             }
-
-            /* foreach($macAddresses as $macaddr) {
-                 // vytvoreni importu
-                 $downloadImport = new DownloadImport();
-                 $downloadImport->setMac($macaddr);
-
-                 // pridani do wigle fronty
-                 $row = $this->wigleDownload->save2WigleAps(null,$macaddr,$priority);
-
-                 // nastaveni importu
-                 $downloadImport->setIdWigleAps($row->getPrimary());
-                 $downloadImport->setState(DownloadImport::ADDED_WIGLE);
-
-                 // ulozeni importu
-                 dump($downloadImport);
-                 $this->downloadImportService->addImport($downloadImport);
-             }*/
+            $text .= '<br /><label for="notify_email">Až budou data získana informujte mě na email:</label><input type="email" name="notify_email" id="notify_email"'. ((isset($_COOKIE['notify_email']))?'value="'.$_COOKIE['notify_email'].'"':'') .' />';
 
             echo "$('#time2down').html('" . $text . "');";
         }
         $this->terminate();
     }
+
+
+    public function renderNotifyEmail() {
+        $notifyEmails = $this->notifyEmailService->getAllNotSentNotifyEmails();
+
+        foreach($notifyEmails as $id=>$row) {
+            $notDownloadedCount = $this->notifyEmailService->getNotDownloadedCountByNotifyEmailId($id);
+            if($notDownloadedCount["pocet"] == 0) {
+                // poslat email
+                $this->notifyEmailService->notifyByEmail($id);
+                $this->notifyEmailService->markAsSent($id);
+            }
+        }
+
+        $this->terminate();
+
+    }
+
 
 
 }
