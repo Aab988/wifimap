@@ -288,7 +288,19 @@ class WigleDownload extends Download implements IDownload {
             'downloaded'=>0,
             'priority'=>$priority
         );
-        $row = $this->database->table('wigle_aps')->insert($array);
+        $alreadyExisting = $this->database->table("wigle_aps")
+            ->where("mac",$mac_address)
+            ->where("downloaded",0)->fetch();
+
+        if($alreadyExisting) {
+            $this->database->table("wigle_aps")
+                ->where("id",$alreadyExisting['id'])
+                ->update(array('priority'=>$priority));
+            $row = $this->database->table("wigle_aps")->where("id",$alreadyExisting["id"])->fetch();
+        }
+        else {
+            $row = $this->database->table('wigle_aps')->insert($array);
+        }
         return $row;
     }
 
