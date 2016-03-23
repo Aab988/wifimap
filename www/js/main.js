@@ -218,6 +218,9 @@ function removeAllParams() {
 function modeChanged() {
     window.location.hash = $.param(hashParams);
     sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
+    if($("#requestInfo").find("#time2down") != null) {
+        uer.getTime();
+    }
     redrawOverlay();
     return false;
 }

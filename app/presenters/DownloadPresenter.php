@@ -10,7 +10,8 @@ use \App\Service;
 use Nette\Http\Url;
 use Nette\Http\UrlScript;
 
-class DownloadPresenter extends BasePresenter {
+class DownloadPresenter extends BasePresenter
+{
 
     const FROM_TEMP_DIR_KEY = 'fromtempdir';
 
@@ -29,24 +30,30 @@ class DownloadPresenter extends BasePresenter {
     /** @var Service\OptimizedWifiManager @inject */
     public $oWifiManager;
 
+    /** maximalni pocet hodin, po ktery lze vytvaret pozadavek s vyfiltrovanymi body */
+    const MAX_HOURS_FILTERED_REQUEST = 168;
+
     /**
      * CRON - 50times a day
      * process Wigle Download
+     *
      * @throws \Nette\Application\AbortException
      */
-    public function renderWigle() {
-        if($this->wigleDownload) {
+    public function renderWigle()
+    {
+        if ($this->wigleDownload) {
             $this->wigleDownload->downloadQueue = $this->downloadQueue;
             $this->wigleDownload->download();
         }
-		$this->terminate();
+        $this->terminate();
     }
 
     /**
      * DOWNLOAD OBSERVATIONS OF MAC ADDRESS FROM WIGLE
      */
-    public function renderWigleObservations() {
-        if($this->wigleDownload) {
+    public function renderWigleObservations()
+    {
+        if ($this->wigleDownload) {
             $this->wigleDownload->downloadObservations();
         }
         $this->terminate();
@@ -55,32 +62,34 @@ class DownloadPresenter extends BasePresenter {
 
     /**
      * process Wifileaks file parse and save to DB
+     *
      * @throws \Nette\Application\AbortException
      */
-    public function renderWifileaks() {
-        MyUtils::setIni(1800,'512M');
+    public function renderWifileaks()
+    {
+        MyUtils::setIni(1800, '512M');
         $fromtempdir = $this->getHttpRequest()->getQuery(self::FROM_TEMP_DIR_KEY);
-        if($fromtempdir) {
+        if ($fromtempdir) {
             //TODO:
             // najit soubory v tempu
             // pokud nejaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnovejsi)
             $this->wifileaksDownload->download("../temp/wifileaks.tsv");
-        }
-        else {
+        } else {
             $this->wifileaksDownload->download();
         }
 
 
-		$this->terminate();
+        $this->terminate();
     }
 
     /**
      * create google request -> save it to db
      */
-    public function renderCreateGoogleRequest() {
+    public function renderCreateGoogleRequest()
+    {
         $this->googleDownload->setWifiManager($this->wifiManager);
         $req = $this->getHttpRequest();
-        if($req->getQuery("wid")) {
+        if ($req->getQuery("wid")) {
             $wifi = $this->wifiManager->getWifiById($req->getQuery("wid"));
             $this->googleDownload->createRequestFromWifi($wifi);
         }
@@ -88,40 +97,44 @@ class DownloadPresenter extends BasePresenter {
     }
 
 
-    public function renderGoogle() {
-        if(!$this->googleDownload) return;
+    public function renderGoogle()
+    {
+        if (!$this->googleDownload) return;
         $this->googleDownload->download();
         $this->terminate();
     }
 
 
+    public function renderPrepareWigleDownload($lat_start, $lat_end, $lon_start, $lon_end)
+    {
+        $coords = new Coords($lat_start, $lat_end, $lon_start, $lon_end);
 
+        // ceska republika rozsah
+        //$this->wigleDownload->generateLatLngDownloadArray(48.54570549184746,51.055207338584964,12.073974609375,18.8525390625);
 
-    public function renderPrepareWigleDownload($lat_start,$lat_end,$lon_start,$lon_end) {
-        $coords = new Coords($lat_start,$lat_end,$lon_start,$lon_end);
-
-		// ceska republika rozsah
-		//$this->wigleDownload->generateLatLngDownloadArray(48.54570549184746,51.055207338584964,12.073974609375,18.8525390625);
-
-		//hk rozsah
-		//$this->wigleDownload->generateLatLngDownloadArray(new Coords(50.17074134967256,50.263887540074116,15.745468139648438,15.90545654296875));
+        //hk rozsah
+        //$this->wigleDownload->generateLatLngDownloadArray(new Coords(50.17074134967256,50.263887540074116,15.745468139648438,15.90545654296875));
 
         // $this->wigleDownload->generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end);
-		$this->terminate();
+        $this->terminate();
     }
 
     /**
      * determine render action
+     *
      * @param $show
      */
-    public function actionAddWigleRequest($show) {
+    public function actionAddWigleRequest($show)
+    {
         $this->determineView($show);
     }
 
-    public function renderAddWigleRequestHelp() {
+    public function renderAddWigleRequestHelp()
+    {
     }
 
-    public function renderAddWigleRequest() {
+    public function renderAddWigleRequest()
+    {
         $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
         $this->template->state = $state;
     }
@@ -129,18 +142,22 @@ class DownloadPresenter extends BasePresenter {
 
     /**
      * determine render action
+     *
      * @param string $show
      */
-    public function actionAddGoogleRequest($show) {
+    public function actionAddGoogleRequest($show)
+    {
         $this->determineView($show);
     }
 
     /** show help for google request */
-    public function renderAddGoogleRequestHelp() {
+    public function renderAddGoogleRequestHelp()
+    {
     }
 
     /** add download request */
-    public function renderAddGoogleRequest() {
+    public function renderAddGoogleRequest()
+    {
         /*$state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);*/
 
         $this->downloadRequest->processDownloadRequestCreation(new Coords(
@@ -148,7 +165,7 @@ class DownloadPresenter extends BasePresenter {
             $this->getHttpRequest()->getQuery("lat2"),
             $this->getHttpRequest()->getQuery("lon1"),
             $this->getHttpRequest()->getQuery("lon2")
-        ),Service\GoogleDownload::ID_SOURCE);
+        ), Service\GoogleDownload::ID_SOURCE);
 
         $this->template->state = Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
     }
@@ -160,22 +177,24 @@ class DownloadPresenter extends BasePresenter {
      * @param int $idSource
      * @return bool|string
      */
-    private function addRequest($idSource) {
+    private function addRequest($idSource)
+    {
         return $this->downloadRequest->processDownloadRequestCreation(new Coords(
             $this->getHttpRequest()->getQuery("lat1"),
             $this->getHttpRequest()->getQuery("lat2"),
             $this->getHttpRequest()->getQuery("lon1"),
             $this->getHttpRequest()->getQuery("lon2")
-        ),$idSource);
+        ), $idSource);
     }
 
 
     /**
      * determines what view show
      */
-    private function determineView($show) {
-        if(strcasecmp($show,'help') == 0) {
-            $this->view = $this->getAction().'help';
+    private function determineView($show)
+    {
+        if (strcasecmp($show, 'help') == 0) {
+            $this->view = $this->getAction() . 'help';
         }
     }
 
@@ -187,15 +206,16 @@ class DownloadPresenter extends BasePresenter {
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderProcessWigleRequest() {
+    public function renderProcessWigleRequest()
+    {
         MyUtils::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
-        if($req) {
-            $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
+        if ($req) {
+            $coords = new Coords($req->lat_start, $req->lat_end, $req->lon_start, $req->lon_end);
             $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
             $total_count = count($this->downloadQueue->getGeneratedCoords());
             $this->downloadQueue->save($req->id);
-            $this->downloadRequest->setProcessed($req,$total_count);
+            $this->downloadRequest->setProcessed($req, $total_count);
         }
         $this->terminate();
     }
@@ -208,117 +228,98 @@ class DownloadPresenter extends BasePresenter {
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderProcessGoogleRequest() {
+    public function renderProcessGoogleRequest()
+    {
         $this->googleDownload->setWifiManager($this->wifiManager);
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\GoogleDownload::ID_SOURCE);
-        $coords = new Coords($req->lat_start,$req->lat_end,$req->lon_start,$req->lon_end);
+        $coords = new Coords($req->lat_start, $req->lat_end, $req->lon_start, $req->lon_end);
         $this->googleDownload->createRequestFromArea($coords);
         // TODO: nastavovat total_count na pocet zaznamu pridanych do google_request?
         $this->downloadRequest->setProcessed($req);
         $this->terminate();
     }
 
-
-
-
-    public function actionAddRequests($data = '../temp/data.mac',$priority = 2,$fromWigle = true,$fromGoogle = false) {
-
-
-
+    public function actionAddRequests($data = '../temp/data.mac', $priority = 2, $fromWigle = true, $fromGoogle = false)
+    {
     }
 
-    public function renderTime2down($lat1,$lat2,$lon1,$lon2,$sourceDownloadFrom) {
-        $coords = new Coords($lat1,$lat2,$lon1,$lon2);
+    public function renderTime2down($lat1, $lat2, $lon1, $lon2, $sourceDownloadFrom)
+    {
+        $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $sourceDownloadFrom = (int)$sourceDownloadFrom;
         $request = $this->getHttpRequest();
         $filter = $request->getQuery("filter");
-        $filterSet = ArrayUtil::arrayHasSomeKey($filter,array("ssidmac","channel","source","security","ssid"));
-        $text = "";
+        $filterSet = ArrayUtil::arrayHasSomeKey($filter, array("ssidmac", "channel", "source", "security", "ssid"));
 
-        if($filterSet) {
+        if ($filterSet) {
             $text = "<strong>Máte nastavený filtr, vytvoří se požadavek přímo na vyfiltrované body</strong><br />";
             $mode = WifiPresenter::MODE_ALL;
 
-            //dump($filter["mode"]);
             if (isset($filter["mode"])) {
                 $mode = $filter["mode"];
             }
 
-            $params = array();
-            //dump($mode);
-            switch ($mode) {
-                case WifiPresenter::MODE_SEARCH:
-                    if (isset($filter["ssidmac"])) {
-                        $ssidmac = $filter["ssidmac"];
-                        if ($ssidmac) {
-                            if (MyUtils::isMacAddress($ssidmac)) {
-                                $params['mac'] = urldecode($ssidmac);
-                            } else {
-                                $params['ssid'] = $ssidmac;
-                            }
-                        }
-                    }
-                    if (isset($filter['channel'])) {
-                        $channel = $filter['channel'];
-                        if ($channel != null && $channel != "") {
-                            $params['channel'] = intval($channel);
-                        }
-                    }
-                    if (isset($filter['security'])) {
-                        $security = $filter['security'];
-                        if ($security != null && $security != '') {
-                            $params['sec'] = intval($security);
-                        }
-                    }
-                    if (isset($filter['source'])) {
-                        $source = $filter['source'];
-                        if ($source != null && $source != "") {
-                            $params['id_source'] = intval($source);
-                        }
-                    }
-                    break;
-                case WifiPresenter::MODE_ONE:
-                    $params['ssid'] = $this->getHttpRequest()->getQuery('ssid');
-                    break;
-                default:
-                    break;
-            }
+            $params = $this->getParamsArray($coords,$mode,$filter);
 
-            $params["coords"] = $coords;
-            //$params["id_source"] = $source;
-
-            //dump($params);
-            // dump($this->getHttpRequest()->getQuery("filter"));
             $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
-            //  dump($nets);
             $netsCount = count($nets);
-
-
             $macAddresses = array();
 
-            foreach($nets as $net) {
+            foreach ($nets as $net) {
                 $macAddresses[$net['mac']] = $net;
             }
 
-            $beforeMinutes = 0; $afterMinutes = 0;
-            switch($sourceDownloadFrom) {
+            $beforeMinutes = 0;
+            $afterMinutes = 0;
+            switch ($sourceDownloadFrom) {
                 case Service\WigleDownload::ID_SOURCE:
                     $beforeMinutes = $this->wigleDownload->getWigleApsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
-                    $afterMinutes = count($macAddresses)*Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
+                    $afterMinutes = count($macAddresses) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
                     break;
                 case Service\GoogleDownload::ID_SOURCE:
-                    $beforeMinutes = $this->wigleDownload->getWigleApsCount(2)* Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + $this->googleDownload->getGoogleRequestsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
-                    $afterMinutes = count($macAddresses)*Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + count($macAddresses) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
+                    $beforeMinutes = $this->wigleDownload->getWigleApsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + $this->googleDownload->getGoogleRequestsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
+                    $afterMinutes = count($macAddresses) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS + count($macAddresses) * Service\BaseService::CRON_TIME_DOWNLOAD_GOOGLE;
                     break;
             }
 
+            $hodin1 = floor($beforeMinutes / 60);
+            $minut1 = $beforeMinutes - $hodin1 * 60;
+            $hodin2 = floor($afterMinutes / 60);
+            $minut2 = $afterMinutes - ($hodin2 * 60);
 
-            $hodin1 = floor($beforeMinutes/60); $minut1 = $beforeMinutes - $hodin1 * 60;
-            $hodin2 = floor($afterMinutes/60); $minut2 = $afterMinutes - ($hodin2 * 60);
+            $celkemHodin = $hodin1 + $hodin2;
+            $celkemMinut = $minut1 + $minut2;
+            $celkemHodin += floor($celkemMinut / 60);
+            $celkemMinut = $celkemMinut - floor($celkemMinut / 60) * 60;
 
-            $text.= "Vyfiltrovaných sítí je " . $netsCount . ".<br />";
+            $text .= "Vyfiltrovaných sítí je " . $netsCount . ".<br />";
 
-            $text .= "Získání dat bude trvat <strong>" . $hodin2 . "hodin a " . $minut2 . "minut + " . $hodin1 . "hodin a " . $minut1 . "minut</strong>";
+            if ($netsCount > 0) {
+                $text .= "Získání dat bude trvat<br /><strong>";
+                if ($hodin2 > 0) $text .= $hodin2 . "hodin";
+                if ($hodin2 > 0 && $minut2 > 0) $text .= " a ";
+                if ($minut2 > 0) $text .= $minut2 . "minut";
+                if ($hodin1 > 0 || $minut1 > 0) $text .= "<br /> + ";
+                if ($hodin1 > 0) $text .= $hodin1 . "hodin";
+                if ($hodin1 > 0 && $minut1 > 0) $text .= " a ";
+                if ($minut1 > 0) $text .= $minut1 . "minut";
+                $text .= "</strong>";
+
+                $text .= "<br />celkem: <strong>";
+                if ($celkemHodin > 0) $text .= ($celkemHodin) . " hodin";
+                if ($celkemHodin > 0 && $celkemMinut > 0) $text .= " a ";
+                if ($celkemMinut > 0) $text .= ($celkemMinut) . " minut";
+                $text .= "</strong>";
+            }
+            if ($netsCount == 0) {
+                echo "$('#createDownloadRequest').hide();";
+            } else {
+                echo "$('#createDownloadRequest').show();";
+            }
+
+            if ($celkemHodin > self::MAX_HOURS_FILTERED_REQUEST) {
+                echo "$('#createDownloadRequest').hide();";
+            }
 
             /* foreach($macAddresses as $macaddr) {
                  // vytvoreni importu
@@ -337,14 +338,10 @@ class DownloadPresenter extends BasePresenter {
                  $this->downloadImportService->addImport($downloadImport);
              }*/
 
-            echo "$('#time2down').html('".$text."');";
-            //echo "$('#createDownloadRequest').hide();";
+            echo "$('#time2down').html('" . $text . "');";
         }
         $this->terminate();
     }
-
-
-
 
 
 }

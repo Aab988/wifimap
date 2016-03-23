@@ -18,23 +18,7 @@ use Nette;
 use Nette\Caching\Cache;
 use Tracy\Debugger;
 
-class WifiPresenter extends BasePresenter
-{
-    /** all APs without filter */
-    const MODE_ALL = "MODE_ALL";
-    /** filtered APs */
-    const MODE_SEARCH = "MODE_SEARCH";
-    /** highlighted APs by params */
-    const MODE_HIGHLIGHT = "MODE_HIGHLIGHT";
-    /** only one AP */
-    const MODE_ONE = 'MODE_ONE';
-    /** calculated position */
-    const MODE_CALCULATED = 'MODE_CALCULATED';
-
-    /** default mode if its not set */
-    const DEFAULT_MODE = self::MODE_ALL;
-
-
+class WifiPresenter extends BasePresenter {
     /** increasing image latlng range and image size */
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
