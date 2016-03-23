@@ -49,7 +49,6 @@ class WifiPresenter extends BasePresenter {
     /** @var DownloadRequest @inject */
     public $downloadRequest;
 
-
     private static $modesLabels = array(
         self::MODE_ALL => "Všechny sítě",
         self::MODE_SEARCH => "Vyhledávání",

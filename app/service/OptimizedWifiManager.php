@@ -17,7 +17,6 @@ class OptimizedWifiManager extends BaseService {
 
     const TABLE = 'wifi';
 
-
     /**
      * @var \PDO
      */
@@ -42,7 +41,6 @@ class OptimizedWifiManager extends BaseService {
         $SQLselect = $this->buildSelect($select);
 
         $SQLwhere = array();
-
         $pdoParams = array();
 
         foreach($params as $p => $pv) {
@@ -84,7 +82,6 @@ class OptimizedWifiManager extends BaseService {
         $sth->execute();
         $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
         return $data;
-
     }
 
     /**

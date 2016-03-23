@@ -4,6 +4,7 @@ namespace App\Presenters;
 
 use App\Model\ArrayUtil;
 use \App\Model\Coords;
+use App\Model\DownloadImport;
 use App\Model\MyUtils;
 use App\Model\Wifi;
 use \App\Service;
@@ -29,6 +30,8 @@ class DownloadPresenter extends BasePresenter
     public $wifiManager;
     /** @var Service\OptimizedWifiManager @inject */
     public $oWifiManager;
+    /** @var Service\DownloadImportService @inject */
+    public $downloadImportService;
 
     /** maximalni pocet hodin, po ktery lze vytvaret pozadavek s vyfiltrovanymi body */
     const MAX_HOURS_FILTERED_REQUEST = 168;
@@ -135,8 +138,71 @@ class DownloadPresenter extends BasePresenter
 
     public function renderAddWigleRequest()
     {
-        $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
+        $request = $this->getHttpRequest();
+        $coords = new Coords($request->getQuery("lat1"), $request->getQuery("lat2"), $request->getQuery("lon1"), $request->getQuery("lon2"));
+        $sourceDownloadFrom = (int)$request->getQuery("sourceDownloadFrom");
+        $filter = $request->getQuery("filter");
+        $filterSet = ArrayUtil::arrayHasSomeKey($filter, array("ssidmac", "channel", "source", "security", "ssid"));
+        if($filterSet) {
+            // request with filter set
+            $state = $this->addFilteredRequest($coords,$filter,$sourceDownloadFrom);
+        }
+        else {
+            // normal request to latitude longitude range
+            $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
+        }
+
+        //$state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
         $this->template->state = $state;
+    }
+
+    /**
+     * vytvori pozadavek s nastavenym filtrem
+     *
+     * @param Coords $coords
+     * @param array $filter
+     * @param int $sourceDownloadFrom
+     * @return string
+     *
+     */
+    private function addFilteredRequest($coords,$filter,$sourceDownloadFrom) {
+        $mode = WifiPresenter::MODE_ALL;
+
+        if (isset($filter["mode"])) {
+            $mode = $filter["mode"];
+        }
+        $params = $this->getParamsArray($coords,$mode,$filter);
+        $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
+        $macAddresses = array();
+        foreach ($nets as $net) {
+            $macAddresses[$net['mac']] = $net;
+        }
+
+        if($sourceDownloadFrom == Service\WigleDownload::ID_SOURCE) {
+            // jen z wigle -> pridame pouze do wigle_aps
+            foreach(array_keys($macAddresses) as $macaddr) {
+                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
+            }
+        }
+        elseif($sourceDownloadFrom == Service\GoogleDownload::ID_SOURCE) {
+            // z Wigle i Google -> pridame do wigle_aps a do download_import
+            foreach(array_keys($macAddresses) as $macaddr) {
+                // vytvoreni importu
+                $downloadImport = new DownloadImport();
+                $downloadImport->setMac($macaddr);
+
+                // pridani do wigle fronty
+                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
+
+                // nastaveni importu
+                $downloadImport->setIdWigleAps($row->getPrimary());
+                $downloadImport->setState(DownloadImport::ADDED_WIGLE);
+
+                // ulozeni importu
+                $this->downloadImportService->addImport($downloadImport);
+            }
+        }
+        return Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
     }
 
 
@@ -159,14 +225,24 @@ class DownloadPresenter extends BasePresenter
     public function renderAddGoogleRequest()
     {
         /*$state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);*/
-
-        $this->downloadRequest->processDownloadRequestCreation(new Coords(
-            $this->getHttpRequest()->getQuery("lat1"),
-            $this->getHttpRequest()->getQuery("lat2"),
-            $this->getHttpRequest()->getQuery("lon1"),
-            $this->getHttpRequest()->getQuery("lon2")
-        ), Service\GoogleDownload::ID_SOURCE);
-
+        $request = $this->getHttpRequest();
+        $coords = new Coords($request->getQuery("lat1"), $request->getQuery("lat2"), $request->getQuery("lon1"), $request->getQuery("lon2"));
+        $sourceDownloadFrom = (int)$request->getQuery("sourceDownloadFrom");
+        $filter = $request->getQuery("filter");
+        $filterSet = ArrayUtil::arrayHasSomeKey($filter, array("ssidmac", "channel", "source", "security", "ssid"));
+        if($filterSet) {
+            // request with filter set
+            $state = $this->addFilteredRequest($coords,$filter,$sourceDownloadFrom);
+        }
+        else {
+            // normal request to latitude longitude range
+            $this->downloadRequest->processDownloadRequestCreation(new Coords(
+                $this->getHttpRequest()->getQuery("lat1"),
+                $this->getHttpRequest()->getQuery("lat2"),
+                $this->getHttpRequest()->getQuery("lon1"),
+                $this->getHttpRequest()->getQuery("lon2")
+            ), Service\GoogleDownload::ID_SOURCE);
+        }
         $this->template->state = Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
     }
 
@@ -269,8 +345,7 @@ class DownloadPresenter extends BasePresenter
                 $macAddresses[$net['mac']] = $net;
             }
 
-            $beforeMinutes = 0;
-            $afterMinutes = 0;
+            $beforeMinutes = 0; $afterMinutes = 0;
             switch ($sourceDownloadFrom) {
                 case Service\WigleDownload::ID_SOURCE:
                     $beforeMinutes = $this->wigleDownload->getWigleApsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
@@ -282,15 +357,11 @@ class DownloadPresenter extends BasePresenter
                     break;
             }
 
-            $hodin1 = floor($beforeMinutes / 60);
-            $minut1 = $beforeMinutes - $hodin1 * 60;
-            $hodin2 = floor($afterMinutes / 60);
-            $minut2 = $afterMinutes - ($hodin2 * 60);
+            $hodin1 = floor($beforeMinutes / 60); $minut1 = $beforeMinutes - $hodin1 * 60;
+            $hodin2 = floor($afterMinutes / 60); $minut2 = $afterMinutes - ($hodin2 * 60);
 
-            $celkemHodin = $hodin1 + $hodin2;
-            $celkemMinut = $minut1 + $minut2;
-            $celkemHodin += floor($celkemMinut / 60);
-            $celkemMinut = $celkemMinut - floor($celkemMinut / 60) * 60;
+            $celkemHodin = $hodin1 + $hodin2; $celkemMinut = $minut1 + $minut2;
+            $celkemHodin += floor($celkemMinut / 60); $celkemMinut = $celkemMinut - floor($celkemMinut / 60) * 60;
 
             $text .= "Vyfiltrovaných sítí je " . $netsCount . ".<br />";
 
@@ -303,9 +374,7 @@ class DownloadPresenter extends BasePresenter
                 if ($hodin1 > 0) $text .= $hodin1 . "hodin";
                 if ($hodin1 > 0 && $minut1 > 0) $text .= " a ";
                 if ($minut1 > 0) $text .= $minut1 . "minut";
-                $text .= "</strong>";
-
-                $text .= "<br />celkem: <strong>";
+                $text .= "</strong><br />celkem: <strong>";
                 if ($celkemHodin > 0) $text .= ($celkemHodin) . " hodin";
                 if ($celkemHodin > 0 && $celkemMinut > 0) $text .= " a ";
                 if ($celkemMinut > 0) $text .= ($celkemMinut) . " minut";
@@ -319,6 +388,9 @@ class DownloadPresenter extends BasePresenter
 
             if ($celkemHodin > self::MAX_HOURS_FILTERED_REQUEST) {
                 echo "$('#createDownloadRequest').hide();";
+            }
+            else {
+                echo "$('#createDownloadRequest').show();";
             }
 
             /* foreach($macAddresses as $macaddr) {

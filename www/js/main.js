@@ -339,7 +339,9 @@ function createDownloadRequest(url, infodiv) {
         lat1: bounds.getSouthWest().lat(),
         lat2: bounds.getNorthEast().lat(),
         lon1: bounds.getSouthWest().lng(),
-        lon2: bounds.getNorthEast().lng()
+        lon2: bounds.getNorthEast().lng(),
+        sourceDownloadFrom: $("#createDownloadRequest").attr("data-source"),
+        filter: getUrlVars()
     };
     sendRequestAjax(url, data, infodiv, function () {
         uer.getUserEditableRectangle().setMap(null);
