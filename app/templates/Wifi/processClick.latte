@@ -55,7 +55,7 @@
     </tr>
     <tr>
         <td>Datum přidání</td>
-        <td>{if $detail['dateAdded'] && $detail['dateAdded'] != '0000-00-00'}{$detail['dateAdded']|date:'j. n. Y'}{else}<i>není k dispozici</i>{/if}</td>
+        <td>{if $detail['dateAdded'] && $detail['dateAdded'] != '0000-00-00' && strtotime($detail['dateAdded']) > 0}{$detail['dateAdded']|date:'j. n. Y'}{else}<i>není k dispozici</i>{/if}</td>
     </tr>
 </table>
 <div class="clearfix"></div><br />

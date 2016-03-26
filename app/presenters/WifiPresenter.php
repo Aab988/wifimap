@@ -215,7 +215,7 @@ class WifiPresenter extends BasePresenter {
      */
     public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
     {
-        //header("Content-type: image/png");
+        header("Content-type: image/png");
         MyUtils::setIni(180, '1024M');
 
         $request = $this->getHttpRequest();
