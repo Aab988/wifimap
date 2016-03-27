@@ -81,7 +81,7 @@ class StatisticsManager extends BaseService {
             $ss->setTotalNets($lss->total_nets);
             $ws = new WifiSecurity($lss->ws_id,$lss->ws_label);
             $ss->setWifiSecurity($ws);
-            $stat_sec[] = $ss;
+            $stat_sec[$lss->ws_id] = $ss;
         }
         return $stat_sec;
     }
@@ -100,7 +100,7 @@ class StatisticsManager extends BaseService {
             $ss->setSource(new Source($lss->sourceid,$lss->sourcename));
             $ss->setTotalNets($lss->total_nets);
             $ss->setFreeNets($lss->free_nets);
-            $stat_source[] = $ss;
+            $stat_source[$lss->sourceid] = $ss;
         }
         return $stat_source;
     }

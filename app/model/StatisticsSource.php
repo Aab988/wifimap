@@ -18,6 +18,9 @@ class StatisticsSource extends  Nette\Object {
     /** @var int $free_nets */
     private $free_nets = 0;
 
+    private $color = "#ddd";
+
+
     /**
      * @return int
      */
@@ -81,6 +84,24 @@ class StatisticsSource extends  Nette\Object {
     {
         $this->free_nets = $free_nets;
     }
+
+    /**
+     * @param bool $shade
+     * @return string
+     */
+    public function getColor($shade = false)
+    {
+        return Color::GetRandomColor(Source::$colors[$this->source->getId()],$shade);
+    }
+
+    /**
+     * @param string $color
+     */
+    public function setColor($color)
+    {
+        $this->color = $color;
+    }
+
 
 
 }

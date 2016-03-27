@@ -15,6 +15,9 @@ class StatisticsSecurity extends Nette\Object {
     /** @var int $total_nets */
     private $total_nets = 0;
 
+    private $color = "#ddd";
+
+
     /**
      * @return int
      */
@@ -63,4 +66,21 @@ class StatisticsSecurity extends Nette\Object {
         $this->total_nets = $total_nets;
     }
 
+    /**
+     * @param bool $shade
+     * @return string
+     */
+    public function getColor($shade = false)
+    {
+        $this->color = WifiSecurity::$colors[$this->wifiSecurity->getId()];
+        return Color::GetRandomColor($this->color,$shade);
+    }
+
+    /**
+     * @param string $color
+     */
+    public function setColor($color)
+    {
+        $this->color = $color;
+    }
 }

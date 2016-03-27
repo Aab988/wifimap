@@ -5,12 +5,22 @@
  * Time: 15:47
  */
 namespace App\Model;
+use App\Service\GoogleDownload;
+use App\Service\WifileaksDownload;
+use App\Service\WigleDownload;
 use Nette;
 class Source extends Nette\Object  {
     /** @var int $id */
     private $id;
     /** @var  string $name */
     private $name;
+
+    public static $colors = array(
+        WifileaksDownload::ID_SOURCE => "00c0ef",
+        WigleDownload::ID_SOURCE => "f39c12",
+        GoogleDownload::ID_SOURCE => "5cb85c"
+    );
+
 
     /**
      * @param int $id
