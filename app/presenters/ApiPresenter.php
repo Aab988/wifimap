@@ -59,7 +59,6 @@ class ApiPresenter extends BasePresenter {
         foreach($params as $k=>$v) $filename.='_' . $v;
         $filename = '../temp/' . $filename .'.csv';
 
-
         $file = fopen($filename,"w");
 
         $array = array('Zdroj','Datum pridani', 'MAC', 'SSID', 'latitude', 'longitude', 'altitude',

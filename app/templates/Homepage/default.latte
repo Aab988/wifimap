@@ -2,6 +2,12 @@
 {block content}
     <div id="mapa"></div>
     <input id="pac-input" class="controls" type="text" placeholder="Vyhledat adresu..">
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
+        });
+    </script>
 {/block}
 {block right}
 
@@ -22,4 +28,5 @@
         <div class="loader"></div>
 
 {/block}
+
 

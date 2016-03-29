@@ -239,6 +239,8 @@
     window.onload = function(){
         var ctx1 = document.getElementById("chart_total_history").getContext("2d");
     	window.totalHistoryChart = new Chart(ctx1).Line(totalHistory, {});
+    	$("#chart_total_history").append(totalHistoryChart.generateLegend());
+
 
     	var ctx2 = document.getElementById("chart_total_pie").getContext("2d");
         window.totalPieChart = new Chart(ctx2).Doughnut(totalPie, {});
