@@ -8,7 +8,6 @@ var INIT_CENTER = {lat: 49.8, lng: 15.5}; // initial map center without user geo
 var GEOLOCATION_ZOOM = 12; // zoom with user geolocation
 
 var BASE_URL = location.protocol + "//" + location.host + location.pathname;
-
 var PROCESS_CLICK_URL = BASE_URL + "wifi/processClick";
 var IMAGE_URL = BASE_URL + "wifi/image";
 var GOOGLE_DOWNLOAD_URL = BASE_URL + "download/creategooglerequest";
@@ -378,7 +377,6 @@ function endDownloadRequest(infodiv, beginbutton) {
 
 $(document).ready(function () {
 
-    sendRequestAjax(ACTUAL_MODE_URL,hashParams,$(".actualModeInfoContent"));
 
     $("#frm-searchForm").submit(function (e) {
         e.preventDefault();
