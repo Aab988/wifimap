@@ -10,6 +10,7 @@ namespace App\Service;
 
 use App\Model\Coords;
 use App\Model\Log;
+use App\Model\MyUtils;
 use App\Model\Wifi;
 use App\Model\WifiSecurity;
 use Nette\Utils\DateTime;
@@ -77,7 +78,7 @@ class GoogleDownload extends Download implements IDownload {
                 if($data->accuracy < self::MAX_ALLOWED_ACCURACY) {
                     $w = new Wifi();
                     // naplnit hodnoty podle predchozi w1 kromě id,id_source,latitude,longitude a accuracy
-                    $w->setMac($w1->getMac());
+                    $w->setMac(MyUtils::macSeparator2Colon($w1->getMac()));
                     $w->setSsid($w1->getSsid());
                     $w->setAltitude($w1->getAltitude());
                     $w->setSec($w1->getSec());

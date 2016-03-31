@@ -1,0 +1,40 @@
+{block content}
+<form action="#" method="get">
+    MAC: <input type="text" name="mac" />
+    Reálná latitude: <input type="text" name="r_latitude" />
+    Reálná longitude: <input type="text" name="r_longitude"  />
+    <input type="submit" />
+</form>
+
+{ifset $table}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Zdroj</th>
+            <th>latitude</th>
+            <th>longitude</th>
+            <th>ssid</th>
+            <th>mac</th>
+            <th>vypočtená?</th>
+            <th>vzdalenost od realne</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {foreach $table as $ta}
+        <tr>
+            <td>{$ta["id"]}</td>
+            <td>{$ta["name"]}</td>
+            <td>{$ta["latitude"]}</td>
+            <td>{$ta["longitude"]}</td>
+            <td>{$ta["ssid"]}</td>
+            <td>{$ta["mac"]}</td>
+            <td>{$ta["calculated"]}</td>
+            <td>{$ta["distance"]}</td>
+        </tr>
+        {/foreach}
+    </tbody>
+</table>
+{/ifset}
+{/block}

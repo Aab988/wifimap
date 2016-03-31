@@ -164,5 +164,18 @@ class ApiPresenter extends BasePresenter {
 
 
 
+    public function renderAccuracy() {
+        if($this->getHttpRequest()->getQuery("mac") != "" && $this->getHttpRequest()->getQuery("r_latitude") != "" && $this->getHttpRequest()->getQuery("r_longitude") != "" && MyUtils::isMacAddress($this->getHttpRequest()->getQuery("mac"))) {
+
+            $mac = MyUtils::macSeparator2Colon($this->getHttpRequest()->getQuery("mac"));
+            $tableData = $this->wifiManager->getDistanceFromOriginalGPS($mac,doubleval($this->getHttpRequest()->getQuery("r_latitude")), doubleval($this->getHttpRequest()->getQuery("r_longitude")));
+            $this->template->table = $tableData;
+
+        }
+
+
+    }
+
+
 
 }

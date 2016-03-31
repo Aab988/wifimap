@@ -425,7 +425,14 @@ class WifiManager extends BaseService {
 		return Wifi::createWifiArrayFromDBRowArray($w);
 	}
 
-
+	public function getDistanceFromOriginalGPS($mac,$r_latitude,$r_longitude) {
+		$q = "select w.id,w.mac,w.ssid,w.latitude,w.longitude, s.name, SQRT(POW(w.latitude-?,2)+POW(w.longitude-?,2)) as distance, w.calculated
+			  from wifi w
+			  join source s on (s.id = w.id_source)
+			  where w.mac LIKE ?";
+		$all = $this->database->query($q,$r_latitude,$r_longitude,$mac)->fetchAll();
+		return $all;
+	}
 
 
 
