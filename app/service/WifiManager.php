@@ -429,11 +429,11 @@ class WifiManager extends BaseService {
 		$q = "select w.id,w.mac,w.ssid,w.latitude,w.longitude, s.name, SQRT(POW(w.latitude-?,2)+POW(w.longitude-?,2)) as distance, w.calculated
 			  from wifi w
 			  join source s on (s.id = w.id_source)
-			  where w.mac LIKE ?";
+			  where w.mac LIKE ?
+			  order by distance ASC";
 		$all = $this->database->query($q,$r_latitude,$r_longitude,$mac)->fetchAll();
 		return $all;
 	}
-
 
 
 

@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 use App\Model\Log;
+use App\Model\MyUtils;
 use App\Model\Wifi;
 use Nette;
 
@@ -80,7 +81,7 @@ class Download extends BaseService {
         $array = array(
             "id_source" => $wifi->getSource(),
             "date_added" => date("Y-m-d"),
-            "mac" => $wifi->getMac(),
+            "mac" => MyUtils::macSeparator2Colon($wifi->getMac()),
             "ssid" => $wifi->getSsid(),
             "sec" => $wifi->getSec(),
             "latitude" => $wifi->getLatitude(),

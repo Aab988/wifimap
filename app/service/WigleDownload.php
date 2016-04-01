@@ -155,16 +155,24 @@ class WigleDownload extends Download implements IDownload {
             ->where('state',1)
             ->update(array('state'=>DownloadImport::DOWNLOADED_WIGLE));
 
+
+        $idGR = null;
+
         $googleDownloadService = new GoogleDownload($this->database);
         if ($rows) foreach($rows as $row) {
             $w = Wifi::createWifiFromDBRow($row);
-            if($w) $googleDownloadService->createRequestFromWifi($w);
+            if($w) {
+                $idGR = $googleDownloadService->createRequestFromWifi($w,2);
+            }
         }
 
         $this->database->table(DownloadImportService::TABLE)
             ->where('id_wigle_aps',$ap['id'])
-            ->where('state',1)
-            ->update(array('state'=>DownloadImport::ADDED_GOOGLE));
+            ->where('state',DownloadImport::DOWNLOADED_WIGLE)
+            ->update(array(
+                'state'=>DownloadImport::ADDED_GOOGLE,
+                'id_google_request' => $idGR
+            ));
 
         $ap->update(array('downloaded'=>1,'downloaded_date'=>new DateTime()));
         if($id_wigle_download_queue) {

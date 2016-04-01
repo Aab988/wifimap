@@ -9,6 +9,7 @@ namespace App\Service;
 
 
 use App\Model\Coords;
+use App\Model\DownloadImport;
 use App\Model\Log;
 use App\Model\MyUtils;
 use App\Model\Wifi;
@@ -109,6 +110,11 @@ class GoogleDownload extends Download implements IDownload {
                     ->where("id",$ws->id)
                     ->update(array("downloaded"=>'Y'));
                 // nastavit priznak staezno na download
+                $this->database->table(DownloadImportService::TABLE)
+                    ->where('id_wigle_aps',$ws->id1)
+                    ->where('state',DownloadImport::ADDED_GOOGLE)
+                    ->update(array('state'=>DownloadImport::DOWNLOADED_GOOGLE));
+
             }
         }
         foreach($wifis as $wifi) {
@@ -155,8 +161,10 @@ class GoogleDownload extends Download implements IDownload {
      * creates google request from one net (requested by InfoWindow button)
      *
      * @param Wifi $wifi
+     * @param int $priority
+     *
      */
-    public function createRequestFromWifi(Wifi $wifi) {
+    public function createRequestFromWifi(Wifi $wifi, $priority = 1) {
         $this->wifiManager = new WifiManager($this->database);
 
         // ziskam druhou nejblizsi sit
@@ -169,15 +177,16 @@ class GoogleDownload extends Download implements IDownload {
                 return;
             }
 
-            $this->database->table("google_request")->insert(array(
+            $id = $this->database->table("google_request")->insert(array(
                 'created'=>new DateTime(),
                 'id_wifi1' => $wifi->getId(),
                 'id_wifi2' => $w2->getId(),
-                'downloaded' => 'N'
+                'downloaded' => 'N',
+                'priority' => $priority
             ));
+            return $id->getPrimary(true);
         }
-
-
+        return null;
     }
 
 
