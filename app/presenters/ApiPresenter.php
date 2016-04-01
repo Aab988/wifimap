@@ -6,6 +6,7 @@
  * Time: 22:15
  */
 namespace App\Presenters;
+use App\Model\Coords;
 use App\Model\DownloadImport;
 use App\Service\DownloadImportService;
 use App\Service\SourceManager;
@@ -169,7 +170,17 @@ class ApiPresenter extends BasePresenter {
 
             $mac = MyUtils::macSeparator2Colon($this->getHttpRequest()->getQuery("mac"));
             $tableData = $this->wifiManager->getDistanceFromOriginalGPS($mac,doubleval($this->getHttpRequest()->getQuery("r_latitude")), doubleval($this->getHttpRequest()->getQuery("r_longitude")));
-            $this->template->table = $tableData;
+
+            $data = array();
+            foreach($tableData as $td) {
+                $coords = new Coords($td["latitude"],$this->getHttpRequest()->getQuery("r_latitude"),$td["longitude"],$this->getHttpRequest()->getQuery("r_longitude"));
+                $inM = $coords->getDistanceInMetres();
+                $arr = $td;
+                $arr["inM"] = $inM;
+                $data[] = $arr;
+            }
+
+            $this->template->table = $data;
 
         }
 

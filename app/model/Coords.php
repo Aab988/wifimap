@@ -16,6 +16,9 @@ class Coords {
     /** @var float $lon_end */
     private $lon_end;
 
+    /** earth radius in meters */
+    const EARTH_RADIUS = 6371000;
+
     /**
      * @param string|float $lat1
      * @param string|float $lat2
@@ -196,5 +199,30 @@ class Coords {
     {
         $this->lon_end = $lon_end;
     }
+
+    /**
+     * @return int
+     */
+    public function getDistanceInMetres() {
+        $r = self::EARTH_RADIUS;
+        $dlat = $this->toRad($this->getDeltaLat());
+        $dlon = $this->toRad($this->getDeltaLon());
+
+        $a = sin($dlat/2) * sin($dlat/2) +
+            cos($this->toRad($this->lat_start)) * cos($this->toRad($this->lat_end))
+            * sin ($dlon /2) * sin($dlon / 2);
+        $c = 2 * atan2(sqrt($a),sqrt(1-$a));
+        $d = $r * $c;
+        return $d;
+    }
+
+    /**
+     * @param float $degrees
+     * @return float
+     */
+    public function toRad($degrees) {
+        return $degrees * pi() / 180;
+    }
+
 
 }

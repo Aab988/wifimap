@@ -17,7 +17,8 @@
             <th>ssid</th>
             <th>mac</th>
             <th>vypočtená?</th>
-            <th>vzdalenost od realne</th>
+            <th>vzdálenost od realne</th>
+            <th>vzdálenost v metrech</th>
         </tr>
     </thead>
 
@@ -32,6 +33,7 @@
             <td>{$ta["mac"]}</td>
             <td>{$ta["calculated"]}</td>
             <td>{$ta["distance"]}</td>
+            <td>{$ta["inM"]}</td>
         </tr>
         {/foreach}
     </tbody>
