@@ -169,6 +169,7 @@ class WigleDownload extends Download implements IDownload {
         $this->database->table(DownloadImportService::TABLE)
             ->where('id_wigle_aps',$ap['id'])
             ->where('state',DownloadImport::DOWNLOADED_WIGLE)
+            ->where('id_google_request',null)
             ->update(array(
                 'state'=>DownloadImport::ADDED_GOOGLE,
                 'id_google_request' => $idGR
