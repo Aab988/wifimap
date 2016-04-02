@@ -426,7 +426,7 @@ class WifiManager extends BaseService {
 	}
 
 	public function getDistanceFromOriginalGPS($mac,$r_latitude,$r_longitude) {
-		$q = "select w.id,w.mac,w.ssid,w.latitude,w.longitude, s.name, SQRT(POW(w.latitude-?,2)+POW(w.longitude-?,2)) as distance, w.calculated
+		$q = "select w.id_source,w.id,w.mac,w.ssid,w.latitude,w.longitude, s.name, SQRT(POW(w.latitude-?,2)+POW(w.longitude-?,2)) as distance, w.calculated
 			  from wifi w
 			  join source s on (s.id = w.id_source)
 			  where w.mac LIKE ?

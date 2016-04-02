@@ -9,7 +9,9 @@ namespace App\Presenters;
 use App\Model\Coords;
 use App\Model\DownloadImport;
 use App\Service\DownloadImportService;
+use App\Service\GoogleDownload;
 use App\Service\SourceManager;
+use App\Service\WifileaksDownload;
 use App\Service\WifiManager;
 use App\Service\WifiSecurityService;
 use App\Service\WigleDownload;
@@ -179,12 +181,55 @@ class ApiPresenter extends BasePresenter {
                 $arr["inM"] = $inM;
                 $data[] = $arr;
             }
+            usort($data,"self::Sort");
+
+            $chWifileaks = 0;
+            $chWigleMin = 9999999999;
+            $chWigleMax = 0;
+            $chWigleTotal = 0;
+            $chGoogleMin = 999999999;
+            $chGoogleMax = 0;
+            $chGoogleTotal = 0;
+            $chWigleAvg = 0;
+
+            foreach($data as $d) {
+                if($d["id_source"] == WifileaksDownload::ID_SOURCE && $chWifileaks < $d["inM"]) $chWifileaks = $d["inM"];
+                if($d["id_source"] == WigleDownload::ID_SOURCE) {
+                    if($chWigleMin > $d["inM"]) $chWigleMin = $d["inM"];
+                    if($chWigleMax < $d["inM"]) $chWigleMax = $d["inM"];
+                    $chWigleTotal += $d["inM"];
+                    if($d["calculated"] == 1) $chWigleAvg = $d["inM"];
+                }
+                if($d["id_source"] == GoogleDownload::ID_SOURCE) {
+                    if($chGoogleMin > $d["inM"]) $chGoogleMin = $d["inM"];
+                    if($chGoogleMax < $d["inM"]) $chGoogleMax = $d["inM"];
+                    $chGoogleTotal += $d["inM"];
+                }
+            }
+
+            if($chWigleAvg == 0) $chWigleAvg = $chWigleTotal / count($data);
+            $chGoogleAvg = $chGoogleTotal / count($data);
+
+
+            $this->template->chWifileaks = $chWifileaks;
+            $this->template->chWigleMin = $chWigleMin;
+            $this->template->chWigleMax = $chWigleMax;
+            $this->template->chWigleAvg = $chWigleAvg;
+            $this->template->chGoogleMin = $chGoogleMin;
+            $this->template->chGoogleMax = $chGoogleMax;
+            $this->template->chGoogleAvg = $chGoogleAvg;
 
             $this->template->table = $data;
-
         }
 
 
+    }
+
+    public static function Sort($a,$b) {
+        if ($a["inM"] == $b["inM"]) {
+            return 0;
+        }
+        return ($a["inM"] < $b["inM"]) ? -1 : 1;
     }
 
 

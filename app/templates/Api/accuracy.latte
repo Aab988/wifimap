@@ -1,12 +1,37 @@
 {block content}
 <form action="#" method="get">
-    MAC: <input type="text" name="mac" />
-    Reálná latitude: <input type="text" name="r_latitude" />
-    Reálná longitude: <input type="text" name="r_longitude"  />
+    MAC: <input type="text" name="mac"{ifset $_GET['mac']}value={$_GET["mac"]}{/ifset} />
+    Reálná latitude: <input type="text" name="r_latitude" {ifset $_GET['r_latitude']}value={$_GET["r_latitude"]}{/ifset} />
+    Reálná longitude: <input type="text" name="r_longitude" {ifset $_GET['r_longitude']}value={$_GET["r_longitude"]}{/ifset} />
     <input type="submit" />
 </form>
 
+
 {ifset $table}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Chyba Wifileaks</th>
+            <th>Chyba Wigle MIN</th>
+            <th>Chyba Wigle MAX</th>
+            <th>Chyba Wigle AVG</th>
+            <th>Chyba Google MIN</th>
+            <th>Chyba Google MAX</th>
+            <th>Chyba Google AVG</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{$chWifileaks}</td>
+            <td>{$chWigleMin}</td>
+            <td>{$chWigleMax}</td>
+            <td>{$chWigleAvg}</td>
+            <td>{$chGoogleMin}</td>
+            <td>{$chGoogleMax}</td>
+            <td>{$chGoogleAvg}</td>
+        </tr>
+    </tbody>
+</table>
 <table class="table table-bordered">
     <thead>
         <tr>
