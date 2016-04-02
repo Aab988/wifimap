@@ -20,8 +20,40 @@ class StatisticsManager extends BaseService {
      */
     public function getAllStatistics()
     {
+        $count = $this->database->table("statistics")->count("id");
+        $between = round($count/5);
+
+        $last = $this->database->table("statistics")->select("max(id) AS max_id")->fetch();
+        $first = $this->database->table("statistics")->select("min(id) AS min_id")->fetch();
+
+        if($last && $first) {
+            $_25 = $first["min_id"] + $between;
+            $_75 = $last["max_id"] - $between;
+
+
+            $avg = $this->database->table("statistics")->select("round(avg(id)) AS avg_id")
+                ->fetch();
+
+            $avgF = $this->database->table("statistics")->select("id")
+                ->where("id",$_25)
+                ->fetch();
+            $avgL = $this->database->table("statistics")->select("id")
+                ->where("id",$_75)
+                ->fetch();
+
+            $all = array();
+            if($first) $all[] = (object) array("id" => $first["min_id"]);
+            if($avgF) $all[] = (object) array("id" => $avgF["id"]);
+            if($avg) $all[] = (object) array("id" => $avg["avg_id"]);
+            if($avgL) $all[] = (object) array("id" => $avgL["id"]);
+            if($last) $all[] = (object) array("id" => $last["max_id"]);
+        }
+        else {
+            $all = $this->database->table("statistics")->select("id")->order("created ASC")->fetchAll();
+        }
+
         $allStats = array();
-        $all = $this->database->table("statistics")->select("id")->order("created ASC")->fetchAll();
+
         foreach ($all as $a) {
             $allStats[] = $this->getStatisticsById($a->id);
         }
@@ -47,6 +79,18 @@ class StatisticsManager extends BaseService {
         $latestStatistics->setStatisticsSecurity($this->getStatisticsSecurityByIdStatistics($latest->id));
 
         return $latestStatistics;
+    }
+
+    public function getSecondLatestStatistics() {
+        $latest = $this->getLatestStatistics();
+        $latestId = $latest->getId();
+        $sl = $this->database->table("statistics")
+            ->where("id != ?",$latestId)
+            ->order("id DESC")
+            ->limit(1)
+            ->fetch();
+        return $this->getStatisticsById($sl["id"]);
+
     }
 
 

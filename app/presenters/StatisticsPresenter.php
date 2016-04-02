@@ -41,8 +41,9 @@ class StatisticsPresenter extends BasePresenter {
 
 
 		$this->template->allSecurityTypes = $this->wsservice->getAllWifiSecurityTypes();
-		$this->template->actualStatistics = $this->statisticsManager->getLatestStatistics();
-		$this->template->secondLatestStatistics = (isset ($allStats[count($allStats)-2]))?$allStats[count($allStats)-2]:null;
+		$actualStatistics = $this->statisticsManager->getLatestStatistics();
+		$this->template->actualStatistics = $actualStatistics;
+		$this->template->secondLatestStatistics = $this->statisticsManager->getSecondLatestStatistics();
 
 		$this->template->allStatistics = $allStats;
 
