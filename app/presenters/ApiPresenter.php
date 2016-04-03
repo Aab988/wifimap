@@ -192,24 +192,34 @@ class ApiPresenter extends BasePresenter {
             $chGoogleTotal = 0;
             $chWigleAvg = 0;
 
+            $wigleCount = 0;
+            $wifileaksCount = 0;
+            $wifileaksTotal = 0;
+            $googleCount = 0;
+
             foreach($data as $d) {
-                if($d["id_source"] == WifileaksDownload::ID_SOURCE && $chWifileaks < $d["inM"]) $chWifileaks = $d["inM"];
+                if($d["id_source"] == WifileaksDownload::ID_SOURCE) {
+                    $wifileaksCount++;
+                    $wifileaksTotal += $d["inM"];
+                }
                 if($d["id_source"] == WigleDownload::ID_SOURCE) {
+                    $wigleCount++;
                     if($chWigleMin > $d["inM"]) $chWigleMin = $d["inM"];
                     if($chWigleMax < $d["inM"]) $chWigleMax = $d["inM"];
                     $chWigleTotal += $d["inM"];
                     if($d["calculated"] == 1) $chWigleAvg = $d["inM"];
                 }
                 if($d["id_source"] == GoogleDownload::ID_SOURCE) {
+                    $googleCount++;
                     if($chGoogleMin > $d["inM"]) $chGoogleMin = $d["inM"];
                     if($chGoogleMax < $d["inM"]) $chGoogleMax = $d["inM"];
                     $chGoogleTotal += $d["inM"];
                 }
             }
 
-            if($chWigleAvg == 0) $chWigleAvg = $chWigleTotal / count($data);
-            $chGoogleAvg = $chGoogleTotal / count($data);
-
+            if($chWigleAvg == 0) $chWigleAvg = $chWigleTotal / $wigleCount;
+            $chGoogleAvg = $chGoogleTotal / $googleCount;
+            $chWifileaks = $wifileaksTotal / $wifileaksCount;
 
             $this->template->chWifileaks = $chWifileaks;
             $this->template->chWigleMin = $chWigleMin;
