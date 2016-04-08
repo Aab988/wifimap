@@ -7,19 +7,30 @@
 namespace App\Model;
 class Color {
 
+    /** @var int */
     public $r, $g, $b;
 
+    /** @var array $colors */
     public static $colors = array(
         '00c0ef','00a65a','f39c12','dd4b39','337ab7','5cb85c','5bc0de','f0ad4e','d9534f'
     );
 
+    /**
+     * @param int $r
+     * @param int $g
+     * @param int $b
+     */
     public function __construct($r = 0,$g = 0,$b = 0) {
         $this->r = $r;
         $this->g = $g;
         $this->b = $b;
     }
 
-
+    /**
+     * @param string|null $color
+     * @param bool|false $shade
+     * @return string
+     */
     public static function GetRandomColor($color = null, $shade = false) {
 
         if(!$color) {
@@ -43,7 +54,6 @@ class Color {
 
         return "#".$color;
     }
-
 
 
 }

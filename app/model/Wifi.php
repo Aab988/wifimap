@@ -5,6 +5,7 @@ use App\Service\WifileaksDownload;
 use App\Service\WigleDownload;
 
 class Wifi extends Nette\Object {
+
     /** @var int */
     private $id;
     /** @var string  */
@@ -54,19 +55,12 @@ class Wifi extends Nette\Object {
     /** @var int $calculated */
     private $calculated = 0;
 
-
     /**
      * @param \Nette\Database\Table\IRow $row
      * @return Wifi
      */
     public static function createWifiFromDBRow($row) {
-        if($row != null) {
-            return self::createWifiFromAssociativeArray($row);
-        }
-        else {
-            return null;
-        }
-
+        return ($row != null) ? self::createWifiFromAssociativeArray($row) : null;
     }
 
     /**
@@ -81,7 +75,6 @@ class Wifi extends Nette\Object {
         }
         return $wifi;
     }
-
 
     /**
      * @param mixed $property

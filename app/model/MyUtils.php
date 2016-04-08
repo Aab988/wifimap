@@ -13,14 +13,14 @@ class MyUtils extends Nette\Object {
      * return if string is mac address
      *
      * @param string $string
-     * @return int
+     * @return bool
      */
     public static function isMacAddress($string) {
-        return preg_match("^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})^", urldecode($string));
+        return (bool) preg_match("^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})^", urldecode($string));
     }
 
     /**
-     * replace - to : in mac address
+     * replace '-' to ':' in mac address
      *
      * @param string $mac
      * @return mixed
@@ -66,6 +66,10 @@ class MyUtils extends Nette\Object {
         }
     }
 
+    /**
+     * @param resource $img
+     * @return string
+     */
     public static function image2string($img) {
         ob_start();
         imagepng($img);

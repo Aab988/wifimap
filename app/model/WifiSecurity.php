@@ -13,6 +13,7 @@ class WifiSecurity extends Nette\Object {
     /** @var string $label */
     private $label;
 
+    /** @var array $colors */
     public static $colors = array(
         1 => "dd4b39",
         2 => "f39c12",

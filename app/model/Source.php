@@ -15,12 +15,12 @@ class Source extends Nette\Object  {
     /** @var  string $name */
     private $name;
 
+    /** @var array $colors */
     public static $colors = array(
         WifileaksDownload::ID_SOURCE => "00c0ef",
         WigleDownload::ID_SOURCE => "f39c12",
         GoogleDownload::ID_SOURCE => "5cb85c"
     );
-
 
     /**
      * @param int $id

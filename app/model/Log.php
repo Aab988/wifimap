@@ -10,7 +10,7 @@ use Nette\Utils\DateTime;
 
 class Log extends Object {
 
-    /** TYPES */
+    /** LOG TYPES */
     const TYPE_ERROR = 'ERROR';
     const TYPE_INFO = 'INFO';
     const TYPE_WARNING = 'WARNING';
@@ -45,10 +45,7 @@ class Log extends Object {
         $this->message = $message;
     }
 
-
-    /**
-     * @return int
-     */
+    /** @return int */
     public function getId()
     {
         return $this->id;

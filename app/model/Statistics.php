@@ -7,6 +7,7 @@ use Nette;
  * Time: 16:09
  */
 class Statistics extends Nette\Object {
+
     /** @var int $id */
     private $id;
     /** @var Nette\Utils\DateTime $created */
@@ -19,7 +20,6 @@ class Statistics extends Nette\Object {
     private $statisticsSecurity = array();
     /** @var StatisticsSource[] $statisticsSource */
     private $statisticsSource = array();
-
 
     /**
      * @param StatisticsSecurity $statisticsSecurity

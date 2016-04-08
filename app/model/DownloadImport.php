@@ -10,7 +10,7 @@ use Nette\Object;
 
 class DownloadImport extends Object
 {
-
+    /** import state constants */
     const ADDED_WIGLE = 1;
     const DOWNLOADED_WIGLE = 2;
     const ADDED_GOOGLE = 3;
@@ -116,7 +116,5 @@ class DownloadImport extends Object
             'id_google_request' => $this->id_google_request
         );
     }
-
-
 
 }

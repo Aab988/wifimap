@@ -97,7 +97,6 @@ class Coords {
         $this->increaseLonRange($k);
     }
 
-
     /**
      * @param float $lat
      * @param float $lng
@@ -201,6 +200,8 @@ class Coords {
     }
 
     /**
+     * haversine formula calculate distance in meters
+     *
      * @return int
      */
     public function getDistanceInMetres() {
@@ -217,6 +218,8 @@ class Coords {
     }
 
     /**
+     * convert degrees to radians
+     *
      * @param float $degrees
      * @return float
      */

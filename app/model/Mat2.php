@@ -7,14 +7,14 @@
 namespace App\Model;
 class Mat2 {
 
+    /** @var int $x */
     private $x;
+    /** @var int $y */
     private $y;
 
     /**
-     * Mat2 constructor.
-     *
-     * @param $x
-     * @param $y
+     * @param int $x
+     * @param int $y
      */
     public function __construct($x, $y)
     {
@@ -23,7 +23,7 @@ class Mat2 {
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getX()
     {
@@ -31,7 +31,7 @@ class Mat2 {
     }
 
     /**
-     * @param mixed $x
+     * @param int $x
      */
     public function setX($x)
     {
@@ -39,7 +39,7 @@ class Mat2 {
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getY()
     {
@@ -47,12 +47,11 @@ class Mat2 {
     }
 
     /**
-     * @param mixed $y
+     * @param int $y
      */
     public function setY($y)
     {
         $this->y = $y;
     }
-
 
 }

@@ -9,6 +9,7 @@ namespace App\Model;
 use Nette;
 
 class StatisticsSource extends  Nette\Object {
+
     /** @var int $id */
     private $id;
     /** @var Source $source */
@@ -17,71 +18,62 @@ class StatisticsSource extends  Nette\Object {
     private $total_nets = 0;
     /** @var int $free_nets */
     private $free_nets = 0;
-
+    /** @var string $color */
     private $color = "#ddd";
-
 
     /**
      * @return int
      */
-    public function getId()
-    {
+    public function getId() {
         return $this->id;
     }
 
     /**
      * @param int $id
      */
-    public function setId($id)
-    {
+    public function setId($id) {
         $this->id = $id;
     }
 
     /**
      * @return Source
      */
-    public function getSource()
-    {
+    public function getSource() {
         return $this->source;
     }
 
     /**
      * @param Source $source
      */
-    public function setSource($source)
-    {
+    public function setSource($source) {
         $this->source = $source;
     }
 
     /**
      * @return int
      */
-    public function getTotalNets()
-    {
+    public function getTotalNets() {
         return $this->total_nets;
     }
 
     /**
      * @param int $total_nets
      */
-    public function setTotalNets($total_nets)
-    {
+    public function setTotalNets($total_nets) {
         $this->total_nets = $total_nets;
     }
 
     /**
      * @return int
      */
-    public function getFreeNets()
-    {
+    public function getFreeNets() {
         return $this->free_nets;
     }
 
     /**
      * @param int $free_nets
      */
-    public function setFreeNets($free_nets)
-    {
+    public function setFreeNets($free_nets) {
         $this->free_nets = $free_nets;
     }
 
@@ -89,19 +81,15 @@ class StatisticsSource extends  Nette\Object {
      * @param bool $shade
      * @return string
      */
-    public function getColor($shade = false)
-    {
+    public function getColor($shade = false) {
         return Color::GetRandomColor(Source::$colors[$this->source->getId()],$shade);
     }
 
     /**
      * @param string $color
      */
-    public function setColor($color)
-    {
+    public function setColor($color) {
         $this->color = $color;
     }
-
-
 
 }
