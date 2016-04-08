@@ -20,8 +20,8 @@ class GoogleDownload extends Download implements IDownload {
     /** google source id in DB */
     const ID_SOURCE = 3;
 
-    /** maximal accuracy in meters - accuracy >100 meters is bad */
-    const MAX_ALLOWED_ACCURACY = 300;
+    /** maximal accuracy in meters - accuracy >1000 meters is bad */
+    const MAX_ALLOWED_ACCURACY = 1000;
 
     /** number of requests processed by one call of method download */
     const REQUESTS_LIMIT = 10;

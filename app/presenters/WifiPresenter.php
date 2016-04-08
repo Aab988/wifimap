@@ -139,6 +139,10 @@ class WifiPresenter extends BasePresenter {
                 if(MyUtils::isMacAddress($ssidmac)) { $params['mac'] = urldecode($ssidmac); }
                 else { $params['ssid'] = $ssidmac; }
                 break;
+            case self::MODE_CALCULATED:
+                $a = $this->wifiManager->getWifiById($httpr->getQuery("a"));
+                $mac = $a->getMac();
+                $params["mac"] = $mac;
             default:
                 break;
         }
@@ -334,7 +338,7 @@ class WifiPresenter extends BasePresenter {
                 $net = new Wifi();
                 $net->setLatitude($lat_avg);
                 $net->setLongitude($lon_avg);
-                $img = $this->overlayRenderer->drawCalculated($coords,$nets,$net);
+                $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
 
