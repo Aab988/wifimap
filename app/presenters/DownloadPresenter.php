@@ -8,27 +8,34 @@ use App\Model\DownloadImport;
 use App\Model\MyUtils;
 use \App\Service;
 
-class DownloadPresenter extends BasePresenter
-{
-
+class DownloadPresenter extends BasePresenter {
+    /** value when wifileaks download from temp directory */
     const FROM_TEMP_DIR_KEY = 'fromtempdir';
 
     /** @var \App\Service\WigleDownload @inject */
     public $wigleDownload;
+
     /** @var \App\Service\WifileaksDownload @inject */
     public $wifileaksDownload;
+
     /** @var Service\GoogleDownload @inject */
     public $googleDownload;
+
     /** @var \App\Service\DownloadRequest @inject */
     public $downloadRequest;
+
     /** @var \App\Service\WigleDownloadQueue @inject */
     public $downloadQueue;
+
     /** @var \App\Service\WifiManager @inject */
     public $wifiManager;
+
     /** @var Service\OptimizedWifiManager @inject */
     public $oWifiManager;
+
     /** @var Service\DownloadImportService @inject */
     public $downloadImportService;
+
     /** @var Service\NotifyEmailService @inject */
     public $notifyEmailService;
 
@@ -41,67 +48,54 @@ class DownloadPresenter extends BasePresenter
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderWigle()
-    {
-        if ($this->wigleDownload) {
-            $this->wigleDownload->downloadQueue = $this->downloadQueue;
-            $this->wigleDownload->download();
-        }
+    public function renderWigle() {
+        $this->wigleDownload->downloadQueue = $this->downloadQueue;
+        $this->wigleDownload->download();
         $this->terminate();
     }
 
     /**
      * DOWNLOAD OBSERVATIONS OF MAC ADDRESS FROM WIGLE
      */
-    public function renderWigleObservations()
-    {
-        if ($this->wigleDownload) {
-            $this->wigleDownload->downloadObservations();
-        }
+    public function renderWigleObservations() {
+        $this->wigleDownload->downloadObservations();
         $this->terminate();
     }
-
 
     /**
      * process Wifileaks file parse and save to DB
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderWifileaks()
-    {
+    public function renderWifileaks() {
         MyUtils::setIni(1800, '512M');
         $fromtempdir = $this->getHttpRequest()->getQuery(self::FROM_TEMP_DIR_KEY);
         if ($fromtempdir) {
-            //TODO:
-            // najit soubory v tempu
-            // pokud nejaky odpovida regularu na nazev wifileaks souboru tak vzit (nejlepe ten nejnovejsi)
             $this->wifileaksDownload->download("../temp/wifileaks.tsv");
         } else {
             $this->wifileaksDownload->download();
         }
-
-
         $this->terminate();
     }
 
     /**
      * create google request -> save it to db
      */
-    public function renderCreateGoogleRequest()
-    {
+    public function renderCreateGoogleRequest() {
         $this->googleDownload->setWifiManager($this->wifiManager);
         $req = $this->getHttpRequest();
         if ($req->getQuery("wid")) {
             $wifi = $this->wifiManager->getWifiById($req->getQuery("wid"));
-            $this->googleDownload->createRequestFromWifi($wifi);
+            if($wifi) $this->googleDownload->createRequestFromWifi($wifi);
         }
         $this->terminate();
     }
 
-
-    public function renderGoogle()
-    {
-        if (!$this->googleDownload) return;
+    /**
+     * download from google
+     * @throws \Nette\Application\AbortException
+     */
+    public function renderGoogle() {
         $this->googleDownload->download();
         $this->terminate();
     }
@@ -116,17 +110,22 @@ class DownloadPresenter extends BasePresenter
         $this->determineView($show);
     }
 
-    public function renderAddWigleRequestHelp()
-    {
-    }
+    /** show help for wigle request */
+    public function renderAddWigleRequestHelp() { }
 
-    public function renderAddWigleRequest()
-    {
+    /** show help for google request */
+    public function renderAddGoogleRequestHelp() { }
+
+    /**
+     * add request to download from wigle
+     */
+    public function renderAddWigleRequest() {
         $request = $this->getHttpRequest();
         $coords = new Coords($request->getQuery("lat1"), $request->getQuery("lat2"), $request->getQuery("lon1"), $request->getQuery("lon2"));
         $sourceDownloadFrom = (int)$request->getQuery("sourceDownloadFrom");
         $filter = $request->getQuery("filter");
         $filterSet = ArrayUtil::arrayHasSomeKey($filter, array("ssidmac", "channel", "source", "security", "ssid"));
+
         if($filterSet) {
             // request with filter set
             $state = $this->addFilteredRequest($coords,$filter,$sourceDownloadFrom);
@@ -135,90 +134,21 @@ class DownloadPresenter extends BasePresenter
             // normal request to latitude longitude range
             $state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
         }
-
-        //$state = $this->addRequest(Service\WigleDownload::ID_SOURCE);
         $this->template->state = $state;
     }
-
-    /**
-     * vytvori pozadavek s nastavenym filtrem
-     *
-     * @param Coords $coords
-     * @param array $filter
-     * @param int $sourceDownloadFrom
-     * @return string
-     *
-     */
-    private function addFilteredRequest($coords,$filter,$sourceDownloadFrom) {
-        $mode = WifiPresenter::MODE_ALL;
-
-        if (isset($filter["mode"])) {
-            $mode = $filter["mode"];
-        }
-        $params = $this->getParamsArray($coords,$mode,$filter);
-        $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
-        $macAddresses = array();
-        foreach ($nets as $net) {
-            $macAddresses[$net['mac']] = $net;
-        }
-
-        $notifyEmail = null;
-        if($this->getHttpRequest()->getQuery("notifyEmail") != "") {
-            $notifyEmail = $this->notifyEmailService->addNotifyEmail($this->getHttpRequest()->getQuery("notifyEmail"));
-            setcookie("notify_email", $this->getHttpRequest()->getQuery("notifyEmail"), time()+3600);
-        }
-
-
-        if($sourceDownloadFrom == Service\WigleDownload::ID_SOURCE) {
-            // jen z wigle -> pridame pouze do wigle_aps
-            foreach(array_keys($macAddresses) as $macaddr) {
-                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
-                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
-            }
-        }
-        elseif($sourceDownloadFrom == Service\GoogleDownload::ID_SOURCE) {
-            // z Wigle i Google -> pridame do wigle_aps a do download_import
-            foreach(array_keys($macAddresses) as $macaddr) {
-                // vytvoreni importu
-                $downloadImport = new DownloadImport();
-                $downloadImport->setMac($macaddr);
-
-                // pridani do wigle fronty
-                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
-
-                // nastaveni importu
-                $downloadImport->setIdWigleAps($row->getPrimary(true));
-                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
-                $downloadImport->setState(DownloadImport::ADDED_WIGLE);
-
-                // ulozeni importu
-                $importId = $this->downloadImportService->addImport($downloadImport);
-                if($notifyEmail) $this->notifyEmailService->addNotifyEmailDownloadImport($notifyEmail,$importId->getPrimary(true));
-            }
-        }
-        return Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
-    }
-
 
     /**
      * determine render action
      *
      * @param string $show
      */
-    public function actionAddGoogleRequest($show)
-    {
+    public function actionAddGoogleRequest($show) {
         $this->determineView($show);
     }
 
-    /** show help for google request */
-    public function renderAddGoogleRequestHelp()
-    {
-    }
 
     /** add download request */
-    public function renderAddGoogleRequest()
-    {
-        /*$state = $this->addRequest(Service\GoogleDownload::ID_SOURCE);*/
+    public function renderAddGoogleRequest() {
         $request = $this->getHttpRequest();
         $coords = new Coords($request->getQuery("lat1"), $request->getQuery("lat2"), $request->getQuery("lon1"), $request->getQuery("lon2"));
         $sourceDownloadFrom = (int)$request->getQuery("sourceDownloadFrom");
@@ -230,55 +160,18 @@ class DownloadPresenter extends BasePresenter
         }
         else {
             // normal request to latitude longitude range
-            $this->downloadRequest->processDownloadRequestCreation(new Coords(
-                $this->getHttpRequest()->getQuery("lat1"),
-                $this->getHttpRequest()->getQuery("lat2"),
-                $this->getHttpRequest()->getQuery("lon1"),
-                $this->getHttpRequest()->getQuery("lon2")
-            ), Service\GoogleDownload::ID_SOURCE);
+            $this->addRequest(Service\GoogleDownload::ID_SOURCE);
         }
         $this->template->state = Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
     }
 
-
-    /**
-     * add download request
-     *
-     * @param int $idSource
-     * @return bool|string
-     */
-    private function addRequest($idSource)
-    {
-        return $this->downloadRequest->processDownloadRequestCreation(new Coords(
-            $this->getHttpRequest()->getQuery("lat1"),
-            $this->getHttpRequest()->getQuery("lat2"),
-            $this->getHttpRequest()->getQuery("lon1"),
-            $this->getHttpRequest()->getQuery("lon2")
-        ), $idSource);
-    }
-
-
-    /**
-     * @param string $show
-     * determines what view show
-     */
-    private function determineView($show)
-    {
-        if (strcasecmp($show, 'help') == 0) {
-            $this->view = $this->getAction() . 'help';
-        }
-    }
-
-
     /**
      * CRON -> run every 1 HOUR (?)
-     *
      * get one use created DownloadRequest, divide it by wifi density and add calculated records to wigle download queue
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderProcessWigleRequest()
-    {
+    public function renderProcessWigleRequest() {
         MyUtils::setIni(1200, '256M');
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
         if ($req) {
@@ -293,28 +186,30 @@ class DownloadPresenter extends BasePresenter
 
     /**
      * CRON - every 30 minutes
-     *
      * get one user created DownloadRequest for google, and process it
      *
      * @throws \Nette\Application\AbortException
      */
-    public function renderProcessGoogleRequest()
-    {
+    public function renderProcessGoogleRequest() {
         $this->googleDownload->setWifiManager($this->wifiManager);
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\GoogleDownload::ID_SOURCE);
-        $coords = new Coords($req->lat_start, $req->lat_end, $req->lon_start, $req->lon_end);
-        $this->googleDownload->createRequestFromArea($coords);
-        // TODO: nastavovat total_count na pocet zaznamu pridanych do google_request?
-        $this->downloadRequest->setProcessed($req);
+        if($req) {
+            $coords = new Coords($req->lat_start, $req->lat_end, $req->lon_start, $req->lon_end);
+            $totalCount = $this->googleDownload->createRequestFromArea($coords);
+            $this->downloadRequest->setProcessed($req,$totalCount);
+        }
         $this->terminate();
     }
 
-    public function actionAddRequests($data = '../temp/data.mac', $priority = 2, $fromWigle = true, $fromGoogle = false)
-    {
-    }
-
-    public function renderTime2down($lat1, $lat2, $lon1, $lon2, $sourceDownloadFrom)
-    {
+    /**
+     * @param float $lat1
+     * @param float $lat2
+     * @param float $lon1
+     * @param float $lon2
+     * @param int $sourceDownloadFrom
+     * @throws \Nette\Application\AbortException
+     */
+    public function renderTime2down($lat1, $lat2, $lon1, $lon2, $sourceDownloadFrom) {
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $sourceDownloadFrom = (int)$sourceDownloadFrom;
         $request = $this->getHttpRequest();
@@ -323,23 +218,17 @@ class DownloadPresenter extends BasePresenter
 
         if ($filterSet) {
             $text = "<strong>Máte nastavený filtr, vytvoří se požadavek přímo na vyfiltrované body</strong><br />";
-            $mode = WifiPresenter::MODE_ALL;
 
-            if (isset($filter["mode"])) {
-                $mode = $filter["mode"];
-            }
-
+            $mode = (isset($filter["mode"])) ? $filter["mode"] : WifiPresenter::MODE_ALL;
             $params = $this->getParamsArray($coords,$mode,$filter);
-
             $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
             $netsCount = count($nets);
-            $macAddresses = array();
 
-            foreach ($nets as $net) {
-                $macAddresses[$net['mac']] = $net;
-            }
+            $macAddresses = array();
+            foreach ($nets as $net) $macAddresses[$net['mac']] = $net;
 
             $beforeMinutes = 0; $afterMinutes = 0;
+
             switch ($sourceDownloadFrom) {
                 case Service\WigleDownload::ID_SOURCE:
                     $beforeMinutes = $this->wigleDownload->getWigleApsCount(2) * Service\BaseService::CRON_TIME_DOWNLOAD_WIGLE_OBSERVATIONS;
@@ -374,42 +263,109 @@ class DownloadPresenter extends BasePresenter
                 if ($celkemMinut > 0) $text .= ($celkemMinut) . " minut";
                 $text .= "</strong>";
             }
-            if ($netsCount == 0) {
-                echo "$('#createDownloadRequest').hide();";
-            } else {
-                echo "$('#createDownloadRequest').show();";
-            }
+            if ($netsCount == 0) echo "$('#createDownloadRequest').hide();";
+            else echo "$('#createDownloadRequest').show();";
 
-            if ($celkemHodin > self::MAX_HOURS_FILTERED_REQUEST) {
-                echo "$('#createDownloadRequest').hide();";
-            }
-            else {
-                echo "$('#createDownloadRequest').show();";
-            }
+            if ($celkemHodin > self::MAX_HOURS_FILTERED_REQUEST)  echo "$('#createDownloadRequest').hide();";
+            else echo "$('#createDownloadRequest').show();";
+
             $text .= '<br /><label for="notify_email">Až budou data získana informujte mě na email:</label><input type="email" name="notify_email" id="notify_email" '. ((isset($_COOKIE['notify_email']))?'value="'.$_COOKIE['notify_email'].'"':'') .' />';
-
             echo "$('#time2down').html('" . $text . "');";
         }
         $this->terminate();
     }
 
-
+    /**
+     * CRON: once a day
+     * @throws \Nette\Application\AbortException
+     */
     public function renderNotifyEmail() {
         $notifyEmails = $this->notifyEmailService->getAllNotSentNotifyEmails();
 
         foreach($notifyEmails as $id=>$row) {
             $notDownloadedCount = $this->notifyEmailService->getNotDownloadedCountByNotifyEmailId($id);
             if($notDownloadedCount["pocet"] == 0) {
-                // poslat email
                 $this->notifyEmailService->notifyByEmail($id);
                 $this->notifyEmailService->markAsSent($id);
             }
         }
-
         $this->terminate();
 
     }
 
+    /**
+     * create request with filter set
+     *
+     * @param Coords $coords
+     * @param array $filter
+     * @param int $sourceDownloadFrom
+     * @return string
+     */
+    private function addFilteredRequest($coords,$filter,$sourceDownloadFrom) {
+        $mode = (isset($filter["mode"])) ? $mode = $filter["mode"] : WifiPresenter::MODE_ALL;
 
+        $params = $this->getParamsArray($coords,$mode,$filter);
+
+        $nets = $this->oWifiManager->getNetsByParams($params, array('id,mac'));
+        $macAddresses = array();
+        foreach ($nets as $net) $macAddresses[$net['mac']] = $net;
+
+        $notifyEmail = null;
+        if($this->getHttpRequest()->getQuery("notifyEmail") != "") {
+            $notifyEmail = $this->notifyEmailService->addNotifyEmail($this->getHttpRequest()->getQuery("notifyEmail"));
+            setcookie("notify_email", $this->getHttpRequest()->getQuery("notifyEmail"), time() + 3600);
+        }
+
+        if($sourceDownloadFrom == Service\WigleDownload::ID_SOURCE) {
+            // only from wigle - add to wigle_aps
+            foreach(array_keys($macAddresses) as $macaddr) {
+                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
+            }
+        }
+        elseif($sourceDownloadFrom == Service\GoogleDownload::ID_SOURCE) {
+            // from Wigle and Google -> add to wigle_aps and download_import
+            foreach(array_keys($macAddresses) as $macaddr) {
+                $downloadImport = new DownloadImport();
+                $downloadImport->setMac($macaddr);
+
+                // pridani do wigle fronty
+                $row = $this->wigleDownload->save2WigleAps(null,$macaddr,2);
+
+                // nastaveni importu
+                $downloadImport->setIdWigleAps($row->getPrimary(true));
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailWigleAps($notifyEmail,$row->getPrimary(true));
+                $downloadImport->setState(DownloadImport::ADDED_WIGLE);
+
+                // ulozeni importu
+                $importId = $this->downloadImportService->addImport($downloadImport);
+                if($notifyEmail) $this->notifyEmailService->addNotifyEmailDownloadImport($notifyEmail,$importId->getPrimary(true));
+            }
+        }
+        return Service\DownloadRequest::STATE_SUCCESS_ADDED_TO_QUEUE;
+    }
+
+    /**
+     * add download request
+     *
+     * @param int $idSource
+     * @return bool|string
+     */
+    private function addRequest($idSource) {
+        return $this->downloadRequest->processDownloadRequestCreation(new Coords(
+            $this->getHttpRequest()->getQuery("lat1"),
+            $this->getHttpRequest()->getQuery("lat2"),
+            $this->getHttpRequest()->getQuery("lon1"),
+            $this->getHttpRequest()->getQuery("lon2")
+        ), $idSource);
+    }
+
+    /**
+     * @param string $show
+     * determines what view show
+     */
+    private function determineView($show) {
+        if (strcasecmp($show, 'help') == 0) $this->view = $this->getAction() . 'help';
+    }
 
 }

@@ -8,6 +8,7 @@
 namespace App\Presenters;
 use App\Model\Coords;
 use App\Model\DownloadImport;
+use App\Model\Log;
 use App\Service\DownloadImportService;
 use App\Service\GoogleDownload;
 use App\Service\SourceManager;
@@ -31,6 +32,11 @@ class ApiPresenter extends BasePresenter {
     public $wifiSecurityService;
 
 
+    /**
+     * export to CSV by filter
+     *
+     * @throws \Nette\Application\AbortException
+     */
     public function actionDownload() {
         $params = array();
 
@@ -99,23 +105,24 @@ class ApiPresenter extends BasePresenter {
                 fputcsv($file,$array,';');
             }
         }
-
         fclose($file);
 
         // stazeni souboru
         $this->payload->file= $filename;
         $this->sendPayload();
-
-        //$this->redirectUrl("../".$filename);
         $this->terminate();
     }
 
-
-
+    /**
+     * @param string $data
+     * @param int    $priority
+     * @throws \Nette\Application\AbortException
+     */
     public function actionAddRequests($data = '../temp/data.mac',$priority = 2) {
-        // rozparsovat data
+
+        // parse data
         if(!file_exists($data)) {
-            echo "soubor nenalezen";
+            $this->logger->addLog(new Log(Log::TYPE_ERROR,"import","file " . $data . " not found"));
             $this->terminate();
         }
 
@@ -132,20 +139,21 @@ class ApiPresenter extends BasePresenter {
         fclose($fh);
 
         $before = $this->wigleDownload->getWigleApsCount($priority);
+
         foreach($macAddresses as $macaddr) {
-            // vytvoreni importu
+
+            // create import
             $downloadImport = new DownloadImport();
             $downloadImport->setMac($macaddr);
 
-            // pridani do wigle fronty
+            // add to wigle queue
             $row = $this->wigleDownload->save2WigleAps(null,$macaddr,$priority);
 
-            // nastaveni importu
+            // set import state
             $downloadImport->setIdWigleAps($row->getPrimary());
             $downloadImport->setState(DownloadImport::ADDED_WIGLE);
 
-            // ulozeni importu
-            dump($downloadImport);
+            // save import
             $this->downloadImportService->addImport($downloadImport);
         }
         echo "bude trvat: " . ($count*30) . '+' . ($before*30) . 'minut';
@@ -153,22 +161,12 @@ class ApiPresenter extends BasePresenter {
         $this->terminate();
     }
 
-
-    public function actionAdd2GoogleRequests() {
-        $dis = $this->downloadImportService->getDownloadImportsByState(DownloadImport::DOWNLOADED_WIGLE);
-        foreach($dis as $di) {
-            $nets = $this->wifiManager->getNetsByParams(array('mac'=>$di->getMac()));
-            dump($nets);
-
-        }
-
-        $this->terminate();
-    }
-
-
-
+    /**
+     * accuracy page
+     */
     public function renderAccuracy() {
-        if($this->getHttpRequest()->getQuery("mac") != "" && $this->getHttpRequest()->getQuery("r_latitude") != "" && $this->getHttpRequest()->getQuery("r_longitude") != "" && MyUtils::isMacAddress($this->getHttpRequest()->getQuery("mac"))) {
+        if($this->getHttpRequest()->getQuery("mac") != "" && $this->getHttpRequest()->getQuery("r_latitude") != ""
+            && $this->getHttpRequest()->getQuery("r_longitude") != "" && MyUtils::isMacAddress($this->getHttpRequest()->getQuery("mac"))) {
 
             $mac = MyUtils::macSeparator2Colon($this->getHttpRequest()->getQuery("mac"));
             $tableData = $this->wifiManager->getDistanceFromOriginalGPS($mac,doubleval($this->getHttpRequest()->getQuery("r_latitude")), doubleval($this->getHttpRequest()->getQuery("r_longitude")));
@@ -183,17 +181,10 @@ class ApiPresenter extends BasePresenter {
             }
             usort($data,"self::Sort");
 
-            $chWigleMin = 9999999999;
-            $chWigleMax = 0;
-            $chWigleTotal = 0;
-            $chGoogleMin = 999999999;
-            $chGoogleMax = 0;
-            $chGoogleTotal = 0;
-            $chWigleAvg = 0;
-
-            $wigleCount = 0;
-            $wifileaksCount = 0;
-            $wifileaksTotal = 0;
+            $chWigleMin = PHP_INT_MAX; $chWigleMax = 0; $chWigleTotal = 0;
+            $chGoogleMin = PHP_INT_MAX; $chGoogleMax = 0; $chGoogleTotal = 0;
+            $chWigleAvg = 0; $wigleCount = 0;
+            $wifileaksCount = 0; $wifileaksTotal = 0;
             $googleCount = 0;
 
             foreach($data as $d) {
@@ -230,17 +221,19 @@ class ApiPresenter extends BasePresenter {
 
             $this->template->table = $data;
         }
-
-
     }
 
+    /**
+     * sort by distance in meters
+     * @param $a
+     * @param $b
+     * @return int
+     */
     public static function Sort($a,$b) {
         if ($a["inM"] == $b["inM"]) {
             return 0;
         }
         return ($a["inM"] < $b["inM"]) ? -1 : 1;
     }
-
-
 
 }

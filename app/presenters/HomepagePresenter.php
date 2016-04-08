@@ -10,37 +10,32 @@ use App\Service;
 /**
  * Homepage presenter.
  */
-class HomepagePresenter extends BasePresenter
-{
+class HomepagePresenter extends BasePresenter {
 
-	/**
-	 * @var Service\SourceManager
-	 * @inject
-	 */
+	/** @var Service\SourceManager @inject */
 	public $sourceManager;
 
-	/**
-	 * @var Service\WifiManager
-	 * @inject
-	 */
+	/** @var Service\WifiManager @inject */
 	public $wifiManager;
 
 	/** @var Service\WifiSecurityService @inject */
 	public $wifiSecurityService;
 
-	public function renderDefault()
-	{
+	/** MAP page */
+	public function renderDefault() {
 		$this->template->sources = $this->sourceManager->getAllSources();
 	}
 
-
+	/**
+	 * search form
+	 * @return UI\Form
+	 */
 	protected function createComponentSearchForm() {
 		$form = new UI\Form;
 
 		$form->getElementPrototype()->class = "form-horizontal";
 		$ssidmacTxt = $form->addText('ssidmac', 'SSID/MAC:');
 		$ssidmacTxt->getControlPrototype()->class='form-control';;
-		//$ssidmac->getControlPrototype()->id='ssidmac';
 
 		$channelsQ = $this->wifiManager->getAllChannels();
 		$channels = array();
@@ -56,7 +51,6 @@ class HomepagePresenter extends BasePresenter
 			->setPrompt("Všechny typy")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
-
 		$sourcesfdb = $this->sourceManager->getAllSourcesAsKeyVal();
 		$sources = array();
 		foreach($sourcesfdb as $k=>$s) {
@@ -66,7 +60,6 @@ class HomepagePresenter extends BasePresenter
 		$form->addSelect('source', 'Zdroj:', $sources)
 			->setPrompt("Všechny zdroje")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
-
 
 		$form->addSubmit('search', 'Vyhledat')->getControlPrototype()->addAttributes(array('class'=>'form-control btn btn-info btn-sm'));;
 

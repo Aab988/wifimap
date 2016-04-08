@@ -18,8 +18,7 @@ class StatisticsManager extends BaseService {
     /**
      * @return Statistics[]
      */
-    public function getAllStatistics()
-    {
+    public function getAllStatistics() {
         $count = $this->database->table("statistics")->count("id");
         $between = round($count/5);
 
@@ -148,5 +147,44 @@ class StatisticsManager extends BaseService {
         }
         return $stat_source;
     }
+
+    public function getCurrentStatistics() {
+        return $this->database->table("statistics")->where("created", date("Y-m-d"))->fetch();
+    }
+
+
+    public function createStatistics() {
+        $total_nets = $this->database->table("wifi")->select("count(id) AS pocet")->fetch();
+        $free_nets = $this->database->table("wifi")->select("count(id) AS pocet")->where("sec", 1)->fetch();
+
+        $id = $this->database->table("statistics")->insert(array(
+            "created"=>new Nette\Utils\DateTime(),
+            "total_nets"=>$total_nets->pocet,
+            "free_nets"=>$free_nets->pocet)
+        )->getPrimary(true);
+
+        // create security statistics
+        $ssec = $this->database->query("SELECT ws.id,count(w.id) AS pocet FROM wifi w JOIN wifi_security ws ON (w.sec = ws.id) GROUP BY ws.id")->fetchAll();
+        foreach($ssec as $s) {
+            $this->database->table("statistics_security")->insert(array(
+                "id_statistics"=>$id,
+                "id_wifi_security"=>$s->id,
+                "total_nets" => $s->pocet
+            ));
+        }
+
+        // create source statistics
+        $ssource = $this->database->query("SELECT s.id,count(w.id) AS pocet FROM wifi w JOIN source s ON (w.id_source = s.id) GROUP BY s.id")->fetchAll();
+        foreach($ssource as $s) {
+            $count = $this->database->table("wifi")->select("count(id) AS pocet")->where("sec", 1)->where("id_source",$s->id)->fetch();
+            $this->database->table("statistics_source")->insert(array(
+                "id_statistics"=>$id,
+                "id_source" => $s->id,
+                "total_nets"=>$s->pocet,
+                "free_nets"=>$count->pocet
+            ));
+        }
+    }
+
 
 }

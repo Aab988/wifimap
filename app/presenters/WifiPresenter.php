@@ -16,13 +16,16 @@ use Nette\Caching\Cache;
 use Tracy\Debugger;
 
 class WifiPresenter extends BasePresenter {
+
     /** increasing image latlng range and image size */
     const INCREASE_LATLNG_RANGE_ABOUT = 0.125;
 
+    /** minimum zoom when overlay is shown */
     const MIN_OVERLAY_ZOOM = 10;
+    /** minimum zoom when info windows is shown */
     const MIN_INFO_WINDOW_ZOOM = 10;
 
-    /** polomer kruznice vytvorene z bodu kliknuti */
+    /** radius of circle around click to map coords */
     const CLICK_POINT_CIRCLE_RADIUS = 0.03;
 
     /** @var WifiManager @inject */
@@ -40,12 +43,13 @@ class WifiPresenter extends BasePresenter {
     /** @var OptimizedWifiManager @inject */
     public $oWifiManager;
 
-    /** @var array modes that can be used */
-    private $allowedModes = array();
-
     /** @var DownloadRequest @inject */
     public $downloadRequest;
 
+    /** @var array modes that can be used */
+    private $allowedModes = array();
+
+    /** @var array labels of modes to info block */
     private static $modesLabels = array(
         self::MODE_ALL => "Všechny sítě",
         self::MODE_SEARCH => "Vyhledávání",
@@ -57,8 +61,8 @@ class WifiPresenter extends BasePresenter {
     /** can highlight by these params */
     public static $MODE_HIGHLIGHT_ALLOWED_BY = array('ssid', 'mac', 'channel');
 
-    public function __construct()
-    {
+    /** settings */
+    public function __construct() {
         parent::__construct();
         $this->allowedModes = array(
             self::MODE_SEARCH,
@@ -73,10 +77,8 @@ class WifiPresenter extends BasePresenter {
      * show detail of one AP
      * @throws Nette\Application\AbortException
      */
-    public function renderProcessClick()
-    {
+    public function renderProcessClick() {
         $httpr = $this->getHttpRequest();
-        // pokud je nedostatecny zoom vratit prazdny - nemusim resit -> JS omezeni
         if($httpr->getQuery("zoom") != null && $httpr->getQuery("zoom") < self::MIN_INFO_WINDOW_ZOOM) {
             echo json_encode(array("success"=>false), JSON_UNESCAPED_UNICODE);
             $this->terminate();
@@ -86,7 +88,7 @@ class WifiPresenter extends BasePresenter {
         $click_lon = doubleval($httpr->getQuery("click_lon"));
 
         $detail = array();
-        // pokud jiz je konkretni sit (prekliknuto z IW)
+        // click on concrete net in info window table
         if($httpr->getQuery("net")) {
             $id = intval($httpr->getQuery("net"));
             $wifi = $this->wifiManager->getWifiById($id);
@@ -120,7 +122,7 @@ class WifiPresenter extends BasePresenter {
         $requestCoords = new Coords($lat1,$lat2,$lon1,$lon2);
 
         $params = array("coords" => $requestCoords);
-        // podle nastaveneho modu rozhodnout
+
         switch($httpr->getQuery("mode")) {
             case self::MODE_SEARCH:
                 if ($httpr->getQuery("ssidmac") != null) {
@@ -149,7 +151,6 @@ class WifiPresenter extends BasePresenter {
 
         $nets = $this->oWifiManager->getNetsByParams($params,$select,null,"distance");
 
-        // neni to rozkliknuto
         if(!$httpr->getQuery("net") && isset($nets[0])) {
             $wifi = $nets[0];
             $detail["id"] = $wifi["id"];
@@ -187,8 +188,8 @@ class WifiPresenter extends BasePresenter {
         $this->template->count = $count;
         $this->template->others = $others;
         $this->template->detail = $detail;
-
         $this->template->alreadyInGoogleQueue = $alreadyInGoogleQueue;
+
         $temp = (string)$this->template;
 
         $json['iw'] = $temp;
@@ -215,8 +216,7 @@ class WifiPresenter extends BasePresenter {
      * @param float $lon1
      * @param float $lon2
      */
-    public function renderImage($mode, $lat1, $lat2, $lon1, $lon2)
-    {
+    public function renderImage($mode, $lat1, $lat2, $lon1, $lon2) {
         header("Content-type: image/png");
         MyUtils::setIni(180, '1024M');
 
@@ -225,17 +225,16 @@ class WifiPresenter extends BasePresenter {
 
         $this->overlayRenderer = new OverlayRenderer($zoom);
 
-        // uzivatel se pokusil do url zadat kravinu prepnu na defaultni mod
-        // kontrola kvuli cache key -> aby mi nemohl ulozit na server nejaky skodlivy kod
+        // not allowed mode -> set do default mode
         if(!$this->allowedMode($mode)) $mode = self::DEFAULT_MODE;
 
-        // moc maly zoom vratim obrazek at si priblizi
+        // zoom is too small
         if($zoom < self::MIN_OVERLAY_ZOOM) {
             echo MyUtils::image2string($this->overlayRenderer->drawNone());
             exit;
         }
 
-        // zvysim rozsah souradnic - kvuli orezavani
+        // increase coords range, due to future crop
         $coords = new Coords($lat1, $lat2, $lon1, $lon2);
         $coords->increaseLatLngRange(self::INCREASE_LATLNG_RANGE_ABOUT);
 
@@ -272,10 +271,10 @@ class WifiPresenter extends BasePresenter {
                 break;
         }
 
-        // vygenerovani klice pro cache
+        // generating cache key
         $key = MyUtils::generateCacheKey($mode,$coords,$zoom,$params);
 
-        // zkusi se nalezt v cache
+        // try to find in cache
         if(self::CACHE_ON && $mode != self::MODE_CALCULATED) {
             $img = $this->cache->load($key);
             if($img != null) {
@@ -284,13 +283,11 @@ class WifiPresenter extends BasePresenter {
             }
         }
 
-        // ziskani dat a vygenerovani prekryvne vrstvy
-
+        // get data and generate tile of overlay
         switch($mode) {
             case self::MODE_SEARCH:
                 $params['coords'] = $coords;
                 $nets = $this->oWifiManager->getNetsByParams($params,array('ssid,mac,latitude,longitude,id_source'));
-                //$nets = $this->wifiManager->getNetsModeSearch($coords, $params);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
             case self::MODE_HIGHLIGHT:
@@ -338,14 +335,15 @@ class WifiPresenter extends BasePresenter {
                 $img = $this->overlayRenderer->drawCalculated($coords,$nets2,$net);
                 break;
             default:
-
                 $nets = $this->wifiManager->getAllNetsInLatLngRange($coords,array('latitude','longitude','ssid','mac','id_source'),true);
                 $img = $this->overlayRenderer->drawModeAll($coords, $nets);
                 break;
-
         }
+
         $image = MyUtils::image2string($img);
         $img = null;
+
+        // save generated image to cache
         if(self::CACHE_ON && $mode != self::MODE_CALCULATED) {
             $this->cache->save($key, $image, array(Cache::EXPIRE => time() + self::$cacheExpire[$zoom]));
         }
@@ -353,13 +351,7 @@ class WifiPresenter extends BasePresenter {
         return;
     }
 
-    private function allowedMode($mode) {
-        return in_array($mode,$this->allowedModes);
-    }
-
-
-
-
+    /** render actual mode block */
     public function renderActualMode() {
         Debugger::$productionMode = true;
         $params = $this->request->getParameters();
@@ -372,9 +364,15 @@ class WifiPresenter extends BasePresenter {
         }
         if(isset($params['source'])) $params['source'] = ($this->sourceManager->getById(intval($params['source'])))?$this->sourceManager->getById(intval($params['source']))->name:$params['source'];
         if(isset($params['ssidmac'])) $params['ssidmac'] = urldecode($params['ssidmac']);
-
         unset($params['id']); unset($params['gm']);unset($params['action']);
         $this->template->parameters = $params;
     }
 
+    /**
+     * @param string $mode
+     * @return bool
+     */
+    private function allowedMode($mode) {
+        return in_array($mode,$this->allowedModes);
+    }
 }

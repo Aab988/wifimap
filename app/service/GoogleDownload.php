@@ -190,7 +190,10 @@ class GoogleDownload extends Download implements IDownload {
         return null;
     }
 
-
+    /**
+     * @param Coords $coords
+     * @return int
+     */
     public function createRequestFromArea(Coords $coords) {
         $wfs = $this->wifiManager->getAllNetsInLatLngRange($coords);
 
@@ -198,8 +201,7 @@ class GoogleDownload extends Download implements IDownload {
             $this->createRequestFromWifi($w);
         }
 
-        // vratit chybu/uspech
-
+        return count($wfs);
     }
 
 
