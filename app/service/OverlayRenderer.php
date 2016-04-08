@@ -214,13 +214,18 @@ class OverlayRenderer {
 		return $this->img;
 	}
 
-
+	/**
+	 * @param Coords $coords
+	 * @param Wifi[] $nets
+	 * @param Wifi   $net
+	 * @return resource
+	 */
 	public function drawCalculated(Coords $coords,$nets,Wifi $net) {
 		$this->createImage(self::IMAGE_BIGGER, self::IMAGE_BIGGER);
 		$op = $this->getConversionRatio($coords);
 
 		foreach($nets as $w) {
-			$xy = $this->latLngToPx($w->latitude, $w->longitude, $coords->getLatStart(), $coords->getLonStart(), $op->onepxlat, $op->onepxlon);
+			$xy = $this->latLngToPx($w->getLatitude(), $w->getLongitude(), $coords->getLatStart(), $coords->getLonStart(), $op->onepxlat, $op->onepxlon);
 			$this->drawOneNet($xy->getX(),$xy->getY(),16,16,array('ssid'=>$w->getSsid(),'mac'=>$w->getMac()),$this->imgcolors['one_net'],self::IMG_TYPE_ELLIPSE);
 		}
 		if($net->getLatitude() < $coords->getLatEnd() && $net->getLatitude()>$coords->getLatStart()

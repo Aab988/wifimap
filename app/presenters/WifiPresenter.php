@@ -2,18 +2,15 @@
 
 namespace App\Presenters;
 
-use App\Model\ArrayUtil;
 use App\Model\Coords;
 use App\Model\MyUtils;
 use App\Model\Wifi;
 use App\Service\DownloadRequest;
-use App\Service\GoogleDownload;
 use App\Service\OptimizedWifiManager;
 use App\Service\OverlayRenderer;
 use App\Service\SourceManager;
 use App\Service\WifiManager;
 use App\Service\WifiSecurityService;
-use App\Service\WigleDownload;
 use Nette;
 use Nette\Caching\Cache;
 use Tracy\Debugger;
@@ -143,6 +140,7 @@ class WifiPresenter extends BasePresenter {
                 $a = $this->wifiManager->getWifiById($httpr->getQuery("a"));
                 $mac = $a->getMac();
                 $params["mac"] = $mac;
+                break;
             default:
                 break;
         }
@@ -288,7 +286,6 @@ class WifiPresenter extends BasePresenter {
 
         // ziskani dat a vygenerovani prekryvne vrstvy
 
-        $img = $this->overlayRenderer->drawNone();
         switch($mode) {
             case self::MODE_SEARCH:
                 $params['coords'] = $coords;

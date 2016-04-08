@@ -95,7 +95,7 @@ INNER JOIN
 ON dr.lat_start = groupeddr.lat_start AND dr.lat_end = groupeddr.lat_end AND dr.lon_start = groupeddr.lon_start
 AND dr.lon_end = groupeddr.lon_end
 AND dr.date = groupeddr.MaxDateTime
-")->fetchAll();
+WHERE dr.id_source = " .$idSource)->fetchAll();
 
 
         /*return $this->database->table("download_request")->where("id_source", $idSource)

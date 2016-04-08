@@ -2,9 +2,6 @@
 namespace App\Service;
 use App\Model\Log;
 use App\Model\Wifi;
-use Nette\Utils\ArrayList;
-use Nette\Utils\DateTime;
-use Nette\Utils\Image;
 
 class WifileaksDownload extends Download implements IDownload {
 

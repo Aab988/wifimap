@@ -6,10 +6,7 @@ use App\Model\ArrayUtil;
 use \App\Model\Coords;
 use App\Model\DownloadImport;
 use App\Model\MyUtils;
-use App\Model\Wifi;
 use \App\Service;
-use Nette\Http\Url;
-use Nette\Http\UrlScript;
 
 class DownloadPresenter extends BasePresenter
 {
@@ -106,21 +103,6 @@ class DownloadPresenter extends BasePresenter
     {
         if (!$this->googleDownload) return;
         $this->googleDownload->download();
-        $this->terminate();
-    }
-
-
-    public function renderPrepareWigleDownload($lat_start, $lat_end, $lon_start, $lon_end)
-    {
-        $coords = new Coords($lat_start, $lat_end, $lon_start, $lon_end);
-
-        // ceska republika rozsah
-        //$this->wigleDownload->generateLatLngDownloadArray(48.54570549184746,51.055207338584964,12.073974609375,18.8525390625);
-
-        //hk rozsah
-        //$this->wigleDownload->generateLatLngDownloadArray(new Coords(50.17074134967256,50.263887540074116,15.745468139648438,15.90545654296875));
-
-        // $this->wigleDownload->generateLatLngDownloadArray($lat_start,$lat_end,$lon_start,$lon_end);
         $this->terminate();
     }
 
@@ -244,7 +226,7 @@ class DownloadPresenter extends BasePresenter
         $filterSet = ArrayUtil::arrayHasSomeKey($filter, array("ssidmac", "channel", "source", "security", "ssid"));
         if($filterSet) {
             // request with filter set
-            $state = $this->addFilteredRequest($coords,$filter,$sourceDownloadFrom);
+            $this->addFilteredRequest($coords,$filter,$sourceDownloadFrom);
         }
         else {
             // normal request to latitude longitude range
@@ -277,6 +259,7 @@ class DownloadPresenter extends BasePresenter
 
 
     /**
+     * @param string $show
      * determines what view show
      */
     private function determineView($show)
@@ -300,7 +283,7 @@ class DownloadPresenter extends BasePresenter
         $req = $this->downloadRequest->getEldestDownloadRequest(Service\WigleDownload::ID_SOURCE);
         if ($req) {
             $coords = new Coords($req->lat_start, $req->lat_end, $req->lon_start, $req->lon_end);
-            $this->downloadQueue->generateLatLngDownloadArray($coords, $req->id);
+            $this->downloadQueue->generateLatLngDownloadArray($coords);
             $total_count = count($this->downloadQueue->getGeneratedCoords());
             $this->downloadQueue->save($req->id);
             $this->downloadRequest->setProcessed($req, $total_count);
@@ -403,7 +386,7 @@ class DownloadPresenter extends BasePresenter
             else {
                 echo "$('#createDownloadRequest').show();";
             }
-            $text .= '<br /><label for="notify_email">Až budou data získana informujte mě na email:</label><input type="email" name="notify_email" id="notify_email"'. ((isset($_COOKIE['notify_email']))?'value="'.$_COOKIE['notify_email'].'"':'') .' />';
+            $text .= '<br /><label for="notify_email">Až budou data získana informujte mě na email:</label><input type="email" name="notify_email" id="notify_email" '. ((isset($_COOKIE['notify_email']))?'value="'.$_COOKIE['notify_email'].'"':'') .' />';
 
             echo "$('#time2down').html('" . $text . "');";
         }

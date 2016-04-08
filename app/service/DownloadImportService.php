@@ -8,7 +8,6 @@ namespace App\Service;
 
 
 use App\Model\DownloadImport;
-use Nette\Database\IRow;
 
 class DownloadImportService extends BaseService {
 

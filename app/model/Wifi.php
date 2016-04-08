@@ -1,6 +1,5 @@
 <?php
 namespace App\Model;
-use App\Service\SourceManager;
 use Nette;
 use App\Service\WifileaksDownload;
 use App\Service\WigleDownload;

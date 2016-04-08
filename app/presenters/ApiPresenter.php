@@ -183,7 +183,6 @@ class ApiPresenter extends BasePresenter {
             }
             usort($data,"self::Sort");
 
-            $chWifileaks = 0;
             $chWigleMin = 9999999999;
             $chWigleMax = 0;
             $chWigleTotal = 0;

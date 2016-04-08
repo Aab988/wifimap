@@ -13,7 +13,6 @@ use App\Model\DownloadImport;
 use App\Model\Log;
 use App\Model\MyUtils;
 use App\Model\Wifi;
-use App\Model\WifiSecurity;
 use Nette\Utils\DateTime;
 
 class GoogleDownload extends Download implements IDownload {
@@ -50,6 +49,7 @@ class GoogleDownload extends Download implements IDownload {
         $wifis = array();
 
         foreach($f as $ws) {
+            $ws = (object)$ws;
             $w1 = new Wifi();
             $w1->setMac($ws->mac1);
             $w1->setSsid($ws->ssid1);
@@ -148,8 +148,8 @@ class GoogleDownload extends Download implements IDownload {
     /**
      * return array with information from google
      *
-     * @param $url google download url
-     * @return array
+     * @param string $url google download url
+     * @return object
      */
     private function getDataFromGoogle($url) {
         return json_decode(file_get_contents($url));
@@ -162,6 +162,7 @@ class GoogleDownload extends Download implements IDownload {
      *
      * @param Wifi $wifi
      * @param int $priority
+     * @return int|null
      *
      */
     public function createRequestFromWifi(Wifi $wifi, $priority = 1) {
@@ -173,8 +174,8 @@ class GoogleDownload extends Download implements IDownload {
         if($w2) {
             // pridam do DB fronty -> pokud tam jeste neni
             if($this->getGoogleRequestByWifiIds($wifi->getId(),$w2->getId())) {
-                // log eistuje
-                return;
+                $this->logger->addLog(new Log(Log::TYPE_INFO,"googlerequest","This ID is already in queue"));
+                return null;
             }
 
             $id = $this->database->table("google_request")->insert(array(

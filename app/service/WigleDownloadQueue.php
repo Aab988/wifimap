@@ -72,9 +72,8 @@ class WigleDownloadQueue extends BaseService {
      * divide big area into smaller ones by counted sites density
      *
      * @param Coords $coords
-     * @param int|null $iddreq
      */
-    public function generateLatLngDownloadArray($coords,$iddreq = null) {
+    public function generateLatLngDownloadArray($coords) {
         $this->fillWigleNetColors();
 
         $coords = $this->divideLatLngInitially($coords);

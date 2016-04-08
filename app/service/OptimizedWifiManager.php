@@ -9,7 +9,6 @@
  * Time: 17:34
  */
 namespace App\Service;
-use App\Model\Coords;
 use App\Model\MyUtils;
 use Nette;
 

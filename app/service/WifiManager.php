@@ -7,6 +7,7 @@
 namespace App\Service;
 use App\Model\MyUtils;
 use App\Model\Wifi;
+use App\Presenters\BasePresenter;
 use App\Presenters\WifiPresenter;
 use App\Model\Coords;
 
@@ -145,9 +146,11 @@ class WifiManager extends BaseService {
 	 * return nets data in passed lat lng range
 	 *
 	 * @param Coords $coords
+	 * @param array $select
+	 * @param bool $asArray
 	 * @return Wifi[]
 	 */
-	public function getAllNetsInLatLngRange($coords, $select = array('*'), $asArray = false, $limit = null) {
+	public function getAllNetsInLatLngRange($coords, $select = array('*'), $asArray = false) {
 		//$q = $this->getNetsRangeQuery($coords);
 
 		$sqlSelect = $this->buildSelect($select);
@@ -335,14 +338,6 @@ class WifiManager extends BaseService {
 					$params['sec'] = intval($request->getQuery("security"));
 				}
 				$sql = $this->getSearchQuery($requestCoords,$params);
-				break;
-			case WifiPresenter::MODE_ONE_SOURCE:
-				$srca = explode("-",$request->getQuery("source"));
-				$source = (isset($srca[1]))?intval($srca[1]):-1;
-				$sql = $this->getOneSourceQuery($requestCoords,$source);
-				break;
-			case WifiPresenter::MODE_FREE:
-				$sql = $this->getFreeNetsQuery($requestCoords);
 				break;
 			default:
 				$sql = $this->getNetsRangeQuery($requestCoords);

@@ -28,15 +28,6 @@ class HomepagePresenter extends BasePresenter
 	/** @var Service\WifiSecurityService @inject */
 	public $wifiSecurityService;
 
-
-	public $database;
-	
-	public function __construct(Nette\Database\Context $database) {
-	    $this->database = $database;
-	}
-        
-        
-
 	public function renderDefault()
 	{
 		$this->template->sources = $this->sourceManager->getAllSources();
@@ -57,11 +48,11 @@ class HomepagePresenter extends BasePresenter
 			$channels[$ch->channel] = $ch->channel;
 		}
 
-		$channelSelect = $form->addSelect('channel','Kanál:', $channels)
+		$form->addSelect('channel','Kanál:', $channels)
 			->setPrompt('Všechny kanály')
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
-		$securitySelect = $form->addSelect('security', 'Zabezpečení:', $this->wifiSecurityService->getAllWifiSecurityTypes(false))
+		$form->addSelect('security', 'Zabezpečení:', $this->wifiSecurityService->getAllWifiSecurityTypes(false))
 			->setPrompt("Všechny typy")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
@@ -72,14 +63,13 @@ class HomepagePresenter extends BasePresenter
 			$sources[$k] = ucfirst($s);
 		}
 
-		$sourceSelect = $form->addSelect('source', 'Zdroj:', $sources)
+		$form->addSelect('source', 'Zdroj:', $sources)
 			->setPrompt("Všechny zdroje")
 			->getControlPrototype()->addAttributes(array('class'=>'form-control'));
 
 
 		$form->addSubmit('search', 'Vyhledat')->getControlPrototype()->addAttributes(array('class'=>'form-control btn btn-info btn-sm'));;
-		//$form->getElementPrototype()->onsubmit = 'return searchFormSubmit()';
-		//$form->getElementPrototype()->id = 'searchForm';
+
 		return $form;
 	}
 

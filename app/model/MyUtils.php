@@ -34,6 +34,7 @@ class MyUtils extends Nette\Object {
      *
      * @param string $mode
      * @param Coords $coords
+     * @param int $zoom
      * @param array[] $params
      * @return string
      */

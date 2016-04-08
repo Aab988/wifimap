@@ -73,7 +73,7 @@ class WigleDownloadService extends BaseService {
             $rows->update(array('id_download_request'=>$dr->id));
 
             // -> downloaded_count u vsech nastavit na 0
-            $dr->update(array('total_count'=>$total,'downloaded_count'=>0));
+            $this->database->table("download_request")->where("id",$dr->id)->update(array('total_count'=>$total,'downloaded_count'=>0));
         }
         $this->database->commit();
     }

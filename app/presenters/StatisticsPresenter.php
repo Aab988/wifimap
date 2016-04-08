@@ -25,20 +25,9 @@ class StatisticsPresenter extends BasePresenter {
 	 */
 	public $wsservice;
 
-	public $database;
-
-	public function __construct(Nette\Database\Context $database) {
-
-		$this->database = $database;
-	}
-
-
-
 	public function renderDefault()
 	{
-		$latestStat = $this->statisticsManager->getLatestStatistics();
 		$allStats = $this->statisticsManager->getAllStatistics();
-
 
 		$this->template->allSecurityTypes = $this->wsservice->getAllWifiSecurityTypes();
 		$actualStatistics = $this->statisticsManager->getLatestStatistics();

@@ -93,7 +93,7 @@ class NotifyEmailService extends BaseService {
     public function notifyByEmail($id) {
         $ne = $this->getNotifyEmailById($id);
         $mail = new Message();
-        $mail->setFrom('Wifimapa <info@wifimapa.cz>')
+        $mail->setFrom("Wifimapa <info@wifimapa.cz>")
             ->addTo($ne["email"])
             ->setSubject('Potvrzení získání dat')
             ->setBody("Dobrý den,\ndata o která jste požádal byla získána do databáze.");

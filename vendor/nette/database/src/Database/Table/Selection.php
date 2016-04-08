@@ -19,6 +19,7 @@ use Nette,
  * @author     Jan Skrasek
  *
  * @property-read string $sql
+ * @property mixed       id
  */
 class Selection extends Nette\Object implements \Iterator, IRowContainer, \ArrayAccess, \Countable
 {

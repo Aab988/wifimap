@@ -23,7 +23,6 @@ class RequestsPresenter extends BasePresenter {
             $wrfm[$wr->lat_start.$wr->lat_end.$wr->lon_start.$wr->lon_end] = $wr;
         }*/
 
-
         $this->template->wigleRequestsMap = $wrs;
         $this->template->googleRequests = $this->downloadRequest->getAllRequestsByIdSource(GoogleDownload::ID_SOURCE);
 
