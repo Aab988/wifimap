@@ -38,11 +38,13 @@ class OverlayRenderer {
 	/** @var resource $img */
 	private $img;
 
+	/**
+	 * @param int $zoom
+	 */
 	public function __construct($zoom) {
 		$this->zoom = (int) $zoom;
 		$this->setColors();
 	}
-
 
 	/** sets color shades for each element */
 	private function setColors() {
@@ -238,6 +240,9 @@ class OverlayRenderer {
 		return $this->img;
 	}
 
+	/**
+	 * @return resource
+	 */
 	public function drawNone() {
 		$this->createImage(self::IMAGE_WIDTH,self::IMAGE_HEIGHT);
 		imagestring($this->img,4,self::IMAGE_WIDTH/2-75,self::IMAGE_HEIGHT/2,'pro zobrazeni priblizte', $this->imgcolors['text']);

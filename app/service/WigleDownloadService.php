@@ -11,7 +11,12 @@
  */
 namespace App\Service;
 
-
+/**
+ * Class WigleDownloadService
+ *
+ * @deprecated
+ * @package App\Service
+ */
 class WigleDownloadService extends BaseService {
 
     // vlozeni vsech mac z wifi do wigle_aps kde id_source je wigle - provest v transakci -> nejdrive tohle a pak delete z wifi

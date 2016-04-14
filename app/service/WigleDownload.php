@@ -31,7 +31,6 @@ class WigleDownload extends Download implements IDownload {
     /** Wigle get observations URL  */
     const WIGLE_OBSERVATIONS_URL = "https://wigle.net/api/v1/jsonLocation";
 
-
     const WIGLE_MAXIMUM_ROWS = 100;
 
     /** @var string Wigle login */
@@ -39,8 +38,6 @@ class WigleDownload extends Download implements IDownload {
 
     /** @var string Wigle password */
     private $password = "";
-
-
 
     /**
      * @var WigleDownloadQueue
@@ -98,7 +95,9 @@ class WigleDownload extends Download implements IDownload {
         }
     }
 
-
+    /**
+     * download observations for one mac address
+     */
     public function downloadObservations() {
         $this->loginToWigle();
 
@@ -185,8 +184,6 @@ class WigleDownload extends Download implements IDownload {
         // PO UPDATE wigle_download_queue se pomoci DB triggeru zmeni hodnoty u download_requestu
         // a pokud je ten reuqest jiz dokoncen tak i requesty ktere cekaly na ten dany request
         dump($wifis);
-
-
     }
 
     /**
@@ -218,14 +215,12 @@ class WigleDownload extends Download implements IDownload {
 		return $result;
 	}
 
-
 	/**
 	 * Login to Wigle and save cookie
 	 */
     private function loginToWigle() {
 		$this->sendCurlRequest(self::WIGLE_LOGIN_URL,array("credential_0"=>$this->user,"credential_1"=>$this->password));
     }
-
 
     /**
      * @param Coords $coords
@@ -254,18 +249,6 @@ class WigleDownload extends Download implements IDownload {
         $ws = array();
         foreach($data["results"] as $net) {
             $ws[] = $this->parseLine($net);
-        }
-        return $ws;
-    }
-
-    /**
-     * @param array $data decoded JSON
-     * @return array MAC addresses array
-     */
-    private function parseData2MacAddresses($data) {
-        $ws = array();
-        foreach($data["results"] as $net) {
-            $ws[] = MyUtils::macSeparator2Colon($net['netid']);
         }
         return $ws;
     }
@@ -313,8 +296,6 @@ class WigleDownload extends Download implements IDownload {
         return $row;
     }
 
-
-
     /**
      * get count of not downloaded records in wigle_aps table where priority is >= $priority
      *
@@ -327,8 +308,6 @@ class WigleDownload extends Download implements IDownload {
         if($priority) $count->where('priority >= ?',$priority);
         return $count->count();
     }
-
-
 
     /**
      * @param array $line
@@ -355,10 +334,8 @@ class WigleDownload extends Download implements IDownload {
         $wifi->setBcninterval($line['bcninterval']);
         $wifi->setQos((int)$line['qos']);
         $wifi->setSource(self::ID_SOURCE);
-
         return $wifi;
     }
-
 
     /**
      * @param string $user
@@ -373,7 +350,5 @@ class WigleDownload extends Download implements IDownload {
     public function setPassword($password) {
         $this->password = $password;
     }
-
-
 
 }

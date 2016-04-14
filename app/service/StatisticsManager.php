@@ -14,7 +14,6 @@ use Nette;
  */
 class StatisticsManager extends BaseService {
 
-
     /**
      * @return Statistics[]
      */
@@ -28,7 +27,6 @@ class StatisticsManager extends BaseService {
         if($last && $first) {
             $_25 = $first["min_id"] + $between;
             $_75 = $last["max_id"] - $between;
-
 
             $avg = $this->database->table("statistics")->select("round(avg(id)) AS avg_id")
                 ->fetch();
@@ -80,6 +78,9 @@ class StatisticsManager extends BaseService {
         return $latestStatistics;
     }
 
+    /**
+     * @return Statistics
+     */
     public function getSecondLatestStatistics() {
         $latest = $this->getLatestStatistics();
         $latestId = $latest->getId();
@@ -89,9 +90,7 @@ class StatisticsManager extends BaseService {
             ->limit(1)
             ->fetch();
         return $this->getStatisticsById($sl["id"]);
-
     }
-
 
     /**
      * @param int $sid
@@ -148,11 +147,16 @@ class StatisticsManager extends BaseService {
         return $stat_source;
     }
 
+    /**
+     * @return bool|mixed|Nette\Database\Table\IRow
+     */
     public function getCurrentStatistics() {
         return $this->database->table("statistics")->where("created", date("Y-m-d"))->fetch();
     }
 
-
+    /**
+     * creates new statistics
+     */
     public function createStatistics() {
         $total_nets = $this->database->table("wifi")->select("count(id) AS pocet")->fetch();
         $free_nets = $this->database->table("wifi")->select("count(id) AS pocet")->where("sec", 1)->fetch();

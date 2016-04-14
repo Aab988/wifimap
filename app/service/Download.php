@@ -14,7 +14,6 @@ use Nette;
  */
 class Download extends BaseService {
 
-
     /**
      * save one Wi-fi network into DB
      * @param Wifi $wifi
@@ -59,14 +58,19 @@ class Download extends BaseService {
                     $this->database->table('wifi')->insert($data);
                 }
                 catch(\PDOException $pdoe) {
-                    echo $pdoe->getMessage();
+                    $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFI INSERT', 'nepodarilo se ulozit bod do tabulky wifi, zprava:'.$pdoe->getMessage()));
                 }
                 $data = array();
             }
         }
         if(count($data)) {
-            // TODO: osetrit ze uz existuje (DUPLIKATNI KLIC)
-            $this->database->table('wifi')->insert($data);
+            try {
+                $this->database->table('wifi')->insert($data);
+            }
+            catch(\PDOException $e) {
+                $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFI INSERT', 'nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage()));
+                return null;
+            }
         }
     }
 
@@ -112,7 +116,12 @@ class Download extends BaseService {
      * @param Wifi $w
      */
     public function save(Wifi $w) {
-        $this->database->table('wifi')->insert($w->toArray());
+        try {
+            $this->database->table('wifi')->insert($w->toArray());
+        }
+        catch(\PDOException $e) {
+            $this->logger->addLog(new Log(Log::TYPE_ERROR,'WIFI INSERT', 'nepodarilo se ulozit bod do tabulky wifi, zprava:'.$e->getMessage()));
+        }
     }
 
 }

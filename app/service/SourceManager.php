@@ -10,7 +10,6 @@ use App\Model\Source;
 
 class SourceManager extends BaseService {
 
-
     /**
      * @return Source[]
      */
@@ -26,15 +25,12 @@ class SourceManager extends BaseService {
         return $this->database->table("source")->where("id",$id)->fetch();
     }
 
-
-
     /**
      * return (id => name) array
      * @return array
      */
     public function getAllSourcesAsKeyVal() {
         return $this->database->table("source")->fetchPairs("id","name");
-
     }
 
     /**
@@ -55,7 +51,6 @@ class SourceManager extends BaseService {
         $this->database->table('source')->where('id',$id_source)
             ->update(array('latest_download_data'=>$data));
     }
-
 
     /**
      * returns latest download data

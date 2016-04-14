@@ -16,6 +16,7 @@ use App\Model\Wifi;
 use Nette\Utils\DateTime;
 
 class GoogleDownload extends Download implements IDownload {
+
     /** google source id in DB */
     const ID_SOURCE = 3;
 
@@ -25,10 +26,8 @@ class GoogleDownload extends Download implements IDownload {
     /** number of requests processed by one call of method download */
     const REQUESTS_LIMIT = 10;
 
-
     /** @var WifiManager */
     private $wifiManager;
-
 
     /**
      * main method, processed by cron
@@ -70,9 +69,7 @@ class GoogleDownload extends Download implements IDownload {
             $w2->setSsid($ws->ssid2);
 
             $url = $this->generateGoogleRequestUrl($w1,$w2);
-            // vraci accuracy -> v metrech
-            // location -> lat,lng
-            // a status
+
             $data = $this->getDataFromGoogle($url);
             dump($data);
             if($data->status == 'OK') {
@@ -114,7 +111,6 @@ class GoogleDownload extends Download implements IDownload {
                     ->where('id_wigle_aps',$ws->id1)
                     ->where('state',DownloadImport::ADDED_GOOGLE)
                     ->update(array('state'=>DownloadImport::DOWNLOADED_GOOGLE));
-
             }
         }
         foreach($wifis as $wifi) {
@@ -155,8 +151,6 @@ class GoogleDownload extends Download implements IDownload {
         return json_decode(file_get_contents($url));
     }
 
-
-
     /**
      * creates google request from one net (requested by InfoWindow button)
      *
@@ -196,16 +190,17 @@ class GoogleDownload extends Download implements IDownload {
      */
     public function createRequestFromArea(Coords $coords) {
         $wfs = $this->wifiManager->getAllNetsInLatLngRange($coords);
-
         foreach($wfs as $w) {
             $this->createRequestFromWifi($w);
         }
-
         return count($wfs);
     }
 
-
-
+    /**
+     * @param $w1id
+     * @param $w2id
+     * @return bool|mixed|\Nette\Database\Table\IRow
+     */
     private function getGoogleRequestByWifiIds($w1id,$w2id) {
         return $this->database->table("google_request")
             ->select("datediff(now(),created) AS diff")
@@ -215,8 +210,6 @@ class GoogleDownload extends Download implements IDownload {
             ->order("diff ASC")
             ->fetch();
     }
-
-
 
     /**
      * @param WifiManager $wifiManager
@@ -235,6 +228,5 @@ class GoogleDownload extends Download implements IDownload {
         if($priority) $count->where('priority >= ?',$priority);
         return $count->count();
     }
-
 
 }

@@ -13,7 +13,6 @@ use App\Model\Coords;
 class DownloadRequest extends BaseService {
 
     /** ERROR/INFO returned CONSTANTS */
-
     const STATE_ERR_ALREADY_IN_QUEUE = "ALREADY_IN_QUEUE";
     const STATE_ERR_RECENTLY_DOWNLOADED = "RECENTLY_DOWNLOADED";
     const STATE_SUCCESS_ADDED_TO_QUEUE = "ADDED_TO_QUEUE";
@@ -89,20 +88,16 @@ class DownloadRequest extends BaseService {
      * @return array|Nette\Database\Table\IRow[]
      */
     public function getAllRequestsByIdSource($idSource) {
-        return $this->database->query("select dr.* from download_request dr
-INNER JOIN
-(select lat_start,lat_end,lon_start,lon_end,MAX(date) AS MaxDateTime FROM download_request GROUP BY lat_start,lat_end,lon_start,lon_end) groupeddr
-ON dr.lat_start = groupeddr.lat_start AND dr.lat_end = groupeddr.lat_end AND dr.lon_start = groupeddr.lon_start
-AND dr.lon_end = groupeddr.lon_end
-AND dr.date = groupeddr.MaxDateTime
-WHERE dr.id_source = " .$idSource)->fetchAll();
-
-
-        /*return $this->database->table("download_request")->where("id_source", $idSource)
-            ->fetchAll();*/
+        return $this->database->query("SELECT dr.* FROM download_request dr
+                                       INNER JOIN
+                                          (SELECT lat_start,lat_end,lon_start,lon_end,MAX(date) AS MaxDateTime
+                                          FROM download_request
+                                          GROUP BY lat_start,lat_end,lon_start,lon_end) groupeddr
+                                      ON dr.lat_start = groupeddr.lat_start AND dr.lat_end = groupeddr.lat_end
+                                       AND dr.lon_start = groupeddr.lon_start AND dr.lon_end = groupeddr.lon_end
+                                       AND dr.date = groupeddr.MaxDateTime
+                                       WHERE dr.id_source = " .$idSource)->fetchAll();
     }
-
-
 
 
     /**
@@ -124,21 +119,18 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
         return $query->fetch();
     }
 
-
-
-
+    /**
+     * @param int $download_request
+     * @param int $waitfor
+     */
     public function addWaiting($download_request,$waitfor) {
-
         $this->database->table('download_request_waiting')
             ->insert(array(
                 'id_download_request' => $download_request,
                 'id_download_request_waitfor' => $waitfor,
                 'completed' => 'N'
             ));
-
     }
-
-
 
     /**
      * process wigle request and determine what to do
@@ -172,10 +164,6 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
                     return self::STATE_ERR_RECENTLY_DOWNLOADED;
                 }
                 else {
-                    /*
-                    $this->addDownloadRequest($coords,$idSource);
-                    return self::STATE_SUCCESS_ADDED_TO_QUEUE;
-                    */
                     return $this->addAllNotDownloadedRequests($coords,$idSource);
                 }
             }
@@ -185,8 +173,11 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
         }
     }
 
-
-
+    /**
+     * @param Coords $coords
+     * @param int $idSource
+     * @return string
+     */
     private function addAllNotDownloadedRequests($coords,$idSource) {
         if(self::DIVIDE_AREA_ONLY_NOT_IN_QUEUE) {
             $rects = $this->findNotInQueueRectsInLatLngRange($coords,$idSource);
@@ -206,26 +197,15 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
         }
     }
 
-
-
     /**
      * @param int $idSource
      * @return bool|mixed|Nette\Database\Table\IRow
      */
     public function getEldestDownloadRequest($idSource) {
-        /*return $this->database->table("download_request")
-            ->select('id,lat_start,lat_end,lon_start,lon_end')
-            ->where('processed', 'N')
-            ->where('id_source',$idSource)
-            ->order('date ASC')
-            ->fetch();*/
-
         $sql = "SELECT * FROM download_request WHERE processed = ? AND id_source = ? AND id NOT IN (SELECT id_download_request FROM download_request_waiting WHERE completed = ? GROUP BY id_download_request)";
         $return = $this->database->query($sql,'N',$idSource,'N')->fetch();
-
         return $return;
     }
-
 
     /**
      * get all nets trespassing to area created by latitude and longitude range
@@ -244,7 +224,6 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
             ->fetchAll();
     }
 
-
     /**
      * finds rectangles which are not in existing query
      * - user create query with latitude and longitude range,
@@ -257,17 +236,14 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
      * @return array
      */
     public function findNotInQueueRectsInLatLngRange($coords, $idSource) {
-
         // get all requests in this range
         $data = $this->getAllRequestsInLatLngRange($coords,$idSource);
 
         // create latitude, longitude XY mapping
         $mapping = $this->createMappingXY($data,$coords);
 
-
         $mappingX = $mapping['xMap'];
         $mappingY = $mapping['yMap'];
-
 
         // create mapepd array
         $array = $this->createMappedArray($data,$mappingX,$mappingY);
@@ -410,15 +386,10 @@ WHERE dr.id_source = " .$idSource)->fetchAll();
         return array('xMap'=>$mappingX,'yMap'=>$mappingY);
     }
 
-
-    public function getTime2Download() {
-        // zjistit delku fronty
-
-        //
-    }
-
-
-
+    /**
+     * @param int $wifiId
+     * @return bool
+     */
     public function isInGoogleQueue($wifiId) {
         $count = $this->database->table('google_request')
             ->where('id_wifi1',$wifiId)

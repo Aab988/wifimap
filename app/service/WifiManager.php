@@ -66,8 +66,6 @@ class WifiManager extends BaseService {
 		return $q->count('id');
 	}
 
-
-
 	/**
 	 * create query with latitude and longitude range
 	 *
@@ -83,7 +81,6 @@ class WifiManager extends BaseService {
 		return $q;
 	}
 
-
 	/**
 	 * create search query by associative params array
 	 *
@@ -92,7 +89,6 @@ class WifiManager extends BaseService {
 	 * @return Nette\Database\Table\Selection
 	 */
 	private function getSearchQuery($coords,$params) {
-
 
 		$q = $this->getNetsRangeQuery($coords);
 		foreach($params as $param => $val) {
@@ -108,9 +104,6 @@ class WifiManager extends BaseService {
 		}
 		return $q;
 	}
-
-
-
 
 	/**
 	 * builds SQL select
@@ -130,9 +123,11 @@ class WifiManager extends BaseService {
 		return $sqlSelect;
 	}
 
-
-
-
+	/**
+	 * @param Coords $coords
+	 * @param int $id_source
+	 * @return Nette\Database\Table\Selection
+	 */
 	private function getOneSourceQuery($coords,$id_source) {
 		$q = $this->getNetsRangeQuery($coords);
 		if($id_source > 0) {
@@ -140,7 +135,6 @@ class WifiManager extends BaseService {
 		}
 		return $q;
 	}
-
 
 	/**
 	 * return nets data in passed lat lng range
@@ -151,7 +145,6 @@ class WifiManager extends BaseService {
 	 * @return Wifi[]
 	 */
 	public function getAllNetsInLatLngRange($coords, $select = array('*'), $asArray = false) {
-		//$q = $this->getNetsRangeQuery($coords);
 
 		$sqlSelect = $this->buildSelect($select);
 		$sql = 'SELECT ' . $sqlSelect . ' FROM ' . self::TABLE . ' WHERE  (`latitude` > ?) AND (`latitude` < ?) AND (`longitude` > ?) AND (`longitude` < ?)';
@@ -185,7 +178,12 @@ class WifiManager extends BaseService {
 		return Wifi::createWifiArrayFromDBRowArray($q->fetchAll());
 	}
 
-
+	/**
+	 * @param Coords $coords
+	 * @param string $param
+	 * @param string $value
+	 * @return \App\Model\Wifi[]
+	 */
 	public function getNetsBySt($coords,$param, $value) {
 		$q = $this->getNetsRangeQuery($coords);
 		$q->where($param,$value);
@@ -200,11 +198,13 @@ class WifiManager extends BaseService {
 	 * @return array|Nette\Database\Table\IRow[]
 	 */
 	public function getNetsModeOneSource($coords,$source_id) {
-
 		return $this->getOneSourceQuery($coords,$source_id)->fetchAll();
-
 	}
 
+	/**
+	 * @param Coords $coords
+	 * @return Nette\Database\Table\Selection
+	 */
 	private function getFreeNetsQuery($coords) {
 		$q = $this->getNetsRangeQuery($coords);
 		$q->where('sec = ? OR freenet = ?',1,'Y');
@@ -221,8 +221,6 @@ class WifiManager extends BaseService {
 		return $this->getFreeNetsQuery($coords)->fetchAll();
 	}
 
-
-
 	/**
 	 * return one wifi by ID
 	 *
@@ -233,8 +231,12 @@ class WifiManager extends BaseService {
 		return Wifi::createWifiFromDBRow($this->database->table("wifi")->where("id",$id)->fetch());
 	}
 
-
-
+	/**
+	 * @param Nette\Http\IRequest $request
+	 * @param null|float                $click_lat
+	 * @param null|float                $click_lon
+	 * @return Nette\Database\Table\Selection
+	 */
 	public function getClickQueryByMode(Nette\Http\IRequest $request, $click_lat = null, $click_lon = null) {
 		if(!$click_lat && !$click_lon) {
 			$click_lat = doubleval($request->getQuery("click_lat"));
@@ -282,7 +284,6 @@ class WifiManager extends BaseService {
 		$sql->order("distance");
 		return $sql;
 	}
-
 
 	/**
 	 *	get JSON with nets - use MODE and get only sites which are visible in that MODES
@@ -365,9 +366,7 @@ class WifiManager extends BaseService {
 		}
 
 		return $json;
-		//return json_encode($json);
 	}
-
 
 	/**
 	 * get all channels that are used
@@ -382,7 +381,6 @@ class WifiManager extends BaseService {
 			->order('channel ASC')
 			->fetchAll();
 	}
-
 
 	/**
 	 * @param Wifi $wifi
@@ -407,7 +405,6 @@ class WifiManager extends BaseService {
 			->limit(2)->fetchAll();
 	}
 
-
 	/**
 	 * @param int $limit
 	 * @param int $from
@@ -420,6 +417,12 @@ class WifiManager extends BaseService {
 		return Wifi::createWifiArrayFromDBRowArray($w);
 	}
 
+	/**
+	 * @param string $mac
+	 * @param float $r_latitude
+	 * @param float $r_longitude
+	 * @return array|Nette\Database\IRow[]
+	 */
 	public function getDistanceFromOriginalGPS($mac,$r_latitude,$r_longitude) {
 		$q = "select w.id_source,w.id,w.mac,w.ssid,w.latitude,w.longitude, s.name, SQRT(POW(w.latitude-?,2)+POW(w.longitude-?,2)) as distance, w.calculated
 			  from wifi w

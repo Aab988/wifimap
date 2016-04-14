@@ -8,14 +8,10 @@ class WifileaksDownload extends Download implements IDownload {
     /** @var SourceManager */
     private $sourceManager;
 
-    /**
-     * Wifileaks ID from DB
-     */
+    /** Wifileaks ID from DB */
     const ID_SOURCE = 1;
 
-    /**
-     * how many nets will be saved simultaneously
-     */
+    /** how many nets will be saved simultaneously */
     const MULTIINSERT_ROWS = 1000;
 
     /** wifileaks download file location */
@@ -26,7 +22,6 @@ class WifileaksDownload extends Download implements IDownload {
 
     /** wifileaks download file name date part regular expression */
     const WIFILEAKS_DOWNLOAD_FILENAME_DATE_PATTERN = '$wifileaks_([\d]{6}).tsv$';
-
 
     /**
      * main method - parse whole file and save into DB
