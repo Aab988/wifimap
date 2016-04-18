@@ -8,11 +8,12 @@ $(document).ready(function() {
             }
     });
     initWigleMap();
+    initGoogleMap();
 });
 
 function initWigleMap() {
   // Create a map object and specify the DOM element for display.
-  var map = new google.maps.Map(document.getElementById('wigle-map'), {
+  var mapWigle = new google.maps.Map(document.getElementById('wigle-map'), {
     center: { lat: 50.2, lng: 15.82 },
     zoom: 12,
     scrollwheel: false,
@@ -26,7 +27,7 @@ function initWigleMap() {
             strokeWeight: 2,
             fillColor: {if $wr->processed == 'Y'}'#00FF00'{else}'#FF0000'{/if},
             fillOpacity: 0.35,
-            map: map,
+            map: mapWigle,
             bounds: {
                 north: {$wr->lat_end},
                 south: {$wr->lat_start},
@@ -37,6 +38,32 @@ function initWigleMap() {
   {/foreach}
 }
 
+function initGoogleMap() {
+  // Create a map object and specify the DOM element for display.
+  var mapGoogle = new google.maps.Map(document.getElementById('google-map'), {
+    center: { lat: 50.2, lng: 15.82 },
+    zoom: 12,
+    scrollwheel: false,
+  });
+
+  rects = [];
+  {foreach $googleRequests as $gr}
+    var rectangle = new google.maps.Rectangle({
+        strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: {if $gr->processed == 'Y'}'#00FF00'{else}'#FF0000'{/if},
+            fillOpacity: 0.35,
+            map: mapGoogle,
+            bounds: {
+                north: {$gr->lat_end},
+                south: {$gr->lat_start},
+                east: {$gr->lon_end},
+                west: {$gr->lon_start}
+            }
+    });
+  {/foreach}
+}
 </script>
 {/block}
 
@@ -103,6 +130,7 @@ function initWigleMap() {
                 {/foreach}
                 </tbody>
             </table>
+            <div id="google-map"></div>
         </div>
     </div>
 </div>

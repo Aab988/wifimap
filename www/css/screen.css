@@ -223,7 +223,7 @@ html.js .jshidden {
     margin-top: 5px;
 }
 
-#wigle-map {
+#wigle-map,#google-map {
     width: 100%;
     height: 500px;
 }
